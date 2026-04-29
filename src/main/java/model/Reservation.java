@@ -3,7 +3,7 @@ package model;
 import java.time.*;
 import java.util.*;
 
-public class Reservation {
+public abstract class Reservation {
     private String reservationId;
     private LocalDate reservationDate;
     private LocalTime startTime;
