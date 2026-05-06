@@ -1,5 +1,7 @@
 package model;
 
 public class PrivateReservation extends Reservation{
-    private boolean isStrictlyPrivate;
+    public PrivateReservation() {
+        this.visibility = "Private";
+    }
 }

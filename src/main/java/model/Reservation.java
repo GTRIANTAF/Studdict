@@ -10,6 +10,7 @@ public abstract class Reservation {
     private int durationMinutes;
     private int numberOfPeople;
     private String status; // π.χ. PENDING, CONFIRMED
-    private Table table;
+    private Tables tables;
+    String visibility;
     private List<ReservationParticipant> participants;
 }
