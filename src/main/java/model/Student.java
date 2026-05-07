@@ -1,36 +1,30 @@
 package model;
 
-import java.time.*;
-import java.util.*;
+import jakarta.persistence.*;
 
+@Entity
+@Table(name = "students")
 public class Student {
+
+    @Id
+    @Column(name = "student_id") // Typically an AM or UUID
     private String studentId;
+
     private String firstName;
     private String lastName;
 
-    // Getters
-    public String getStudentId() {
-        return studentId;
-    }
+    @Column(unique = true)
+    private String email;
 
-    public String getFirstName() {
-        return firstName;
-    }
+    public Student() {}
 
-    public String getLastName() {
-        return lastName;
-    }
-
-    // Setters
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    // Getters and Setters
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }

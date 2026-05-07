@@ -1,29 +1,40 @@
 package model;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "study_subjects")
 public class StudySubject {
-    private String subjectId;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "subject_id")
+    private Long subjectId;
+
+    @Column(name = "name", unique = true, nullable = false)
     private String name;
-    public StudySubject(String subjectId, String name) {
-        this.subjectId = subjectId;
+
+    public StudySubject() {}
+
+    public StudySubject(String name) {
         this.name = name;
     }
 
-    // Setters
-    public String getSubjectId(){
+    // Getters
+    public Long getSubjectId() {
         return subjectId;
     }
 
-    public String getName(){
+    public String getName() {
         return name;
     }
 
-    // Setters
-    public void setSubjectId(){
+    // Setters ()
+    public void setSubjectId(Long subjectId) {
         this.subjectId = subjectId;
     }
 
-    public void setName(){
+    public void setName(String name) {
         this.name = name;
     }
-
 }

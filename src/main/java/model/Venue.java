@@ -1,19 +1,39 @@
 package model;
 
-import java.util.*;
+import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
+@Entity
+@Table(name = "venues")
 public class Venue {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "venue_id")
     private Long venueId;
+
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "address")
     private String address;
+
+    @Column(name = "type")
     private String type;       // π.χ "library" | "cafe"
+
+    @Column(name = "is_active")
     private boolean isActive;
-    private List<Table> tables;
+
+    // Defines the One-to-Many relationship with StudyTable.
+    // CascadeType.ALL ensures that if you delete a Venue, its tables are deleted too.
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "venue_id") // Links the tables to this venue's ID
+    private List<StudyTable> tables = new ArrayList<>();
 
     public Venue() {}
 
-    public Venue(String name, String address, String type,
-                 Integer capacity, Boolean isActive) {
+    public Venue(String name, String address, String type, boolean isActive) {
         this.name = name;
         this.address = address;
         this.type = type;
@@ -21,7 +41,7 @@ public class Venue {
     }
 
     // Getters
-    public Long getvenueId() {
+    public Long getVenueId() {
         return venueId;
     }
 
@@ -37,12 +57,16 @@ public class Venue {
         return type;
     }
 
-    public Boolean getIsActive() {
+    public boolean isActive() {
         return isActive;
     }
 
+    public List<StudyTable> getTables() {
+        return tables;
+    }
+
     // Setters
-    public void setVenueIdId(Long id) {
+    public void setVenueId(Long venueId) {
         this.venueId = venueId;
     }
 
@@ -58,7 +82,11 @@ public class Venue {
         this.type = type;
     }
 
-    public void setIsActive(Boolean isActive) {
+    public void setActive(boolean isActive) {
         this.isActive = isActive;
+    }
+
+    public void setTables(List<StudyTable> tables) {
+        this.tables = tables;
     }
 }
