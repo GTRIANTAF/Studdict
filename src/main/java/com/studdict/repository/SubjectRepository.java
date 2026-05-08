@@ -1,6 +1,6 @@
-package repository;
+package com.studdict.repository;
 
-import model.StudySubject;
+import com.studdict.model.StudySubject;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

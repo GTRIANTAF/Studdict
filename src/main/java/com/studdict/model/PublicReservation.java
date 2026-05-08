@@ -1,4 +1,4 @@
-package model;
+package com.studdict.model;
 
 import jakarta.persistence.*;
 

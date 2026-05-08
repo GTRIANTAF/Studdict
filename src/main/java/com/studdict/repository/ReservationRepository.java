@@ -1,6 +1,6 @@
-package repository;
+package com.studdict.repository;
 
-import model.Reservation;
+import com.studdict.model.Reservation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
