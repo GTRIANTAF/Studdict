@@ -1,4 +1,4 @@
-import java.time.LocalDateTime;
+package com.studdict.model;
 
 public class MenuItem {
     private String itemId;
