@@ -26,5 +26,43 @@ public class OrderItem {
 
     public OrderItem() {}
 
-    // need to add Getters and Setters
+    public Long getOrderItemId() {
+        return orderItemId;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public double getSubTotal() {
+        return subTotal;
+    }
+
+    public MenuItem getMenuItem() {
+        return menuItem;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrderItemId(Long orderItemId) {
+        this.orderItemId = orderItemId;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setSubTotal(double subTotal) {
+        this.subTotal = subTotal;
+    }
+
+    public void setMenuItem(MenuItem menuItem) {
+        this.menuItem = menuItem;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 }

@@ -32,5 +32,51 @@ public class Order {
 
     public Order() {}
 
-    // need to add Getters and Setters
+    public Long getOrderId() {
+        return orderId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public LocalDateTime getPlacedAt() {
+        return placedAt;
+    }
+
+    public List<OrderItem> getItems() {
+        return items;
+    }
+
+    public StudyTable getTable() {
+        return table;
+    }
+
+    public void setOrderId(Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    public void setPlacedAt(LocalDateTime placedAt) {
+        this.placedAt = placedAt;
+    }
+
+    public void setItems(List<OrderItem> items) {
+        this.items = items;
+    }
+
+    public void setTable(StudyTable table) {
+        this.table = table;
+    }
 }

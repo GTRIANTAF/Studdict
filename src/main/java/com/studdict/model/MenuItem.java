@@ -21,5 +21,43 @@ public class MenuItem {
 
     public MenuItem() {}
 
-    // need to add Getters and Setters
+    public Long getItemId() {
+        return itemId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setItemId(Long itemId) {
+        this.itemId = itemId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setAvailable(boolean available) {
+        isAvailable = available;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
 }

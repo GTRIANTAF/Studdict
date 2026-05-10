@@ -20,5 +20,27 @@ public class EBookLicense {
 
     public EBookLicense() {}
 
-    // Add Getters and Setters
+    public Long getLicenseId() {
+        return licenseId;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public EBook getEbook() {
+        return ebook;
+    }
+
+    public void setEbook(EBook ebook) {
+        this.ebook = ebook;
+    }
+
+    public void setAvailable(boolean isAvailable) {
+        this.isAvailable = isAvailable;
+    }
+
+    public void setLicenseId(Long licenseId) {
+        this.licenseId = licenseId;
+    }
 }

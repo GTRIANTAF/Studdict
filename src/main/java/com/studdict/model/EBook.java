@@ -23,5 +23,53 @@ public class EBook {
 
     public EBook() {}
 
-    // Add Getters and Setters
+    public Long geteBookId() {
+        return eBookId;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public String getIsbn() {
+        return isbn;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public List<EBookLicense> getLicenses() {
+        return licenses;
+    }
+
+    public void setLicenses(List<EBookLicense> licenses) {
+        this.licenses = licenses;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public void seteBookId(Long eBookId) {
+        this.eBookId = eBookId;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public void setIsbn(String isbn) {
+        this.isbn = isbn;
+    }
+
+
 }

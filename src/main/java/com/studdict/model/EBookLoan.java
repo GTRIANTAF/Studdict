@@ -32,8 +32,6 @@ public class EBookLoan {
 
     public EBookLoan() {}
 
-    // --- Getters and Setters ---
-
     public Long getLoanId() { return loanId; }
     public void setLoanId(Long loanId) { this.loanId = loanId; }
 
