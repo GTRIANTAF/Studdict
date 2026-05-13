@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ParticipantRepository extends JpaRepository<ReservationParticipant, Long> {
+
+    // UC2 (Matchmaking): Μετράει πόσοι συμμετέχοντες ανήκουν σε μια συγκεκριμένη κράτηση
+    long countByReservationId(Long reservationId);
 }

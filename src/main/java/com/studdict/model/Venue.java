@@ -46,7 +46,7 @@ public class Venue {
         return venueId;
     }
 
-    public String getName() {
+    public   String getName() {
         return name;
     }
 

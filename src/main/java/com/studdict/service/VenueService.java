@@ -19,7 +19,7 @@ public class VenueService {
         return venueRepository.findByIsActiveTrue();
     }
 
-    public Venue findVenueById(Long venueId) {
+    public Venue fetchVenues(Long venueId) {
         return venueRepository.findById(venueId)
                 .orElseThrow(() -> new RuntimeException("Ο χώρος δεν βρέθηκε ή δεν υπάρχει!"));
     }

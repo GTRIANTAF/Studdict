@@ -13,16 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReservationService {
 
     @Autowired private ReservationRepository reservationRepository;
-    @Autowired private TableRepository tableRepository;
+    @Autowired private StudyTableRepository studyTableRepository;
     @Autowired private StudentRepository studentRepository;
     @Autowired private SubjectService subjectService;
     @Autowired private ParticipantRepository participantRepository;
 
     // USE CASE 1: ΙΔΙΩΤΙΚΗ ΚΡΑΤΗΣΗ (Private)
     // UML: PrivateReservation.create(...) & ReservationParticipant.register(...)
-    public Long createPrivateReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration) {
+    public Long savePrivateReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration) {
         Student student = studentRepository.findById(studentId).orElseThrow();
-        StudyTable table = tableRepository.findById(tableId).orElseThrow();
+        StudyTable table = studyTableRepository.findById(tableId).orElseThrow();
 
         // 1. Δημιουργία της Κράτησης
         PrivateReservation reservation = new PrivateReservation();
@@ -33,6 +33,7 @@ public class ReservationService {
         reservation.setTable(table);
 
         //Generate το Invite Code (UML: InviteCode.generate())
+        reservation.setLinkedQrCode(table.getQrCodeString());
         reservation = reservationRepository.save(reservation);
 
         // 2. Εγγραφή του Host (UML: ReservationParticipant.register)
@@ -44,16 +45,16 @@ public class ReservationService {
 
         // Οριστικοποίηση κλειδώματος τραπεζιού (Hard Lock)
         table.setIsAvailable(false);
-        tableRepository.save(table);
+        studyTableRepository.save(table);
 
         return reservation.getReservationId();
     }
 
     // USE CASE 2: ΔΗΜΟΣΙΑ ΚΡΑΤΗΣΗ (Public - Matchmaking)
     // UML: PublicReservation.create(...)
-    public Long createPublicReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration, String subjectName) {
+    public Long savePublicReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration, String subjectName) {
         Student student = studentRepository.findById(studentId).orElseThrow();
-        StudyTable table = tableRepository.findById(tableId).orElseThrow();
+        StudyTable table = studyTableRepository.findById(tableId).orElseThrow();
 
         // Εύρεση ή Δημιουργία του Μαθήματος
         StudySubject subject = subjectService.findOrCreate(subjectName);
@@ -77,7 +78,7 @@ public class ReservationService {
         participantRepository.save(host);
 
         table.setIsAvailable(false);
-        tableRepository.save(table);
+        studyTableRepository.save(table);
 
         return reservation.getReservationId();
     }
@@ -91,16 +92,23 @@ public class ReservationService {
             throw new RuntimeException("Δεν μπορείτε να μπείτε σε ιδιωτική κράτηση χωρίς κωδικό πρόσκλησης!");
         }
 
+        // ΕΛΕΓΧΟΣ ΧΩΡΗΤΙΚΟΤΗΤΑΣ
+        long currentParticipants = participantRepository.countByReservationId(reservationId);
+        int maxCapacity = reservation.getTable().getCapacity();
+
+        if (currentParticipants >= maxCapacity) {
+            throw new RuntimeException("Το τραπέζι είναι ήδη πλήρες!");
+        }
+
         ReservationParticipant guest = new ReservationParticipant();
         guest.setReservationId(reservation.getReservationId());
         guest.setStudentId(student.getStudentId());
         guest.setRole("Guest");
 
-        // Εγγραφή του νέου μέλους στην παρέα
         participantRepository.save(guest);
     }
 
-    public void cancelReservation(Long reservationId) {
+    public void discardReservation(Long reservationId) {
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Η κράτηση δεν βρέθηκε"));
 
@@ -114,7 +122,7 @@ public class ReservationService {
             table.setIsAvailable(true);
             table.setSoftLockedBy(null);
             table.setSoftLockExpiration(null);
-            tableRepository.save(table);
+            studyTableRepository.save(table);
         }
     }
 }
