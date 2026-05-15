@@ -1,6 +1,5 @@
 package studdict.controllers;
 
-import studdict.core.Table;
 import studdict.core.Payment;
 
 public class CashPaymentController {

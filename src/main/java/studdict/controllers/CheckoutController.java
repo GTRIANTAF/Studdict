@@ -2,7 +2,6 @@ package studdict.controllers;
 
 import studdict.core.Bill;
 import studdict.core.Order;
-import studdict.core.Reservation;
 
 public class CheckoutController {
     public Bill generateBill(Reservation reservation) {
