@@ -1,0 +1,92 @@
+package com.studdict.controller;
+
+import com.studdict.model.InviteCode;
+import com.studdict.model.Reservation;
+import com.studdict.model.Student;
+import com.studdict.service.InviteCodeService;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/invite-code")
+public class InviteCodeController {
+
+    private final InviteCodeService inviteCodeService;
+
+    public InviteCodeController(InviteCodeService inviteCodeService) {
+        this.inviteCodeService = inviteCodeService;
+    }
+
+    @PostMapping("/generate")
+    public InviteCode generateInviteCode(@RequestBody GenerateInviteCodeRequest request) {
+        return inviteCodeService.generateInviteCode(
+                request.getReservation(),
+                request.getHost()
+        );
+    }
+
+    @PostMapping("/validate")
+    public boolean validateCode(@RequestBody InviteCode inviteCode) {
+        return inviteCodeService.validateCode(inviteCode);
+    }
+
+    @PostMapping("/join")
+    public boolean joinReservation(@RequestBody JoinReservationRequest request) {
+        return inviteCodeService.joinReservation(
+                request.getInviteCode(),
+                request.getGuest()
+        );
+    }
+
+    @GetMapping("/message")
+    public String getInviteCodeMessage(@RequestParam boolean success) {
+        if (success) {
+            return "Η συμμετοχή στην κράτηση ολοκληρώθηκε επιτυχώς.";
+        }
+
+        return "Ο κωδικός πρόσκλησης είναι λανθασμένος, ληγμένος ή η κράτηση είναι πλήρης.";
+    }
+
+    public static class GenerateInviteCodeRequest {
+
+        private Reservation reservation;
+        private Student host;
+
+        public Reservation getReservation() {
+            return reservation;
+        }
+
+        public void setReservation(Reservation reservation) {
+            this.reservation = reservation;
+        }
+
+        public Student getHost() {
+            return host;
+        }
+
+        public void setHost(Student host) {
+            this.host = host;
+        }
+    }
+
+    public static class JoinReservationRequest {
+
+        private InviteCode inviteCode;
+        private Student guest;
+
+        public InviteCode getInviteCode() {
+            return inviteCode;
+        }
+
+        public void setInviteCode(InviteCode inviteCode) {
+            this.inviteCode = inviteCode;
+        }
+
+        public Student getGuest() {
+            return guest;
+        }
+
+        public void setGuest(Student guest) {
+            this.guest = guest;
+        }
+    }
+}
