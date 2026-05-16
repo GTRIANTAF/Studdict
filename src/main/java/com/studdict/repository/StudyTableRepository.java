@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface TableRepository extends JpaRepository<StudyTable, Integer> {
+public interface StudyTableRepository extends JpaRepository<StudyTable, Integer> {
 
     // UC1 & UC2: Finds all available tables inside a specific Venue
     // Note: We use "Venue_VenueId" to navigate the relationship to the Venue class
