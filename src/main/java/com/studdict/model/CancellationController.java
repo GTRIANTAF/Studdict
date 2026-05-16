@@ -1,4 +1,4 @@
-package studdict.controllers;
+package com.studdict.model;
 
 public class CancellationController {
     public void cancelChanges(Reservation reservation) {

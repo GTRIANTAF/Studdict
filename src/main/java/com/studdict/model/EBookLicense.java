@@ -1,4 +1,4 @@
-package studdict.core;
+package com.studdict.model;
 
 public class EBookLicense {
     public void revokeLicense() {

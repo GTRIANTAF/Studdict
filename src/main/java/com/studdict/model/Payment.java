@@ -1,4 +1,4 @@
-package studdict.core;
+package com.studdict.model;
 
 public class Payment {
     private boolean isCompleted;
