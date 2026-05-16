@@ -33,7 +33,7 @@ public abstract class Reservation {
     protected String visibility;
 
     // Relationship to the specific table selected during the booking flow[cite: 1]
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER) //Changed from LAZY to EAGER (mariosk)
     @JoinColumn(name = "table_id")
     private StudyTable table;
 
