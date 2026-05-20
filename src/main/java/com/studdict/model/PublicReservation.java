@@ -14,6 +14,5 @@ public class PublicReservation extends Reservation {
         this.visibility = "Public";
     }
 
-    public StudySubject getStudySubject() { return studySubject; }
     public void setStudySubject(StudySubject studySubject) { this.studySubject = studySubject; }
 }

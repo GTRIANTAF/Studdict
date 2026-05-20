@@ -18,6 +18,13 @@ public class Student {
 
     public Student() {}
 
+    public Student(String studentId, String firstName, String lastName, String email) {
+        this.studentId = studentId;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+    }
+
     // Getters and Setters
     public String getStudentId() { return studentId; }
     public void setStudentId(String studentId) { this.studentId = studentId; }
