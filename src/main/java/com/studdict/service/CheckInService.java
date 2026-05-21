@@ -6,10 +6,12 @@ import com.studdict.model.Student;
 import com.studdict.model.StudyTable;
 import com.studdict.repository.CheckInRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Service
+@Transactional
 public class CheckInService {
 
     private final CheckInRepository checkInRepository;
