@@ -3,7 +3,7 @@ package com.studdict;
 import com.studdict.model.*;
 import com.studdict.repository.*;
 import com.studdict.service.ReservationService;
-import com.studdict.service.TableService;
+import com.studdict.service.StudyTableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -17,9 +17,9 @@ public class TestRunner implements CommandLineRunner {
 
     @Autowired private StudentRepository studentRepository;
     @Autowired private VenueRepository venueRepository;
-    @Autowired private TableRepository tableRepository;
+    @Autowired private StudyTableRepository StudyTableRepository;
     @Autowired private ReservationService reservationService;
-    @Autowired private TableService tableService; // <-- Προστέθηκε για το Soft Lock
+    @Autowired private StudyTableService StudyTableService; // <-- Προστέθηκε για το Soft Lock
     @Autowired private ParticipantRepository participantRepository;
 
     @Override
@@ -40,14 +40,14 @@ public class TestRunner implements CommandLineRunner {
             Venue venue = new Venue("Κεντρική Βιβλιοθήκη", "Πανεπιστημιούπολη", "Library", true);
             venueRepository.save(venue);
 
-            tableRepository.save(new StudyTable(venue, 1, 4, "QR-1", true));
-            tableRepository.save(new StudyTable(venue, 2, 4, "QR-2", true));
-            tableRepository.save(new StudyTable(venue, 3, 6, "QR-3", true));
+            StudyTableRepository.save(new StudyTable(venue, 1, 4, "QR-1", true));
+            StudyTableRepository.save(new StudyTable(venue, 2, 4, "QR-2", true));
+            StudyTableRepository.save(new StudyTable(venue, 3, 6, "QR-3", true));
 
             System.out.println("✅ Τα δεδομένα δημιουργήθηκαν επιτυχώς!\n");
         }
 
-        List<StudyTable> tables = tableRepository.findAll();
+        List<StudyTable> tables = StudyTableRepository.findAll();
         StudyTable table1 = tables.get(0);
         StudyTable table2 = tables.get(1);
         StudyTable table3 = tables.get(2);
@@ -68,7 +68,7 @@ public class TestRunner implements CommandLineRunner {
             Long privateRes1Id = null;
 
             // 1. ΧΡΗΣΗ ΤΗΣ ΜΕΘΟΔΟΥ ΑΠΟ ΤΟ UML (Περνάμε και τα 5 ορίσματα!)
-            List<StudyTable> availableTables = tableService.findAvailable(
+            List<StudyTable> availableTables = StudyTableService.getAvailableTables(
                     currentVenue.getVenueId(), today, LocalTime.of(10, 0), 120, 1);
 
             if (availableTables.isEmpty()) {
@@ -78,7 +78,7 @@ public class TestRunner implements CommandLineRunner {
                 System.out.println("   🔎 Βρέθηκαν " + availableTables.size() + " τραπέζια. Επιλέγει το Τραπέζι: " + selectedTable.getTableNumber());
 
                 // ΑΠΟΘΗΚΕΥΟΥΜΕ ΤΟ ID ΣΤΗ ΜΕΤΑΒΛΗΤΗ
-                privateRes1Id = reservationService.createPrivateReservation(
+                privateRes1Id = reservationService.savePrivateReservation(
                         "S1", selectedTable.getId(), today, LocalTime.of(10, 0), 120);
                 System.out.println("   ✅ Επιτυχία! Κωδικός Κράτησης: " + privateRes1Id + "\n");
             }
@@ -87,7 +87,7 @@ public class TestRunner implements CommandLineRunner {
             // TEST 2: Ιδιωτική Κράτηση για >1 Άτομα (Με προσθήκη παρέας)
             // =====================================================================
             System.out.println("▶️ TEST 2: Η Μαρία (S2) κάνει Private κράτηση στο Τραπέζι 2");
-            Long privateRes2Id = reservationService.createPrivateReservation(
+            Long privateRes2Id = reservationService.savePrivateReservation(
                     "S2", table2.getId(), today, LocalTime.of(12, 0), 120);
 
             ReservationParticipant guest1 = new ReservationParticipant();
@@ -102,7 +102,7 @@ public class TestRunner implements CommandLineRunner {
             // TEST 3 & 4: Δημόσια Κράτηση (Matchmaking)
             // =====================================================================
             System.out.println("▶️ TEST 3: Η Ελένη (S4) ανοίγει Public Τραπέζι για 'Μαθηματικά' στο Τραπέζι 3");
-            Long publicResId = reservationService.createPublicReservation(
+            Long publicResId = reservationService.savePublicReservation(
                     "S4", table3.getId(), today, LocalTime.of(16, 0), 180, "Μαθηματικά");
             System.out.println("   ✅ Επιτυχία! Το Public τραπέζι άνοιξε (Κωδικός: " + publicResId + ")");
 
@@ -114,9 +114,9 @@ public class TestRunner implements CommandLineRunner {
             // TEST 5: Ακύρωση Κράτησης (Cancellation)
             // =====================================================================
             System.out.println("▶️ TEST 5: Ο Γιάννης ακυρώνει την αρχική Private κράτησή του (Test 1)");
-            reservationService.cancelReservation(privateRes1Id);
+            reservationService.discardReservation(privateRes1Id);
 
-            StudyTable checkTable1 = tableRepository.findById(table1.getId()).orElseThrow();
+            StudyTable checkTable1 = StudyTableRepository.findById(table1.getId()).orElseThrow();
             System.out.println("   ✅ Επιτυχία! Η κράτηση ακυρώθηκε. Το Τραπέζι 1 είναι διαθέσιμο: " + checkTable1.getIsAvailable() + "\n");
 
             // =====================================================================
@@ -125,11 +125,11 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("▶️ TEST 6: Έλεγχος Προσωρινού Κλειδώματος (Soft-Lock)");
 
             // Η Ελένη βρίσκει το Τραπέζι 1 που μόλις ελευθερώθηκε και το επιλέγει (κάνει soft lock)
-            boolean isLockedByEleni = tableService.softLock(table1.getId(), "S4");
+            boolean isLockedByEleni = StudyTableService.requestSoftLock(table1.getId(), "S4");
             System.out.println("   🔒 Η Ελένη ξεκίνησε διαδικασία κράτησης στο Τραπέζι 1. Επιτυχία Κλειδώματος: " + isLockedByEleni);
 
             // Ο Γιάννης προσπαθεί το ΙΔΙΟ δευτερόλεπτο να κλειδώσει το ΙΔΙΟ τραπέζι
-            boolean isLockedByGiannis = tableService.softLock(table1.getId(), "S1");
+            boolean isLockedByGiannis = StudyTableService.requestSoftLock(table1.getId(), "S1");
             System.out.println("   ⚠️ Ο Γιάννης προσπαθεί να το κλειδώσει. Επιτυχία Κλειδώματος: " + isLockedByGiannis + " (Αναμενόμενο false!)");
 
             if (!isLockedByGiannis) {
@@ -137,7 +137,7 @@ public class TestRunner implements CommandLineRunner {
             }
 
             // Η Ελένη το μετανιώνει και πατάει 'Ακύρωση' ή 'Πίσω'
-            tableService.releaseSoftLock(table1.getId());
+            StudyTableService.releaseSoftLock(table1.getId());
             System.out.println("   🔓 Η Ελένη ελευθέρωσε το Soft Lock του Τραπεζιού 1.\n");
 
 
