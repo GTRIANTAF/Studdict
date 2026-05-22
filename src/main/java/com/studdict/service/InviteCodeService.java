@@ -7,12 +7,14 @@ import com.studdict.model.Student;
 import com.studdict.repository.InviteCodeRepository;
 import com.studdict.repository.ReservationParticipantRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
 @Service
+@Transactional
 public class InviteCodeService {
 
     private final InviteCodeRepository inviteCodeRepository;
@@ -56,11 +58,7 @@ public class InviteCodeService {
     }
 
     public boolean validateCode(InviteCode inviteCode) {
-        if (inviteCode == null) {
-            return false;
-        }
-
-        return inviteCode.isValid();
+        return inviteCode != null && inviteCode.isValid();
     }
 
     public Reservation findReservation(InviteCode inviteCode) {
@@ -88,11 +86,7 @@ public class InviteCodeService {
     }
 
     public boolean joinReservation(InviteCode inviteCode, Student guest) {
-        if (inviteCode == null || guest == null) {
-            return false;
-        }
-
-        if (!inviteCode.isValid()) {
+        if (inviteCode == null || guest == null || !inviteCode.isValid()) {
             return false;
         }
 

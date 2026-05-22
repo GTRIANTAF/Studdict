@@ -11,6 +11,7 @@ import com.studdict.repository.ReservationRepository;
 import com.studdict.repository.StudentRepository;
 import com.studdict.repository.TableRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class CheckInService {
 
     private final CheckInRepository checkInRepository;
