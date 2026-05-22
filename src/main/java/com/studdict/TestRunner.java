@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import com.studdict.service.GamificationService;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -28,7 +29,7 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private ParticipantRepository participantRepository;
     @Autowired private InviteCodeService inviteCodeService;
     @Autowired private CheckInService checkInService;
-
+    @Autowired private GamificationService gamificationService;
     @Override
     public void run(String... args) throws Exception {
         System.out.println("\n=======================================================");
@@ -54,7 +55,7 @@ public class TestRunner implements CommandLineRunner {
             tableRepository.save(new StudyTable(venue1, 1, 4, "QR-1", true));
             tableRepository.save(new StudyTable(venue1, 2, 4, "QR-2", true));
             tableRepository.save(new StudyTable(venue1, 3, 6, "QR-3", true));
-            
+
             // Extra FREE tables for FE testing (CEID)
             tableRepository.save(new StudyTable(venue1, 4, 2, "QR-4", true));
             tableRepository.save(new StudyTable(venue1, 5, 8, "QR-5", true));
@@ -152,7 +153,7 @@ public class TestRunner implements CommandLineRunner {
             // TEST 5: Ακύρωση Κράτησης (Cancellation)
             // =====================================================================
             System.out.println(" TEST 5: Ο Γιάννης ακυρώνει την αρχική Private κράτησή του (Test 1)");
-            
+
             if (privateRes1Id != null) {
                 // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: discardReservation
                 reservationService.discardReservation(privateRes1Id);
@@ -215,9 +216,28 @@ public class TestRunner implements CommandLineRunner {
             CheckIn successfulCheckIn = checkInService.checkInStudent(mariaReservation, maria, "QR-2");
             System.out.println("    Η Μαρία σκανάρει το σωστό QR-2. Αποτέλεσμα Check-in: " + successfulCheckIn.isSuccessful() + " στις " + successfulCheckIn.getCheckInTime());
 
+            // =====================================================================
+            // TEST GAMIFICATION (UC9 & UC10)
+            // =====================================================================
 
+            System.out.println("▶️ TEST 9: Gamification - Απονομή Πόντων (UC9)");
+            // Πιστώνουμε πόντους στη Μαρία (S2) για 120 λεπτά μελέτης
+            int pointsEarned = gamificationService.creditPointsForStudy("S2", 120);
+            System.out.println("   ✅ Η Μαρία (S2) κέρδισε " + pointsEarned + " πόντους.\n");
+
+            System.out.println("▶️ TEST 10: Gamification - Εξαργύρωση Πόντων (UC10)");
+            // Δίνουμε bonus πόντους για να φτάσει το όριο εξαργύρωσης
+            gamificationService.creditPointsForStudy("S2", 1500);
+
+            boolean redeemSuccess = gamificationService.redeemPoints("S2", 100);
+            System.out.println("   ✅ Αποτέλεσμα Εξαργύρωσης 100 πόντων: " + redeemSuccess);
+
+            if (redeemSuccess) {
+                double discount = gamificationService.calculateDiscount(100);
+                System.out.println("   🎉 Η Μαρία κέρδισε έκπτωση: " + discount + "€ στο επόμενο checkout!\n");
+            }
             System.out.println("=======================================================");
-            System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (8/8) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
+            System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (10/10) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
             System.out.println("=======================================================");
 
         } catch (Exception e) {
