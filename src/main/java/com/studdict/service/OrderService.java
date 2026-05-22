@@ -1,12 +1,16 @@
 package com.studdict.service;
 
+import com.studdict.dto.OrderItemRequest;
 import com.studdict.model.*;
 import com.studdict.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Transactional
@@ -14,23 +18,53 @@ public class OrderService {
 
     @Autowired private OrderRepository orderRepository;
     @Autowired private MenuItemRepository menuItemRepository;
-    @Autowired private ReservationRepository reservationRepository;
+    // Με το νέο domain model η Order συνδέεται απευθείας με το StudyTable (μέσω QR),
+    // οπότε δεν χρειαζόμαστε πλέον το ReservationRepository.
+    @Autowired private StudyTableRepository studyTableRepository;
 
-    public Order createOrder(Long reservationId, List<Long> menuItemIds) {
-        // 1. Εύρεση κράτησης (από την οποία θα βρούμε το τραπέζι)
-        Reservation reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Η κράτηση δεν βρέθηκε."));
+    /**
+     * UC8 - Παραγγελία F&B.
+     * Η παραγγελία συσχετίζεται με το τραπέζι (StudyTable) που έχει ταυτοποιηθεί μέσω του QR code.
+     *
+     * @param tableId       το τραπέζι στο οποίο γίνεται η παραγγελία
+     * @param requestedItems τα προϊόντα του "καλαθιού" με τις ποσότητές τους
+     */
+    public Order createOrder(int tableId, List<OrderItemRequest> requestedItems) {
 
-        // 2. Δημιουργία νέας παραγγελίας [cite: 266]
+        // 1. Έλεγχος ότι η παραγγελία δεν είναι κενή (UC8: απαιτείται >= 1 προϊόν)
+        if (requestedItems == null || requestedItems.isEmpty()) {
+            throw new RuntimeException("Η παραγγελία είναι κενή.");
+        }
+
+        // 2. Εύρεση τραπεζιού
+        StudyTable table = studyTableRepository.findById(tableId)
+                .orElseThrow(() -> new RuntimeException("Το τραπέζι δεν βρέθηκε."));
+
+        // 3. Συνένωση τυχόν διπλότυπων γραμμών (ίδιο προϊόν -> άθροισμα ποσοτήτων)
+        Map<Long, Integer> quantitiesByItem = new LinkedHashMap<>();
+        for (OrderItemRequest req : requestedItems) {
+            if (req.getMenuItemId() == null) {
+                throw new RuntimeException("Λείπει το αναγνωριστικό προϊόντος.");
+            }
+            if (req.getQuantity() <= 0) {
+                throw new RuntimeException("Η ποσότητα πρέπει να είναι μεγαλύτερη του μηδενός.");
+            }
+            quantitiesByItem.merge(req.getMenuItemId(), req.getQuantity(), Integer::sum);
+        }
+
+        // 4. Δημιουργία νέας παραγγελίας
         Order order = new Order();
         order.setPlacedAt(LocalDateTime.now());
-        order.setStatus("PREPARING"); // Αποστολή στην κουζίνα [cite: 267]
-        order.setTable(reservation.getTable());
+        order.setStatus("PREPARING"); // Αποστολή στην κουζίνα (UC8 βήμα 9)
+        order.setTable(table);
 
         double totalAmount = 0.0;
 
-        // 3. Προσθήκη προϊόντων (Items)
-        for (Long itemId : menuItemIds) {
+        // 5. Δημιουργία των γραμμών (OrderItems) με σωστή ποσότητα & subtotal
+        for (Map.Entry<Long, Integer> entry : quantitiesByItem.entrySet()) {
+            Long itemId = entry.getKey();
+            int quantity = entry.getValue();
+
             MenuItem item = menuItemRepository.findById(itemId)
                     .orElseThrow(() -> new RuntimeException("Το προϊόν δεν βρέθηκε."));
 
@@ -38,19 +72,21 @@ public class OrderService {
                 throw new RuntimeException("Το προϊόν " + item.getName() + " δεν είναι διαθέσιμο.");
             }
 
+            double subTotal = item.getPrice() * quantity;
+
             OrderItem orderItem = new OrderItem();
             orderItem.setMenuItem(item);
-            orderItem.setQuantity(1); // Για απλότητα, προσθέτουμε 1 τεμάχιο κάθε φορά
-            orderItem.setSubTotal(item.getPrice());
+            orderItem.setQuantity(quantity);
+            orderItem.setSubTotal(subTotal);
             orderItem.setOrder(order);
 
             order.getItems().add(orderItem);
-            totalAmount += item.getPrice();
+            totalAmount += subTotal;
         }
 
         order.setTotalAmount(totalAmount);
 
-        // 4. Αποθήκευση παραγγελίας [cite: 266]
+        // 6. Αποθήκευση (τα OrderItems αποθηκεύονται με cascade ALL)
         return orderRepository.save(order);
     }
 }

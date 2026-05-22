@@ -40,7 +40,7 @@ public class CheckoutController {
             this.totalAmount = bill.getTotalAmount();
             this.issueTime = bill.getIssueTime();
             this.isSettled = bill.isSettled();
-            this.reservationId = bill.getReservation().getReservationId();
+            this.reservationId = bill.getReservationId();
         }
 
         public Long getBillId() { return billId; }
