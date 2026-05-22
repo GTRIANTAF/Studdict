@@ -68,7 +68,7 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("✅ Τα δεδομένα δημιουργήθηκαν επιτυχώς!\n");
         }
 
-        List<StudyTable> tables = tableRepository.findAll();
+        List<StudyTable> tables = StudyTableRepository.findAll();
         StudyTable table1 = tables.get(0);
         StudyTable table2 = tables.get(1);
         StudyTable table3 = tables.get(2);

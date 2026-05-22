@@ -64,4 +64,15 @@ public abstract class Reservation {
     public void setVisibility(String visibility) { this.visibility = visibility; }
     public void setTable(StudyTable table) { this.table = table; }
     public void setParticipants(List<ReservationParticipant> participants) { this.participants = participants; }
+
+    @OneToMany(mappedBy = "reservation", cascade = CascadeType.ALL)
+    private List<Order> orders;
+
+    @OneToOne(mappedBy = "reservation", cascade = CascadeType.ALL)
+    private Bill bill;
+
+    public List<Order> getOrders() { return orders; }
+    public void setOrders(List<Order> orders) { this.orders = orders; }
+    public Bill getBill() { return bill; }
+    public void setBill(Bill bill) { this.bill = bill; }
 }
