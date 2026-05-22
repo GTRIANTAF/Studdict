@@ -7,20 +7,16 @@ import jakarta.persistence.*;
 public class Student {
 
     @Id
-    @Column(name = "student_id", nullable = false)
+    @Column(name = "student_id") // Typically an AM or UUID
     private String studentId;
 
-    @Column(name = "first_name")
     private String firstName;
-
-    @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
 
-    public Student() {
-    }
+    public Student() {}
 
     public Student(String studentId, String firstName, String lastName, String email) {
         this.studentId = studentId;
@@ -29,35 +25,13 @@ public class Student {
         this.email = email;
     }
 
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    // Getters and Setters
+    public String getStudentId() { return studentId; }
+    public void setStudentId(String studentId) { this.studentId = studentId; }
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 }
