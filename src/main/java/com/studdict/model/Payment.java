@@ -6,38 +6,34 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "payments")
 public class Payment {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_id")
-    private Long paymentId;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String paymentId;
 
-    private double amount;
-
-    @Column(name = "payment_date")
-    private LocalDateTime paymentDate;
-
-    // Η πληρωμή γίνεται από έναν φοιτητή [cite: 407]
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    private Student student;
-
-    // Η πληρωμή αφορά έναν λογαριασμό (ή μέρος αυτού για split bill) [cite: 407]
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bill_id", nullable = false)
-    private Bill bill;
+    private String reservationId;
+    private double amountPaid;
+    private String paymentMethod;
+    private LocalDateTime timestamp;
+    private String status;
 
     public Payment() {}
 
-    // Getters and Setters
-    public Long getPaymentId() { return paymentId; }
-    public void setPaymentId(Long paymentId) { this.paymentId = paymentId; }
-    public double getAmount() { return amount; }
-    public void setAmount(double amount) { this.amount = amount; }
-    public LocalDateTime getPaymentDate() { return paymentDate; }
-    public void setPaymentDate(LocalDateTime paymentDate) { this.paymentDate = paymentDate; }
-    public Student getStudent() { return student; }
-    public void setStudent(Student student) { this.student = student; }
-    public Bill getBill() { return bill; }
-    public void setBill(Bill bill) { this.bill = bill; }
+    // --- GETTERS & SETTERS ---
+    public String getPaymentId() { return paymentId; }
+    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
+
+    public String getReservationId() { return reservationId; }
+    public void setReservationId(String reservationId) { this.reservationId = reservationId; }
+
+    public double getAmountPaid() { return amountPaid; }
+    public void setAmountPaid(double amountPaid) { this.amountPaid = amountPaid; }
+
+    public String getPaymentMethod() { return paymentMethod; }
+    public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }
