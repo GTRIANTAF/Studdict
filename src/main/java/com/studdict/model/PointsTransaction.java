@@ -12,13 +12,12 @@ public class PointsTransaction {
 
     private String studentId;
     private int pointsAmount;
-    private String transactionType;
+    private String transactionType; // "EARN" ή "REDEEM"
     private LocalDateTime timestamp;
     private String description;
 
     public PointsTransaction() {}
 
-    // --- GETTERS & SETTERS (ΑΥΤΑ ΕΛΕΙΠΑΝ) ---
     public String getTransactionId() { return transactionId; }
     public void setTransactionId(String transactionId) { this.transactionId = transactionId; }
 

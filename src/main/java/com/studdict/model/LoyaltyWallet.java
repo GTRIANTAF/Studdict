@@ -9,10 +9,9 @@ import jakarta.persistence.Table;
 public class LoyaltyWallet {
     @Id
     private String studentId;
-
     private int totalBalance = 0;
     private int minimumRedeemLimit = 100;
-    private double exchangeRate = 0.50;
+    private double exchangeRate = 0.05; // 1 πόντος = 0.05 ευρώ
 
     public LoyaltyWallet() {}
 
@@ -20,7 +19,6 @@ public class LoyaltyWallet {
         this.studentId = studentId;
     }
 
-    // --- GETTERS & SETTERS (ΑΠΑΡΑΙΤΗΤΑ ΓΙΑ ΝΑ ΔΟΥΛΕΨΕΙ ΤΟ SERVICE) ---
     public String getStudentId() { return studentId; }
     public void setStudentId(String studentId) { this.studentId = studentId; }
 
