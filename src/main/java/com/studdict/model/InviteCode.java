@@ -16,17 +16,17 @@ public class InviteCode {
     private String code;
 
     @ManyToOne
-    @JoinColumn(name = "reservation_id", nullable = false)
+    @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
     @ManyToOne
-    @JoinColumn(name = "host_id", nullable = false)
+    @JoinColumn(name = "host_id")
     private Student host;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
     @Column(name = "active")
@@ -61,6 +61,7 @@ public class InviteCode {
     public void setCode(String code) {
         this.code = code;
     }
+
 
     public Reservation getReservation() {
         return reservation;

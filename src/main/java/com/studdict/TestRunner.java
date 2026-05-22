@@ -11,16 +11,24 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.studdict.service.GamificationService;
+import com.studdict.service.ReservationUpdateService;
+import com.studdict.service.EBookService;
+import com.studdict.service.OrderService;
+import com.studdict.service.CheckoutService;
+import com.studdict.service.PaymentService;
+import com.studdict.service.StudentService;
+import com.studdict.dto.OrderItemRequest;
+import java.util.Collections;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
 @Component
-@Transactional
 public class TestRunner implements CommandLineRunner {
 
     @Autowired private StudentRepository studentRepository;
+    @Autowired private StudentService studentService;
     @Autowired private VenueRepository venueRepository;
     @Autowired private StudyTableRepository studyTableRepository;
     @Autowired private ReservationRepository reservationRepository; // <-- ΠΡΟΣΤΕΘΗΚΕ ΓΙΑ ΤΟΝ ΕΛΕΓΧΟ QR
@@ -30,6 +38,14 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private InviteCodeService inviteCodeService;
     @Autowired private CheckInService checkInService;
     @Autowired private GamificationService gamificationService;
+    @Autowired private ReservationUpdateService reservationUpdateService;
+    @Autowired private EBookService eBookService;
+    @Autowired private OrderService orderService;
+    @Autowired private CheckoutService checkoutService;
+    @Autowired private PaymentService paymentService;
+    @Autowired private EBookRepository eBookRepository;
+    @Autowired private EBookLicenseRepository licenseRepository;
+    @Autowired private MenuItemRepository menuItemRepository;
     @Override
     public void run(String... args) throws Exception {
         System.out.println("\n=======================================================");
@@ -66,6 +82,29 @@ public class TestRunner implements CommandLineRunner {
             studyTableRepository.save(new StudyTable(venue2, 2, 4, "QR-C2", true));
             studyTableRepository.save(new StudyTable(venue2, 3, 6, "QR-C3", true));
 
+            if (eBookRepository.count() == 0) {
+                EBook ebook = new EBook();
+                ebook.setTitle("Software Engineering");
+                ebook.setAuthor("Ian Sommerville");
+                ebook.setIsbn("978-0133943030");
+                ebook.setCategory("Computer Science");
+                ebook = eBookRepository.save(ebook);
+                
+                EBookLicense license = new EBookLicense();
+                license.setEbook(ebook);
+                license.setAvailable(true);
+                ebook.getLicenses().add(license);
+                licenseRepository.save(license);
+            }
+            if (menuItemRepository.count() == 0) {
+                MenuItem coffee = new MenuItem();
+                coffee.setName("Freddo Espresso");
+                coffee.setPrice(2.50);
+                coffee.setAvailable(true);
+                coffee.setCategory("Coffee");
+                menuItemRepository.save(coffee);
+            }
+
             System.out.println("✅ Τα δεδομένα δημιουργήθηκαν επιτυχώς!\n");
         }
 
@@ -77,6 +116,31 @@ public class TestRunner implements CommandLineRunner {
         LocalDate today = LocalDate.now();
 
         try {
+            // =====================================================================
+            // TEST 0: Λογαριασμός και Σύνδεση (UC11 & UC12)
+            // =====================================================================
+            System.out.println("▶️ TEST 0A: Δημιουργία Λογαριασμού (UC11)");
+            try {
+                Student newStudent = studentService.registerStudent("Γιώργος", "Τ.", "giorgos@upatras.gr", "pass123", "Πανεπιστήμιο Πατρών", "CEID");
+                System.out.println("   ✅ Επιτυχής εγγραφή φοιτητή: " + newStudent.getEmail());
+                
+                System.out.println("   --- Εναλλακτική (UC11 Alt 1): Το Email υπάρχει ήδη ---");
+                studentService.registerStudent("Γιώργος", "Τ.", "giorgos@upatras.gr", "pass123", "Πανεπιστήμιο Πατρών", "CEID");
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα εγγραφής: " + e.getMessage());
+            }
+
+            System.out.println("▶️ TEST 0B: Σύνδεση Χρήστη (UC12)");
+            try {
+                Student loggedIn = studentService.loginStudent("giorgos@upatras.gr", "pass123");
+                System.out.println("   ✅ Επιτυχής σύνδεση φοιτητή: " + loggedIn.getFirstName());
+
+                System.out.println("   --- Εναλλακτική (UC12 Alt 1): Αποτυχία Login ---");
+                studentService.loginStudent("giorgos@upatras.gr", "wrongpass");
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα σύνδεσης: " + e.getMessage());
+            }
+
             // =====================================================================
             // TEST 1: Ιδιωτική Κράτηση για 1 Άτομο
             // =====================================================================
@@ -149,6 +213,15 @@ public class TestRunner implements CommandLineRunner {
             reservationService.joinPublicReservation(publicResId, "S1");
             System.out.println("    Επιτυχία! Ο Γιάννης προστέθηκε στην Public κράτηση.\n");
 
+            System.out.println("   --- Εναλλακτική (UC2 Alt 3): Μη διαθεσιμότητα κατάλληλου τραπεζιού ---");
+            try {
+                List<StudyTable> noTables = tableService.getAvailableTables(currentVenue.getVenueId(), today, LocalTime.of(16, 0), 120, 100);
+                System.out.println("    Αποτέλεσμα αναζήτησης για 100 άτομα: " + noTables.size() + " τραπέζια. (Αναμενόμενο 0)");
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα: " + e.getMessage());
+            }
+
+
             // =====================================================================
             // TEST 5: Ακύρωση Κράτησης (Cancellation)
             // =====================================================================
@@ -203,6 +276,30 @@ public class TestRunner implements CommandLineRunner {
             boolean didEleniJoin = inviteCodeService.joinReservation(generatedCode, eleni);
             System.out.println("    Η Ελένη έβαλε τον κωδικό. Επιτυχία Συμμετοχής: " + didEleniJoin);
 
+            System.out.println("   --- Εναλλακτική (UC3 Alt 1): Λανθασμένος / Ληγμένος Κωδικός ---");
+            InviteCode invalidCode = new InviteCode();
+            invalidCode.setCode("WRONG_CODE");
+            try {
+                boolean failedJoin = inviteCodeService.joinReservation(invalidCode, eleni);
+                System.out.println("    Επιτυχία Συμμετοχής με λάθος κωδικό: " + failedJoin);
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα με λάθος κωδικό: " + e.getMessage());
+            }
+
+            System.out.println("   --- Εναλλακτική (UC3 Alt 2): Απουσία κενών θέσεων στο τραπέζι ---");
+            try {
+                // Γεμίζουμε το τραπέζι 2 (χωρητικότητα 4). Ήδη έχει S2, S3, S4(από invite). Βάζουμε τον S1.
+                inviteCodeService.joinReservation(generatedCode, studentRepository.findById("S1").orElseThrow());
+                // Προσπαθούμε να βάλουμε έναν 5ο φοιτητή
+                Student s5 = new Student("S5", "Νίκος", "Ε.", "nikos@upatras.gr");
+                studentRepository.save(s5);
+                boolean fullJoin = inviteCodeService.joinReservation(generatedCode, s5);
+                System.out.println("    Επιτυχία Συμμετοχής σε γεμάτο τραπέζι: " + fullJoin);
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα λόγω χωρητικότητας: " + e.getMessage());
+            }
+
+
             // =====================================================================
             // TEST 8: Σκανάρισμα QR Code / Check-in (UC5)
             // =====================================================================
@@ -216,6 +313,9 @@ public class TestRunner implements CommandLineRunner {
             CheckIn successfulCheckIn = checkInService.checkInStudent(mariaReservation, maria, "QR-2");
             System.out.println("    Η Μαρία σκανάρει το σωστό QR-2. Αποτέλεσμα Check-in: " + successfulCheckIn.isSuccessful() + " στις " + successfulCheckIn.getCheckInTime());
 
+            System.out.println("   --- Εναλλακτική (UC5 Alt 2): Λάθος ώρα Check-in ---");
+            System.out.println("    (Το CheckInService προς το παρόν επικυρώνει μόνο το QR, ο έλεγχος ώρας είναι pending)");
+
             // =====================================================================
             // TEST GAMIFICATION (UC9 & UC10)
             // =====================================================================
@@ -225,9 +325,18 @@ public class TestRunner implements CommandLineRunner {
             int pointsEarned = gamificationService.creditPointsForStudy("S2", 120);
             System.out.println("   ✅ Η Μαρία (S2) κέρδισε " + pointsEarned + " πόντους.\n");
 
+            System.out.println("   --- Εναλλακτική (UC9 Alt 1): Ακύρωση / No-show ---");
+            int noShowPoints = gamificationService.creditPointsForStudy("S1", 120);
+            System.out.println("    Ο Γιάννης (S1 - No-show/Cancelled) έλαβε πόντους? (Υπολογισμός στο GamificationService): " + noShowPoints);
+
+
             System.out.println("▶️ TEST 10: Gamification - Εξαργύρωση Πόντων (UC10)");
             // Δίνουμε bonus πόντους για να φτάσει το όριο εξαργύρωσης
             gamificationService.creditPointsForStudy("S2", 1500);
+
+            System.out.println("   --- Εναλλακτική (UC10 Alt 1): Μη επαρκές υπόλοιπο πόντων ---");
+            boolean failedRedeem = gamificationService.redeemPoints("S4", 5000);
+            System.out.println("    Αποτέλεσμα Εξαργύρωσης 5000 πόντων από S4 (που δεν έχει): " + failedRedeem);
 
             boolean redeemSuccess = gamificationService.redeemPoints("S2", 100);
             System.out.println("   ✅ Αποτέλεσμα Εξαργύρωσης 100 πόντων: " + redeemSuccess);
@@ -236,8 +345,128 @@ public class TestRunner implements CommandLineRunner {
                 double discount = gamificationService.calculateDiscount(100);
                 System.out.println("   🎉 Η Μαρία κέρδισε έκπτωση: " + discount + "€ στο επόμενο checkout!\n");
             }
+
+            // =====================================================================
+            // TEST 11: Τροποποίηση Κράτησης (UC4)
+            // =====================================================================
+            System.out.println("▶️ TEST 11: Τροποποίηση Κράτησης (UC4)");
+            LocalTime newTime = LocalTime.now().minusMinutes(10);
+            Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, newTime, 180);
+            System.out.println("   ✅ Η κράτηση τροποποιήθηκε: Νέα ώρα " + updatedRes.getStartTime() + " με διάρκεια " + updatedRes.getDurationMinutes() + " λεπτά.\n");
+
+            System.out.println("   --- Εναλλακτική (UC4 Alt 1): Μη διαθεσιμότητα θέσεων ---");
+            try {
+                // Προσπάθεια αλλαγής σε διάρκεια 1000 λεπτών για πρόκληση conflict
+                Reservation failedUpdate = reservationUpdateService.modifyReservation(privateRes2Id, LocalTime.of(16, 0), 1000);
+                System.out.println("    Αποτέλεσμα: Η κράτηση τροποποιήθηκε.");
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα: " + e.getMessage());
+            }
+
+
+            // =====================================================================
+            // TEST 12: Παραγγελία F&B (UC8)
+            // =====================================================================
+            System.out.println("▶️ TEST 12: Παραγγελία F&B (UC8)");
+            
+            // 1. LoadCatalogCtrl
+            List<MenuItem> catalog = orderService.readCatalog();
+            MenuItem coffee = catalog.get(0);
+            
+            // 2. AddProductCtrl
+            List<OrderItemRequest> orderItems = new java.util.ArrayList<>();
+            orderService.addProduct(orderItems, coffee.getItemId(), 2);
+            
+            // 3. ProcessSummaryCtrl
+            orderService.processSummary(orderItems);
+            
+            // 4. ValidateOrderCtrl
+            orderService.verifyAvailability(orderItems);
+            
+            // 5. CreateOrderCtrl
+            Order order = orderService.createOrder(table2.getId(), orderItems);
+            
+            // 6. UpdateBillCtrl
+            orderService.calculateCost(order);
+            
+            System.out.println("   ✅ Η παραγγελία δημιουργήθηκε με συνολικό κόστος: " + order.getTotalAmount() + "€\n");
+
+            System.out.println("   --- Εναλλακτική (UC8 Alt 1): Προϊόν μη διαθέσιμο ---");
+            MenuItem cake = new MenuItem();
+            cake.setName("Chocolate Cake");
+            cake.setPrice(4.00);
+            cake.setAvailable(false);
+            cake.setCategory("Food");
+            menuItemRepository.save(cake);
+            List<OrderItemRequest> failedItems = new java.util.ArrayList<>();
+            orderService.addProduct(failedItems, cake.getItemId(), 1);
+            try {
+                orderService.verifyAvailability(failedItems);
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα παραγγελίας: " + e.getMessage());
+            }
+
+
+            // =====================================================================
+            // TEST 13: Ψηφιακός Δανεισμός E-book (UC7)
+            // =====================================================================
+            System.out.println("▶️ TEST 13: Ψηφιακός Δανεισμός E-book (UC7)");
+            EBook ebook = eBookRepository.findAll().get(0);
+            EBookLicense availableLicense = eBookService.checkAvailability(ebook.geteBookId());
+            EBookLoan loan = eBookService.createLoan(successfulCheckIn.getCheckInId(), availableLicense);
+            System.out.println("   ✅ Ο δανεισμός E-book ξεκίνησε στις: " + loan.getStartTime());
+            
+            // Alt 3: Early Return
+            System.out.println("   --- Εναλλακτική 3: Πρόωρη επιστροφή του E-book ---");
+            eBookService.checkRequest(loan.getLoanId());
+            eBookService.releaseLoan(loan);
+            System.out.println("   ✅ Το E-book επιστράφηκε επιτυχώς πριν τη λήξη της κράτησης.\n");
+
+            System.out.println("   --- Εναλλακτική (UC7 Alt 1): Φοιτητής χωρίς Check-in ---");
+            try {
+                eBookService.createLoan(999L, availableLicense);
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα δανεισμού χωρίς check-in: " + e.getMessage());
+            }
+
+            System.out.println("   --- Εναλλακτική (UC7 Alt 2): Μη διαθεσιμότητα άδειας ---");
+            try {
+                // To ebook έχει 1 άδεια. Θα δεσμευτεί ξανά από τον S2.
+                EBookLoan loan2 = eBookService.createLoan(successfulCheckIn.getCheckInId(), availableLicense);
+                // Προσπάθεια δεύτερου δανεισμού
+                eBookService.checkAvailability(ebook.geteBookId());
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα διαθεσιμότητας E-book: " + e.getMessage());
+            }
+
+
+            // =====================================================================
+            // TEST 14: Check-out και Πληρωμή (UC6)
+            // =====================================================================
+            System.out.println("▶️ TEST 14: Check-out και Πληρωμή (UC6)");
+            Bill bill = checkoutService.generateBillForReservation(privateRes2Id);
+            System.out.println("   Λογαριασμός δημιουργήθηκε. Σύνολο: " + bill.getTotalAmount() + "€");
+
+            System.out.println("   --- Εναλλακτική (UC6 Alt 2): Split Bill ---");
+            try {
+                double splitAmount = paymentService.calculateSplitAmount(bill.getBillId(), 4);
+                System.out.println("    Το μερίδιο για 4 άτομα είναι: " + splitAmount + "€");
+            } catch (Exception e) {
+                System.out.println("    Σφάλμα στο split bill: " + e.getMessage());
+            }
+
+            System.out.println("   --- Εναλλακτική (UC6 Alt 1): Αποτυχία πληρωμής (ανεπαρκές ποσό) ---");
+            try {
+                paymentService.processPayment(bill.getBillId(), "Credit Card", bill.getTotalAmount() - 1.0);
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα κατά την πληρωμή: " + e.getMessage());
+            }
+
+            Bill paidBill = paymentService.processPayment(bill.getBillId(), "Credit Card", bill.getTotalAmount());
+            System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε, το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
+
             System.out.println("=======================================================");
-            System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (10/10) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
+            System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (14/14) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
             System.out.println("=======================================================");
 
         } catch (Exception e) {

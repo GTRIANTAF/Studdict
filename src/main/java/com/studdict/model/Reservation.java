@@ -1,11 +1,11 @@
 package com.studdict.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
+import java.util.*;
 
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
+@Inheritance(strategy = InheritanceType.JOINED) // Links Private and Public tables to this primary table
 @Table(name = "reservations")
 public abstract class Reservation {
 
@@ -26,80 +26,44 @@ public abstract class Reservation {
     @Column(name = "number_of_people")
     private int numberOfPeople;
 
-    @Column(name = "status")
+    @Column(name = "status") // e.g., PENDING, CONFIRMED
     private String status;
 
-    @Column(name = "visibility")
+    @Column(name = "visibility") // Private or Public
     protected String visibility;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    // Relationship to the specific table selected during the booking flow[cite: 1]
+    @ManyToOne(fetch = FetchType.EAGER) //Changed from LAZY to EAGER (mariosk)
     @JoinColumn(name = "table_id")
     private StudyTable table;
 
-    public Reservation() {
-    }
+    // Relationship to all students participating in this reservation[cite: 1]
+    @OneToMany(mappedBy = "reservationId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<ReservationParticipant> participants = new ArrayList<>();
 
-    public Long getReservationId() {
-        return reservationId;
-    }
+    public Reservation() {}
 
-    public void setReservationId(Long reservationId) {
-        this.reservationId = reservationId;
-    }
+    // Getters
+    public Long getReservationId() { return reservationId; }
+    public LocalDate getReservationDate() { return reservationDate; }
+    public LocalTime getStartTime() { return startTime; }
+    public int getDurationMinutes() { return durationMinutes; }
+    public int getNumberOfPeople() { return numberOfPeople; }
+    public String getStatus() { return status; }
+    public String getVisibility() { return visibility; }
+    public StudyTable getTable() { return table; }
+    public List<ReservationParticipant> getParticipants() { return participants; }
 
-    public LocalDate getReservationDate() {
-        return reservationDate;
-    }
+    // Setters
+    public void setReservationId(Long reservationId) { this.reservationId = reservationId; }
+    public void setReservationDate(LocalDate reservationDate) { this.reservationDate = reservationDate; }
+    public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+    public void setDurationMinutes(int durationMinutes) { this.durationMinutes = durationMinutes; }
+    public void setNumberOfPeople(int numberOfPeople) { this.numberOfPeople = numberOfPeople; }
+    public void setStatus(String status) { this.status = status; }
+    public void setVisibility(String visibility) { this.visibility = visibility; }
+    public void setTable(StudyTable table) { this.table = table; }
+    public void setParticipants(List<ReservationParticipant> participants) { this.participants = participants; }
 
-    public void setReservationDate(LocalDate reservationDate) {
-        this.reservationDate = reservationDate;
-    }
 
-    public LocalTime getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(LocalTime startTime) {
-        this.startTime = startTime;
-    }
-
-    public int getDurationMinutes() {
-        return durationMinutes;
-    }
-
-    public void setDurationMinutes(int durationMinutes) {
-        this.durationMinutes = durationMinutes;
-    }
-
-    public int getNumberOfPeople() {
-        return numberOfPeople;
-    }
-
-    public void setNumberOfPeople(int numberOfPeople) {
-        this.numberOfPeople = numberOfPeople;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getVisibility() {
-        return visibility;
-    }
-
-    public void setVisibility(String visibility) {
-        this.visibility = visibility;
-    }
-
-    public StudyTable getTable() {
-        return table;
-    }
-
-    public void setTable(StudyTable table) {
-        this.table = table;
-    }
 }

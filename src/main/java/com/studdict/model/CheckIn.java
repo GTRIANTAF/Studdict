@@ -13,21 +13,21 @@ public class CheckIn {
     private Long checkInId;
 
     @ManyToOne
-    @JoinColumn(name = "reservation_id", nullable = false)
+    @JoinColumn(name = "reservation_id")
     private Reservation reservation;
 
     @ManyToOne
-    @JoinColumn(name = "table_id", nullable = false)
+    @JoinColumn(name = "table_id")
     private StudyTable table;
 
     @ManyToOne
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "student_id")
     private Student student;
 
-    @Column(name = "check_in_time", nullable = false)
+    @Column(name = "check_in_time")
     private LocalDateTime checkInTime;
 
-    @Column(name = "scanned_qr_code", nullable = false)
+    @Column(name = "scanned_qr_code")
     private String scannedQrCode;
 
     @Column(name = "successful")
