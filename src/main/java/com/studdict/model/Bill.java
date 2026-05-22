@@ -1,39 +1,32 @@
 package com.studdict.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "bills")
 public class Bill {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long billId;
+    private Long reservationId; // Έγινε Long για να ταιριάζει με το Reservation.java
 
-    @Column(nullable = false)
-    private Double totalAmount;
-
-    @Column(nullable = false)
+    private double totalAmount;
     private LocalDateTime issueTime;
-
-    @Column(nullable = false)
-    private boolean isSettled;
-
-    @OneToOne
-    @JoinColumn(name = "reservation_id", referencedColumnName = "reservation_id")
-    private Reservation reservation;
+    private boolean isSettled = false;
 
     public Bill() {}
 
-    public Long getBillId() { return billId; }
-    public void setBillId(Long billId) { this.billId = billId; }
-    public Double getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(Double totalAmount) { this.totalAmount = totalAmount; }
+    // Getters & Setters
+    public Long getReservationId() { return reservationId; }
+    public void setReservationId(Long reservationId) { this.reservationId = reservationId; }
+
+    public double getTotalAmount() { return totalAmount; }
+    public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+
     public LocalDateTime getIssueTime() { return issueTime; }
     public void setIssueTime(LocalDateTime issueTime) { this.issueTime = issueTime; }
+
     public boolean isSettled() { return isSettled; }
-    public void setSettled(boolean settled) { this.isSettled = settled; }
-    public Reservation getReservation() { return reservation; }
-    public void setReservation(Reservation reservation) { this.reservation = reservation; }
+    public void setSettled(boolean settled) { isSettled = settled; }
 }
