@@ -9,16 +9,14 @@ import com.studdict.service.StudyTableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import com.studdict.service.GamificationService;
 import com.studdict.service.ReservationUpdateService;
 import com.studdict.service.EBookService;
 import com.studdict.service.OrderService;
-import com.studdict.service.CheckoutService;
+import com.studdict.service.BillCalculationService;
 import com.studdict.service.PaymentService;
 import com.studdict.service.StudentService;
 import com.studdict.dto.OrderItemRequest;
-import java.util.Collections;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -41,7 +39,7 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private ReservationUpdateService reservationUpdateService;
     @Autowired private EBookService eBookService;
     @Autowired private OrderService orderService;
-    @Autowired private CheckoutService checkoutService;
+    @Autowired private BillCalculationService checkoutService;
     @Autowired private PaymentService paymentService;
     @Autowired private EBookRepository eBookRepository;
     @Autowired private EBookLicenseRepository licenseRepository;
