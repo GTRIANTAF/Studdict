@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
+
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -56,10 +58,24 @@ public class ReservationService {
         Student student = studentRepository.findById(studentId).orElseThrow();
         StudyTable table = studyTableRepository.findById(tableId).orElseThrow();
 
+        // Αν το τραπέζι είναι ήδη δεσμευμένο, ελέγχουμε αν υπάρχει ενεργή Public Κράτηση για να κάνουμε JOIN!
+        if (!table.getIsAvailable()) {
+            List<Reservation> activeReservations = reservationRepository.findByTable_TableIdAndStatus(tableId, "CONFIRMED");
+            if (!activeReservations.isEmpty()) {
+                Reservation existingRes = activeReservations.get(0);
+                if (existingRes.getVisibility().equals("Public")) {
+                    joinPublicReservation(existingRes.getReservationId(), studentId);
+                    return existingRes.getReservationId();
+                } else {
+                    throw new RuntimeException("Το τραπέζι είναι ήδη δεσμευμένο σε Ιδιωτική κράτηση.");
+                }
+            }
+        }
+
         // Εύρεση ή Δημιουργία του Μαθήματος
         StudySubject subject = subjectService.findOrCreate(subjectName);
 
-        // Δημιουργία της Public Κράτησης
+        // Δημιουργία της ΝΕΑΣ Public Κράτησης (αν το τραπέζι ήταν ελεύθερο)
         PublicReservation reservation = new PublicReservation();
         reservation.setReservationDate(date);
         reservation.setStartTime(time);

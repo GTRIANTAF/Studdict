@@ -64,4 +64,6 @@ public abstract class Reservation {
     public void setVisibility(String visibility) { this.visibility = visibility; }
     public void setTable(StudyTable table) { this.table = table; }
     public void setParticipants(List<ReservationParticipant> participants) { this.participants = participants; }
+
+
 }

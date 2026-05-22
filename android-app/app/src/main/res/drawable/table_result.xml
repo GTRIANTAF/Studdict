@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/studdict_surface" />
+    <stroke
+        android:width="1dp"
+        android:color="@color/studdict_primary_light" />
+    <corners android:radius="16dp" />
+    <padding
+        android:bottom="16dp"
+        android:left="18dp"
+        android:right="18dp"
+        android:top="16dp" />
+</shape>
