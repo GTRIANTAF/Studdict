@@ -92,7 +92,7 @@ public class PaymentService {
         }
         List<CheckIn> checkIns = checkInRepository.findByReservation_ReservationId(bill.getReservationId());
         for (CheckIn checkIn : checkIns) {
-            eBookService.releaseLoansForCheckIn(checkIn.getCheckInId());
+            eBookService.revokeLoan(checkIn.getCheckInId());
         }
     }
 

@@ -11,6 +11,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.studdict.service.GamificationService;
+import com.studdict.service.ReservationUpdateService;
+import com.studdict.service.EBookService;
+import com.studdict.service.OrderService;
+import com.studdict.service.CheckoutService;
+import com.studdict.service.PaymentService;
+import com.studdict.dto.OrderItemRequest;
+import java.util.Collections;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,6 +37,14 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private InviteCodeService inviteCodeService;
     @Autowired private CheckInService checkInService;
     @Autowired private GamificationService gamificationService;
+    @Autowired private ReservationUpdateService reservationUpdateService;
+    @Autowired private EBookService eBookService;
+    @Autowired private OrderService orderService;
+    @Autowired private CheckoutService checkoutService;
+    @Autowired private PaymentService paymentService;
+    @Autowired private EBookRepository eBookRepository;
+    @Autowired private EBookLicenseRepository licenseRepository;
+    @Autowired private MenuItemRepository menuItemRepository;
     @Override
     public void run(String... args) throws Exception {
         System.out.println("\n=======================================================");
@@ -66,10 +81,33 @@ public class TestRunner implements CommandLineRunner {
             tableRepository.save(new StudyTable(venue2, 2, 4, "QR-C2", true));
             tableRepository.save(new StudyTable(venue2, 3, 6, "QR-C3", true));
 
+            if (eBookRepository.count() == 0) {
+                EBook ebook = new EBook();
+                ebook.setTitle("Software Engineering");
+                ebook.setAuthor("Ian Sommerville");
+                ebook.setIsbn("978-0133943030");
+                ebook.setCategory("Computer Science");
+                ebook = eBookRepository.save(ebook);
+                
+                EBookLicense license = new EBookLicense();
+                license.setEbook(ebook);
+                license.setAvailable(true);
+                ebook.getLicenses().add(license);
+                licenseRepository.save(license);
+            }
+            if (menuItemRepository.count() == 0) {
+                MenuItem coffee = new MenuItem();
+                coffee.setName("Freddo Espresso");
+                coffee.setPrice(2.50);
+                coffee.setAvailable(true);
+                coffee.setCategory("Coffee");
+                menuItemRepository.save(coffee);
+            }
+
             System.out.println("✅ Τα δεδομένα δημιουργήθηκαν επιτυχώς!\n");
         }
 
-        List<StudyTable> tables = StudyTableRepository.findAll();
+        List<StudyTable> tables = tableRepository.findAll();
         StudyTable table1 = tables.get(0);
         StudyTable table2 = tables.get(1);
         StudyTable table3 = tables.get(2);
@@ -236,8 +274,68 @@ public class TestRunner implements CommandLineRunner {
                 double discount = gamificationService.calculateDiscount(100);
                 System.out.println("   🎉 Η Μαρία κέρδισε έκπτωση: " + discount + "€ στο επόμενο checkout!\n");
             }
+
+            // =====================================================================
+            // TEST 11: Τροποποίηση Κράτησης (UC4)
+            // =====================================================================
+            System.out.println("▶️ TEST 11: Τροποποίηση Κράτησης (UC4)");
+            LocalTime newTime = LocalTime.now().minusMinutes(10);
+            Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, newTime, 180);
+            System.out.println("   ✅ Η κράτηση τροποποιήθηκε: Νέα ώρα " + updatedRes.getStartTime() + " με διάρκεια " + updatedRes.getDurationMinutes() + " λεπτά.\n");
+
+            // =====================================================================
+            // TEST 12: Παραγγελία F&B (UC8)
+            // =====================================================================
+            System.out.println("▶️ TEST 12: Παραγγελία F&B (UC8)");
+            
+            // 1. LoadCatalogCtrl
+            List<MenuItem> catalog = orderService.readCatalog();
+            MenuItem coffee = catalog.get(0);
+            
+            // 2. AddProductCtrl
+            List<OrderItemRequest> orderItems = new java.util.ArrayList<>();
+            orderService.addProduct(orderItems, coffee.getItemId(), 2);
+            
+            // 3. ProcessSummaryCtrl
+            orderService.processSummary(orderItems);
+            
+            // 4. ValidateOrderCtrl
+            orderService.verifyAvailability(orderItems);
+            
+            // 5. CreateOrderCtrl
+            Order order = orderService.createOrder(table2.getId(), orderItems);
+            
+            // 6. UpdateBillCtrl
+            orderService.calculateCost(order);
+            
+            System.out.println("   ✅ Η παραγγελία δημιουργήθηκε με συνολικό κόστος: " + order.getTotalAmount() + "€\n");
+
+            // =====================================================================
+            // TEST 13: Ψηφιακός Δανεισμός E-book (UC7)
+            // =====================================================================
+            System.out.println("▶️ TEST 13: Ψηφιακός Δανεισμός E-book (UC7)");
+            EBook ebook = eBookRepository.findAll().get(0);
+            EBookLicense availableLicense = eBookService.checkAvailability(ebook.geteBookId());
+            EBookLoan loan = eBookService.createLoan(successfulCheckIn.getCheckInId(), availableLicense);
+            System.out.println("   ✅ Ο δανεισμός E-book ξεκίνησε στις: " + loan.getStartTime());
+            
+            // Alt 3: Early Return
+            System.out.println("   --- Εναλλακτική 3: Πρόωρη επιστροφή του E-book ---");
+            eBookService.checkRequest(loan.getLoanId());
+            eBookService.releaseLoan(loan);
+            System.out.println("   ✅ Το E-book επιστράφηκε επιτυχώς πριν τη λήξη της κράτησης.\n");
+
+            // =====================================================================
+            // TEST 14: Check-out και Πληρωμή (UC6)
+            // =====================================================================
+            System.out.println("▶️ TEST 14: Check-out και Πληρωμή (UC6)");
+            Bill bill = checkoutService.generateBillForReservation(privateRes2Id);
+            System.out.println("   Λογαριασμός δημιουργήθηκε. Σύνολο: " + bill.getTotalAmount() + "€");
+            Bill paidBill = paymentService.processPayment(bill.getBillId(), "Credit Card", bill.getTotalAmount());
+            System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε, το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
+
             System.out.println("=======================================================");
-            System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (10/10) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
+            System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (14/14) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
             System.out.println("=======================================================");
 
         } catch (Exception e) {

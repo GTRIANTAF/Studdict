@@ -29,14 +29,48 @@ public class OrderService {
      * @param tableId       το τραπέζι στο οποίο γίνεται η παραγγελία
      * @param requestedItems τα προϊόντα του "καλαθιού" με τις ποσότητές τους
      */
-    public Order createOrder(int tableId, List<OrderItemRequest> requestedItems) {
+    /**
+     * Υλοποιεί το LoadCatalogCtrl του Sequence Diagram
+     * Ανακτά τον κατάλογο των προϊόντων
+     */
+    public List<MenuItem> readCatalog() {
+        return menuItemRepository.findAll();
+    }
 
-        // 1. Έλεγχος ότι η παραγγελία δεν είναι κενή (UC8: απαιτείται >= 1 προϊόν)
+    /**
+     * Υλοποιεί το AddProductCtrl του Sequence Diagram
+     * Προσθέτει ένα προϊόν στην παραγγελία
+     */
+    public void addProduct(List<OrderItemRequest> cart, Long menuItemId, int quantity) {
+        OrderItemRequest request = new OrderItemRequest();
+        request.setMenuItemId(menuItemId);
+        request.setQuantity(quantity);
+        cart.add(request);
+    }
+
+    public void processSummary(List<OrderItemRequest> requestedItems) {
         if (requestedItems == null || requestedItems.isEmpty()) {
             throw new RuntimeException("Η παραγγελία είναι κενή.");
         }
+    }
 
-        // 2. Εύρεση τραπεζιού
+    public void verifyAvailability(List<OrderItemRequest> requestedItems) {
+        for (OrderItemRequest req : requestedItems) {
+            if (req.getMenuItemId() == null) {
+                throw new RuntimeException("Λείπει το αναγνωριστικό προϊόντος.");
+            }
+            if (req.getQuantity() <= 0) {
+                throw new RuntimeException("Η ποσότητα πρέπει να είναι μεγαλύτερη του μηδενός.");
+            }
+            MenuItem item = menuItemRepository.findById(req.getMenuItemId())
+                    .orElseThrow(() -> new RuntimeException("Το προϊόν δεν βρέθηκε."));
+            if (!item.isAvailable()) {
+                throw new RuntimeException("Το προϊόν " + item.getName() + " δεν είναι διαθέσιμο.");
+            }
+        }
+    }
+
+    public Order createOrder(int tableId, List<OrderItemRequest> requestedItems) {
         StudyTable table = studyTableRepository.findById(tableId)
                 .orElseThrow(() -> new RuntimeException("Το τραπέζι δεν βρέθηκε."));
 
@@ -68,10 +102,6 @@ public class OrderService {
             MenuItem item = menuItemRepository.findById(itemId)
                     .orElseThrow(() -> new RuntimeException("Το προϊόν δεν βρέθηκε."));
 
-            if (!item.isAvailable()) {
-                throw new RuntimeException("Το προϊόν " + item.getName() + " δεν είναι διαθέσιμο.");
-            }
-
             double subTotal = item.getPrice() * quantity;
 
             OrderItem orderItem = new OrderItem();
@@ -81,12 +111,21 @@ public class OrderService {
             orderItem.setOrder(order);
 
             order.getItems().add(orderItem);
-            totalAmount += subTotal;
         }
 
-        order.setTotalAmount(totalAmount);
-
-        // 6. Αποθήκευση (τα OrderItems αποθηκεύονται με cascade ALL)
+        // Η αποθήκευση γίνεται εδώ προσωρινά
         return orderRepository.save(order);
+    }
+
+    /**
+     * Υλοποιεί το UpdateBillCtrl του Sequence Diagram
+     * Υπολογίζει το συνολικό κόστος της παραγγελίας
+     */
+    public void calculateCost(Order order) {
+        double totalAmount = order.getItems().stream()
+                .mapToDouble(OrderItem::getSubTotal)
+                .sum();
+        order.setTotalAmount(totalAmount);
+        orderRepository.save(order);
     }
 }
