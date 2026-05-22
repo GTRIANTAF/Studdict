@@ -15,6 +15,7 @@ public class StudyTable {
     // ManyToOne relationship connects this table to a specific Venue
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venue_id", nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private Venue venue;
 
     @Column(name = "table_number")

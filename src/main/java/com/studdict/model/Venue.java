@@ -30,6 +30,7 @@ public class Venue {
     // CascadeType.ALL ensures that if you delete a Venue, its tables are deleted too.
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "venue_id") // Links the tables to this venue's ID
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private List<StudyTable> tables = new ArrayList<>();
 
     public Venue() {}
