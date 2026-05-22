@@ -19,4 +19,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // =====================================================================
     @Query("SELECT pr FROM PublicReservation pr WHERE pr.table.venue.venueId = :venueId AND pr.status = 'CONFIRMED' AND LOWER(pr.studySubject.name) = LOWER(:subjectName)")
     List<Reservation> findMatchmakingReservations(@Param("venueId") Long venueId, @Param("subjectName") String subjectName);
+
+    // Find active reservation by table id
+    List<Reservation> findByTable_TableIdAndStatus(Integer tableId, String status);
 }

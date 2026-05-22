@@ -44,12 +44,26 @@ public class TestRunner implements CommandLineRunner {
             studentRepository.save(new Student("S3", "Κώστας", "Γ.", "kostas@upatras.gr"));
             studentRepository.save(new Student("S4", "Ελένη", "Δ.", "eleni@upatras.gr"));
 
-            Venue venue = new Venue("Κεντρική Βιβλιοθήκη", "Πανεπιστημιούπολη", "Library", true);
-            venueRepository.save(venue);
+            Venue venue1 = new Venue("CEID Library", "University Campus", "Library", true);
+            venueRepository.save(venue1);
 
-            tableRepository.save(new StudyTable(venue, 1, 4, "QR-1", true));
-            tableRepository.save(new StudyTable(venue, 2, 4, "QR-2", true));
-            tableRepository.save(new StudyTable(venue, 3, 6, "QR-3", true));
+            Venue venue2 = new Venue("Patras City Cafe", "Agiou Nikolaou St.", "Cafe", true);
+            venueRepository.save(venue2);
+
+            // Tables for Venue 1 (CEID Library)
+            tableRepository.save(new StudyTable(venue1, 1, 4, "QR-1", true));
+            tableRepository.save(new StudyTable(venue1, 2, 4, "QR-2", true));
+            tableRepository.save(new StudyTable(venue1, 3, 6, "QR-3", true));
+            
+            // Extra FREE tables for FE testing (CEID)
+            tableRepository.save(new StudyTable(venue1, 4, 2, "QR-4", true));
+            tableRepository.save(new StudyTable(venue1, 5, 8, "QR-5", true));
+            tableRepository.save(new StudyTable(venue1, 6, 4, "QR-6", true));
+
+            // Extra FREE tables for FE testing (Patras City Cafe)
+            tableRepository.save(new StudyTable(venue2, 1, 2, "QR-C1", true));
+            tableRepository.save(new StudyTable(venue2, 2, 4, "QR-C2", true));
+            tableRepository.save(new StudyTable(venue2, 3, 6, "QR-C3", true));
 
             System.out.println("✅ Τα δεδομένα δημιουργήθηκαν επιτυχώς!\n");
         }
@@ -138,11 +152,16 @@ public class TestRunner implements CommandLineRunner {
             // TEST 5: Ακύρωση Κράτησης (Cancellation)
             // =====================================================================
             System.out.println(" TEST 5: Ο Γιάννης ακυρώνει την αρχική Private κράτησή του (Test 1)");
-            // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: discardReservation
-            reservationService.discardReservation(privateRes1Id);
+            
+            if (privateRes1Id != null) {
+                // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: discardReservation
+                reservationService.discardReservation(privateRes1Id);
 
-            StudyTable checkTable1 = tableRepository.findById(table1.getId()).orElseThrow();
-            System.out.println("    Επιτυχία! Η κράτηση ακυρώθηκε. Το Τραπέζι 1 είναι διαθέσιμο: " + checkTable1.getIsAvailable() + "\n");
+                StudyTable checkTable1 = tableRepository.findById(table1.getId()).orElseThrow();
+                System.out.println("    Επιτυχία! Η κράτηση ακυρώθηκε. Το Τραπέζι 1 είναι διαθέσιμο: " + checkTable1.getIsAvailable() + "\n");
+            } else {
+                System.out.println("    Παράλειψη: Δεν υπήρχε κράτηση για ακύρωση.\n");
+            }
 
             // =====================================================================
             // TEST 6: Έλεγχος Soft-Lock (Race Condition Prevention)
