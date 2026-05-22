@@ -25,14 +25,14 @@ public class InviteCodeController {
     }
 
     @PostMapping("/validate")
-    public boolean validateCode(@RequestBody InviteCode inviteCode) {
-        return inviteCodeService.validateCode(inviteCode);
+    public boolean validateCode(@RequestBody ValidateCodeRequest request) {
+        return inviteCodeService.validateCode(request.getCode());
     }
 
     @PostMapping("/join")
     public boolean joinReservation(@RequestBody JoinReservationRequest request) {
         return inviteCodeService.joinReservation(
-                request.getInviteCode(),
+                request.getCode(),
                 request.getGuest()
         );
     }
@@ -68,17 +68,30 @@ public class InviteCodeController {
         }
     }
 
-    public static class JoinReservationRequest {
+    public static class ValidateCodeRequest {
 
-        private InviteCode inviteCode;
-        private Student guest;
+        private String code;
 
-        public InviteCode getInviteCode() {
-            return inviteCode;
+        public String getCode() {
+            return code;
         }
 
-        public void setInviteCode(InviteCode inviteCode) {
-            this.inviteCode = inviteCode;
+        public void setCode(String code) {
+            this.code = code;
+        }
+    }
+
+    public static class JoinReservationRequest {
+
+        private String code;
+        private Student guest;
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
         }
 
         public Student getGuest() {
