@@ -13,12 +13,12 @@ import java.util.List;
 
 @Service
 @Transactional
-public class CheckoutService {
+public class BillCalculationService {
 
     private final ReservationRepository reservationRepository;
     private final BillRepository billRepository;
 
-    public CheckoutService(ReservationRepository reservationRepository, BillRepository billRepository) {
+    public BillCalculationService(ReservationRepository reservationRepository, BillRepository billRepository) {
         this.reservationRepository = reservationRepository;
         this.billRepository = billRepository;
     }
