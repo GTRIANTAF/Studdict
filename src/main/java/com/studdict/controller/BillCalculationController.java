@@ -1,18 +1,18 @@
 package com.studdict.controller;
 
 import com.studdict.model.Bill;
-import com.studdict.service.CheckoutService;
+import com.studdict.service.BillCalculationService;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/checkout")
-public class CheckoutController {
+public class BillCalculationController {
 
-    private final CheckoutService checkoutService;
+    private final BillCalculationService checkoutService;
 
-    public CheckoutController(CheckoutService checkoutService) {
+    public BillCalculationController(BillCalculationService checkoutService) {
         this.checkoutService = checkoutService;
     }
 

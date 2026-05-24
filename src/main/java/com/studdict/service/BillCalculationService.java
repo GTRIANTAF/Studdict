@@ -16,15 +16,15 @@ import java.util.Optional;
 
 @Service
 @Transactional
-public class CheckoutService {
+public class BillCalculationService {
 
     private final ReservationRepository reservationRepository;
     private final BillRepository billRepository;
     private final OrderRepository orderRepository;
 
-    public CheckoutService(ReservationRepository reservationRepository,
-                           BillRepository billRepository,
-                           OrderRepository orderRepository) {
+    public BillCalculationService(ReservationRepository reservationRepository,
+                                  BillRepository billRepository,
+                                  OrderRepository orderRepository) {
         this.reservationRepository = reservationRepository;
         this.billRepository = billRepository;
         this.orderRepository = orderRepository;

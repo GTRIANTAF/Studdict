@@ -9,16 +9,14 @@ import com.studdict.service.StudyTableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import com.studdict.service.GamificationService;
 import com.studdict.service.ReservationUpdateService;
 import com.studdict.service.EBookService;
 import com.studdict.service.OrderService;
-import com.studdict.service.CheckoutService;
+import com.studdict.service.BillCalculationService;
 import com.studdict.service.PaymentService;
 import com.studdict.service.StudentService;
 import com.studdict.dto.OrderItemRequest;
-import java.util.Collections;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,7 +28,7 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private StudentRepository studentRepository;
     @Autowired private StudentService studentService;
     @Autowired private VenueRepository venueRepository;
-    @Autowired private StudyTableRepository tableRepository;
+    @Autowired private StudyTableRepository studyTableRepository;
     @Autowired private ReservationRepository reservationRepository; // <-- ΠΡΟΣΤΕΘΗΚΕ ΓΙΑ ΤΟΝ ΕΛΕΓΧΟ QR
     @Autowired private ReservationService reservationService;
     @Autowired private StudyTableService tableService;
@@ -41,7 +39,7 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private ReservationUpdateService reservationUpdateService;
     @Autowired private EBookService eBookService;
     @Autowired private OrderService orderService;
-    @Autowired private CheckoutService checkoutService;
+    @Autowired private BillCalculationService checkoutService;
     @Autowired private PaymentService paymentService;
     @Autowired private EBookRepository eBookRepository;
     @Autowired private EBookLicenseRepository licenseRepository;
@@ -68,19 +66,19 @@ public class TestRunner implements CommandLineRunner {
             venueRepository.save(venue2);
 
             // Tables for Venue 1 (CEID Library)
-            tableRepository.save(new StudyTable(venue1, 1, 4, "QR-1", true));
-            tableRepository.save(new StudyTable(venue1, 2, 4, "QR-2", true));
-            tableRepository.save(new StudyTable(venue1, 3, 6, "QR-3", true));
+            studyTableRepository.save(new StudyTable(venue1, 1, 4, "QR-1", true));
+            studyTableRepository.save(new StudyTable(venue1, 2, 4, "QR-2", true));
+            studyTableRepository.save(new StudyTable(venue1, 3, 6, "QR-3", true));
 
             // Extra FREE tables for FE testing (CEID)
-            tableRepository.save(new StudyTable(venue1, 4, 2, "QR-4", true));
-            tableRepository.save(new StudyTable(venue1, 5, 8, "QR-5", true));
-            tableRepository.save(new StudyTable(venue1, 6, 4, "QR-6", true));
+            studyTableRepository.save(new StudyTable(venue1, 4, 2, "QR-4", true));
+            studyTableRepository.save(new StudyTable(venue1, 5, 8, "QR-5", true));
+            studyTableRepository.save(new StudyTable(venue1, 6, 4, "QR-6", true));
 
             // Extra FREE tables for FE testing (Patras City Cafe)
-            tableRepository.save(new StudyTable(venue2, 1, 2, "QR-C1", true));
-            tableRepository.save(new StudyTable(venue2, 2, 4, "QR-C2", true));
-            tableRepository.save(new StudyTable(venue2, 3, 6, "QR-C3", true));
+            studyTableRepository.save(new StudyTable(venue2, 1, 2, "QR-C1", true));
+            studyTableRepository.save(new StudyTable(venue2, 2, 4, "QR-C2", true));
+            studyTableRepository.save(new StudyTable(venue2, 3, 6, "QR-C3", true));
 
             if (eBookRepository.count() == 0) {
                 EBook ebook = new EBook();
@@ -108,7 +106,7 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("✅ Τα δεδομένα δημιουργήθηκαν επιτυχώς!\n");
         }
 
-        List<StudyTable> tables = tableRepository.findAll();
+        List<StudyTable> tables = studyTableRepository.findAll();
         StudyTable table1 = tables.get(0);
         StudyTable table2 = tables.get(1);
         StudyTable table3 = tables.get(2);
@@ -231,7 +229,7 @@ public class TestRunner implements CommandLineRunner {
                 // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: discardReservation
                 reservationService.discardReservation(privateRes1Id);
 
-                StudyTable checkTable1 = tableRepository.findById(table1.getId()).orElseThrow();
+                StudyTable checkTable1 = studyTableRepository.findById(table1.getId()).orElseThrow();
                 System.out.println("    Επιτυχία! Η κράτηση ακυρώθηκε. Το Τραπέζι 1 είναι διαθέσιμο: " + checkTable1.getIsAvailable() + "\n");
             } else {
                 System.out.println("    Παράλειψη: Δεν υπήρχε κράτηση για ακύρωση.\n");
