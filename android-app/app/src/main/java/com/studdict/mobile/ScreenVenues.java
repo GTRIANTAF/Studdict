@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class ScreenVenues extends Activity {
 
@@ -17,6 +18,12 @@ public class ScreenVenues extends Activity {
 
         venueCeid.setOnClickListener(v -> selectVenue(1L, "CEID LIBRARY"));
         venueCafe.setOnClickListener(v -> selectVenue(2L, "PATRAS CITY CAFE"));
+
+        TextView navLiveBoard = findViewById(R.id.navLiveBoard);
+        navLiveBoard.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenLiveBoard.class);
+            startActivity(intent);
+        });
     }
 
     private void selectVenue(long venueId, String venueName) {

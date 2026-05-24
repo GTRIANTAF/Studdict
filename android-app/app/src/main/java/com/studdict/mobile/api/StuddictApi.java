@@ -1,5 +1,6 @@
 package com.studdict.mobile.api;
 
+import com.studdict.mobile.model.PublicReservation;
 import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.StudyTable;
 
@@ -48,4 +49,8 @@ public interface StuddictApi {
             @Path("reservationId") long reservationId,
             @Query("studentId") String studentId
     );
+
+    // LIVE BOARD (UC2)
+    @GET("api/liveboard/published")
+    Call<List<PublicReservation>> getPublishedReservations();
 }

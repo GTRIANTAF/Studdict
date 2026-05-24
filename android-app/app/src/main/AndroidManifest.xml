@@ -19,5 +19,6 @@
         <activity android:name=".ScreenForm" />
         <activity android:name=".ScreenTables" />
         <activity android:name=".ScreenConfirm" />
+        <activity android:name=".ScreenLiveBoard" />
     </application>
 </manifest>

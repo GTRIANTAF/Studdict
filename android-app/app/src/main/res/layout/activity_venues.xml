@@ -119,8 +119,11 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/navLiveBoard"
             style="@style/BottomNavItem"
-            android:text="BOOKING" />
+            android:clickable="true"
+            android:focusable="true"
+            android:text="LIVE BOARD" />
 
         <TextView
             style="@style/BottomNavItem"
