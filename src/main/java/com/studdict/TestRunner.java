@@ -9,16 +9,14 @@ import com.studdict.service.StudyTableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import com.studdict.service.GamificationService;
 import com.studdict.service.ReservationUpdateService;
 import com.studdict.service.EBookService;
 import com.studdict.service.OrderService;
-import com.studdict.service.CheckoutService;
+import com.studdict.service.BillCalculationService;
 import com.studdict.service.PaymentService;
 import com.studdict.service.StudentService;
 import com.studdict.dto.OrderItemRequest;
-import java.util.Collections;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -30,7 +28,7 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private StudentRepository studentRepository;
     @Autowired private StudentService studentService;
     @Autowired private VenueRepository venueRepository;
-    @Autowired private StudyTableRepository tableRepository;
+    @Autowired private StudyTableRepository studyTableRepository;
     @Autowired private ReservationRepository reservationRepository; // <-- ΠΡΟΣΤΕΘΗΚΕ ΓΙΑ ΤΟΝ ΕΛΕΓΧΟ QR
     @Autowired private ReservationService reservationService;
     @Autowired private StudyTableService tableService;
@@ -41,7 +39,7 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private ReservationUpdateService reservationUpdateService;
     @Autowired private EBookService eBookService;
     @Autowired private OrderService orderService;
-    @Autowired private CheckoutService checkoutService;
+    @Autowired private BillCalculationService checkoutService;
     @Autowired private PaymentService paymentService;
     @Autowired private EBookRepository eBookRepository;
     @Autowired private EBookLicenseRepository licenseRepository;
@@ -68,19 +66,19 @@ public class TestRunner implements CommandLineRunner {
             venueRepository.save(venue2);
 
             // Tables for Venue 1 (CEID Library)
-            tableRepository.save(new StudyTable(venue1, 1, 4, "QR-1", true));
-            tableRepository.save(new StudyTable(venue1, 2, 4, "QR-2", true));
-            tableRepository.save(new StudyTable(venue1, 3, 6, "QR-3", true));
+            studyTableRepository.save(new StudyTable(venue1, 1, 4, "QR-1", true));
+            studyTableRepository.save(new StudyTable(venue1, 2, 4, "QR-2", true));
+            studyTableRepository.save(new StudyTable(venue1, 3, 6, "QR-3", true));
 
             // Extra FREE tables for FE testing (CEID)
-            tableRepository.save(new StudyTable(venue1, 4, 2, "QR-4", true));
-            tableRepository.save(new StudyTable(venue1, 5, 8, "QR-5", true));
-            tableRepository.save(new StudyTable(venue1, 6, 4, "QR-6", true));
+            studyTableRepository.save(new StudyTable(venue1, 4, 2, "QR-4", true));
+            studyTableRepository.save(new StudyTable(venue1, 5, 8, "QR-5", true));
+            studyTableRepository.save(new StudyTable(venue1, 6, 4, "QR-6", true));
 
             // Extra FREE tables for FE testing (Patras City Cafe)
-            tableRepository.save(new StudyTable(venue2, 1, 2, "QR-C1", true));
-            tableRepository.save(new StudyTable(venue2, 2, 4, "QR-C2", true));
-            tableRepository.save(new StudyTable(venue2, 3, 6, "QR-C3", true));
+            studyTableRepository.save(new StudyTable(venue2, 1, 2, "QR-C1", true));
+            studyTableRepository.save(new StudyTable(venue2, 2, 4, "QR-C2", true));
+            studyTableRepository.save(new StudyTable(venue2, 3, 6, "QR-C3", true));
 
             if (eBookRepository.count() == 0) {
                 EBook ebook = new EBook();
@@ -108,7 +106,7 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("✅ Τα δεδομένα δημιουργήθηκαν επιτυχώς!\n");
         }
 
-        List<StudyTable> tables = tableRepository.findAll();
+        List<StudyTable> tables = studyTableRepository.findAll();
         StudyTable table1 = tables.get(0);
         StudyTable table2 = tables.get(1);
         StudyTable table3 = tables.get(2);
@@ -231,7 +229,7 @@ public class TestRunner implements CommandLineRunner {
                 // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: discardReservation
                 reservationService.discardReservation(privateRes1Id);
 
-                StudyTable checkTable1 = tableRepository.findById(table1.getId()).orElseThrow();
+                StudyTable checkTable1 = studyTableRepository.findById(table1.getId()).orElseThrow();
                 System.out.println("    Επιτυχία! Η κράτηση ακυρώθηκε. Το Τραπέζι 1 είναι διαθέσιμο: " + checkTable1.getIsAvailable() + "\n");
             } else {
                 System.out.println("    Παράλειψη: Δεν υπήρχε κράτηση για ακύρωση.\n");
@@ -314,7 +312,9 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("    Η Μαρία σκανάρει το σωστό QR-2. Αποτέλεσμα Check-in: " + successfulCheckIn.isSuccessful() + " στις " + successfulCheckIn.getCheckInTime());
 
             System.out.println("   --- Εναλλακτική (UC5 Alt 2): Λάθος ώρα Check-in ---");
-            System.out.println("    (Το CheckInService προς το παρόν επικυρώνει μόνο το QR, ο έλεγχος ώρας είναι pending)");
+            Long futureResId = reservationService.savePrivateReservation("S2", table2.getId(), today.plusDays(1), LocalTime.of(12, 0), 120);
+            com.studdict.service.CheckInService.ReservationValidationResult timeValidation = checkInService.validateReservation(futureResId, "QR-2");
+            System.out.println("    Έλεγχος Check-in για μελλοντική κράτηση. Αποτέλεσμα Validation: " + timeValidation);
 
             // =====================================================================
             // TEST GAMIFICATION (UC9 & UC10)
@@ -406,38 +406,56 @@ public class TestRunner implements CommandLineRunner {
                 System.out.println("    Αναμενόμενο σφάλμα παραγγελίας: " + e.getMessage());
             }
 
+            System.out.println("   --- Εναλλακτική (UC8 Alt 2): Ακύρωση παραγγελίας πριν την υποβολή ---");
+            List<OrderItemRequest> cancelledCart = new java.util.ArrayList<>();
+            orderService.addProduct(cancelledCart, coffee.getItemId(), 1);
+            cancelledCart.clear(); // Ο χρήστης πατάει ακύρωση
+            try {
+                orderService.processSummary(cancelledCart);
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα (Άδειο καλάθι): " + e.getMessage());
+            }
+
 
             // =====================================================================
             // TEST 13: Ψηφιακός Δανεισμός E-book (UC7)
             // =====================================================================
             System.out.println("▶️ TEST 13: Ψηφιακός Δανεισμός E-book (UC7)");
             EBook ebook = eBookRepository.findAll().get(0);
-            EBookLicense availableLicense = eBookService.checkAvailability(ebook.geteBookId());
-            EBookLoan loan = eBookService.createLoan(successfulCheckIn.getCheckInId(), availableLicense);
+            
+            System.out.println("    Εκτέλεση requestAccess()...");
+            boolean accessGranted = eBookService.requestAccess(successfulCheckIn.getCheckInId());
+            
+            System.out.println("    Εκτέλεση requestLoan()...");
+            EBookLoan loan = eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
             System.out.println("   ✅ Ο δανεισμός E-book ξεκίνησε στις: " + loan.getStartTime());
             
             // Alt 3: Early Return
             System.out.println("   --- Εναλλακτική 3: Πρόωρη επιστροφή του E-book ---");
-            eBookService.checkRequest(loan.getLoanId());
-            eBookService.releaseLoan(loan);
+            EBookLoan checkedLoan = eBookService.checkRequest(loan.getLoanId());
+            eBookService.releaseLoan(checkedLoan);
             System.out.println("   ✅ Το E-book επιστράφηκε επιτυχώς πριν τη λήξη της κράτησης.\n");
 
             System.out.println("   --- Εναλλακτική (UC7 Alt 1): Φοιτητής χωρίς Check-in ---");
             try {
-                eBookService.createLoan(999L, availableLicense);
+                eBookService.requestAccess(999L);
             } catch (Exception e) {
-                System.out.println("    Αναμενόμενο σφάλμα δανεισμού χωρίς check-in: " + e.getMessage());
+                System.out.println("    Αναμενόμενο σφάλμα πρόσβασης χωρίς check-in: " + e.getMessage());
             }
 
             System.out.println("   --- Εναλλακτική (UC7 Alt 2): Μη διαθεσιμότητα άδειας ---");
             try {
-                // To ebook έχει 1 άδεια. Θα δεσμευτεί ξανά από τον S2.
-                EBookLoan loan2 = eBookService.createLoan(successfulCheckIn.getCheckInId(), availableLicense);
-                // Προσπάθεια δεύτερου δανεισμού
-                eBookService.checkAvailability(ebook.geteBookId());
+                // To ebook έχει 1 άδεια. Την ξαναδεσμεύουμε από τον S2.
+                EBookLoan loan2 = eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
+                // Προσπάθεια δεύτερου δανεισμού (θα πρέπει να σκάσει λόγω έλλειψης αδειών)
+                eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
             } catch (Exception e) {
                 System.out.println("    Αναμενόμενο σφάλμα διαθεσιμότητας E-book: " + e.getMessage());
             }
+            
+            System.out.println("   --- Εναλλακτική (UC7 Alt 4): Revocation via Expiry ---");
+            eBookService.revokeLoan(successfulCheckIn.getCheckInId());
+            System.out.println("    Η revokeLoan κλήθηκε επιτυχώς (προσομοίωση από TimerSystem).\n");
 
 
             // =====================================================================
