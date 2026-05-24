@@ -55,6 +55,14 @@ public class OrderService {
         }
     }
 
+    /**
+     * Υλοποιεί την ακύρωση της παραγγελίας από τον χρήστη (προστέθηκε στο Sequence Diagram).
+     */
+    public void cancelOrder() {
+        // Η λογική ακύρωσης (π.χ. καθαρισμός state/καλαθιού στο backend αν χρειάζεται).
+        // Σε stateless REST API, συνήθως αρκεί η επιστροφή στο μενού από το Frontend.
+    }
+
     public void verifyAvailability(List<OrderItemRequest> requestedItems) {
         for (OrderItemRequest req : requestedItems) {
             if (req.getMenuItemId() == null) {
