@@ -9,16 +9,21 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
         <activity
-            android:name=".ScreenVenues"
+            android:name=".ScreenLogin"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".ScreenRegister" />
+        <activity android:name=".ScreenVenues" />
         <activity android:name=".ScreenForm" />
         <activity android:name=".ScreenTables" />
         <activity android:name=".ScreenConfirm" />
-        <activity android:name=".ScreenLiveBoard" />
+        <activity android:name=".ScreenEBookVault" />
+        <activity android:name=".ScreenEBookReader" />
+        <activity android:name=".ScreenOrderMenu" />
+        <activity android:name=".ScreenOrderSummary" />
     </application>
 </manifest>
