@@ -42,4 +42,14 @@ public class OrderController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/cancel")
+    public ResponseEntity<?> cancelOrder() {
+        try {
+            orderService.cancelOrder();
+            return ResponseEntity.ok("Order cancelled successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }

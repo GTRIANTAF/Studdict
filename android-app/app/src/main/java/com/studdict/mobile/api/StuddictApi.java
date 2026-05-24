@@ -2,6 +2,14 @@ package com.studdict.mobile.api;
 
 import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.StudyTable;
+import com.studdict.mobile.model.RegisterRequest;
+import com.studdict.mobile.model.LoginRequest;
+import com.studdict.mobile.model.Student;
+import com.studdict.mobile.model.MenuItem;
+import com.studdict.mobile.model.OrderRequest;
+import com.studdict.mobile.model.Order;
+import com.studdict.mobile.model.EBook;
+import com.studdict.mobile.model.EBookLoan;
 
 import java.util.List;
 
@@ -48,4 +56,31 @@ public interface StuddictApi {
             @Path("reservationId") long reservationId,
             @Query("studentId") String studentId
     );
+
+    // --- UC11 & UC12: Account Creation & Login ---
+    @POST("api/students/register")
+    Call<Student> registerStudent(@Body RegisterRequest request);
+
+    @POST("api/students/login")
+    Call<Student> loginStudent(@Body LoginRequest request);
+
+    // --- UC7: Digital E-book Loan ---
+    @POST("api/ebooks/access/{checkInId}")
+    Call<Boolean> requestAccess(@Path("checkInId") long checkInId);
+
+    @GET("api/ebooks/search")
+    Call<List<EBook>> executeSearch(@Query("keyword") String keyword);
+
+    @POST("api/ebooks/loan")
+    Call<EBookLoan> requestLoan(@Query("checkInId") long checkInId, @Query("ebookId") long ebookId);
+
+    @POST("api/ebooks/return/{loanId}")
+    Call<String> requestReturn(@Path("loanId") long loanId);
+
+    // --- UC8: F&B Order ---
+    @GET("api/orders/catalog")
+    Call<List<MenuItem>> readCatalog();
+
+    @POST("api/orders/create")
+    Call<Order> createOrder(@Body OrderRequest request);
 }

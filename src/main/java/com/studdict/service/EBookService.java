@@ -105,6 +105,20 @@ public class EBookService {
         }
     }
 
+    /**
+     * Καλείται από το TimerSystem όταν λήξει η κράτηση (όπως προστέθηκε στο Sequence Diagram)
+     */
+    public void signalExpiry(Long checkInId) {
+        revokeLoan(checkInId);
+    }
+
+    /**
+     * Καλείται από το CheckoutService κατά το Standard Check-out
+     */
+    public void notifyCheckoutCompleted(Long checkInId) {
+        revokeLoan(checkInId);
+    }
+
     // --- Βοηθητικές μέθοδοι ---
 
     public void releaseLoan(EBookLoan loan) {
