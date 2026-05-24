@@ -21,6 +21,7 @@ public class OrderService {
     // Με το νέο domain model η Order συνδέεται απευθείας με το StudyTable (μέσω QR),
     // οπότε δεν χρειαζόμαστε πλέον το ReservationRepository.
     @Autowired private StudyTableRepository studyTableRepository;
+    @Autowired private BillRepository billRepository;
 
     /**
      * UC8 - Παραγγελία F&B.
@@ -89,10 +90,8 @@ public class OrderService {
         // 4. Δημιουργία νέας παραγγελίας
         Order order = new Order();
         order.setPlacedAt(LocalDateTime.now());
-        order.setStatus("PREPARING"); // Αποστολή στην κουζίνα (UC8 βήμα 9)
+        order.setStatus("PREPARING");
         order.setTable(table);
-
-        double totalAmount = 0.0;
 
         // 5. Δημιουργία των γραμμών (OrderItems) με σωστή ποσότητα & subtotal
         for (Map.Entry<Long, Integer> entry : quantitiesByItem.entrySet()) {
@@ -113,8 +112,23 @@ public class OrderService {
             order.getItems().add(orderItem);
         }
 
-        // Η αποθήκευση γίνεται εδώ προσωρινά
-        return orderRepository.save(order);
+        // Αρχική αποθήκευση για να πάρει ID
+        order = orderRepository.save(order);
+
+        // 6. Υπολογισμός κόστους (self-call όπως στο UC8)
+        calculateCost(order);
+
+        // 7. Προσθήκη κόστους στον λογαριασμό (Bill)
+        Bill bill = new Bill();
+        bill.setTableId(tableId);
+        bill.setTotalAmount(order.getTotalAmount());
+        bill.setIssueTime(LocalDateTime.now());
+        billRepository.save(bill);
+
+        // 8. Αποστολή παραγγελίας στην κουζίνα (Mock - KitchenSystem)
+        System.out.println("[KitchenSystem] Ελήφθη νέα παραγγελία για το τραπέζι " + tableId + " με συνολικό κόστος: " + order.getTotalAmount() + "€");
+
+        return order;
     }
 
     /**

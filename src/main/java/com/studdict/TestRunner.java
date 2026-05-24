@@ -312,7 +312,9 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("    Η Μαρία σκανάρει το σωστό QR-2. Αποτέλεσμα Check-in: " + successfulCheckIn.isSuccessful() + " στις " + successfulCheckIn.getCheckInTime());
 
             System.out.println("   --- Εναλλακτική (UC5 Alt 2): Λάθος ώρα Check-in ---");
-            System.out.println("    (Το CheckInService προς το παρόν επικυρώνει μόνο το QR, ο έλεγχος ώρας είναι pending)");
+            Long futureResId = reservationService.savePrivateReservation("S2", table2.getId(), today.plusDays(1), LocalTime.of(12, 0), 120);
+            com.studdict.service.CheckInService.ReservationValidationResult timeValidation = checkInService.validateReservation(futureResId, "QR-2");
+            System.out.println("    Έλεγχος Check-in για μελλοντική κράτηση. Αποτέλεσμα Validation: " + timeValidation);
 
             // =====================================================================
             // TEST GAMIFICATION (UC9 & UC10)
@@ -404,38 +406,56 @@ public class TestRunner implements CommandLineRunner {
                 System.out.println("    Αναμενόμενο σφάλμα παραγγελίας: " + e.getMessage());
             }
 
+            System.out.println("   --- Εναλλακτική (UC8 Alt 2): Ακύρωση παραγγελίας πριν την υποβολή ---");
+            List<OrderItemRequest> cancelledCart = new java.util.ArrayList<>();
+            orderService.addProduct(cancelledCart, coffee.getItemId(), 1);
+            cancelledCart.clear(); // Ο χρήστης πατάει ακύρωση
+            try {
+                orderService.processSummary(cancelledCart);
+            } catch (Exception e) {
+                System.out.println("    Αναμενόμενο σφάλμα (Άδειο καλάθι): " + e.getMessage());
+            }
+
 
             // =====================================================================
             // TEST 13: Ψηφιακός Δανεισμός E-book (UC7)
             // =====================================================================
             System.out.println("▶️ TEST 13: Ψηφιακός Δανεισμός E-book (UC7)");
             EBook ebook = eBookRepository.findAll().get(0);
-            EBookLicense availableLicense = eBookService.checkAvailability(ebook.geteBookId());
-            EBookLoan loan = eBookService.createLoan(successfulCheckIn.getCheckInId(), availableLicense);
+            
+            System.out.println("    Εκτέλεση requestAccess()...");
+            boolean accessGranted = eBookService.requestAccess(successfulCheckIn.getCheckInId());
+            
+            System.out.println("    Εκτέλεση requestLoan()...");
+            EBookLoan loan = eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
             System.out.println("   ✅ Ο δανεισμός E-book ξεκίνησε στις: " + loan.getStartTime());
             
             // Alt 3: Early Return
             System.out.println("   --- Εναλλακτική 3: Πρόωρη επιστροφή του E-book ---");
-            eBookService.checkRequest(loan.getLoanId());
-            eBookService.releaseLoan(loan);
+            EBookLoan checkedLoan = eBookService.checkRequest(loan.getLoanId());
+            eBookService.releaseLoan(checkedLoan);
             System.out.println("   ✅ Το E-book επιστράφηκε επιτυχώς πριν τη λήξη της κράτησης.\n");
 
             System.out.println("   --- Εναλλακτική (UC7 Alt 1): Φοιτητής χωρίς Check-in ---");
             try {
-                eBookService.createLoan(999L, availableLicense);
+                eBookService.requestAccess(999L);
             } catch (Exception e) {
-                System.out.println("    Αναμενόμενο σφάλμα δανεισμού χωρίς check-in: " + e.getMessage());
+                System.out.println("    Αναμενόμενο σφάλμα πρόσβασης χωρίς check-in: " + e.getMessage());
             }
 
             System.out.println("   --- Εναλλακτική (UC7 Alt 2): Μη διαθεσιμότητα άδειας ---");
             try {
-                // To ebook έχει 1 άδεια. Θα δεσμευτεί ξανά από τον S2.
-                EBookLoan loan2 = eBookService.createLoan(successfulCheckIn.getCheckInId(), availableLicense);
-                // Προσπάθεια δεύτερου δανεισμού
-                eBookService.checkAvailability(ebook.geteBookId());
+                // To ebook έχει 1 άδεια. Την ξαναδεσμεύουμε από τον S2.
+                EBookLoan loan2 = eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
+                // Προσπάθεια δεύτερου δανεισμού (θα πρέπει να σκάσει λόγω έλλειψης αδειών)
+                eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
             } catch (Exception e) {
                 System.out.println("    Αναμενόμενο σφάλμα διαθεσιμότητας E-book: " + e.getMessage());
             }
+            
+            System.out.println("   --- Εναλλακτική (UC7 Alt 4): Revocation via Expiry ---");
+            eBookService.revokeLoan(successfulCheckIn.getCheckInId());
+            System.out.println("    Η revokeLoan κλήθηκε επιτυχώς (προσομοίωση από TimerSystem).\n");
 
 
             // =====================================================================
