@@ -10,6 +10,7 @@ import com.studdict.mobile.model.OrderRequest;
 import com.studdict.mobile.model.Order;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
+import com.studdict.mobile.model.PublicReservation;
 
 import java.util.List;
 
@@ -83,4 +84,7 @@ public interface StuddictApi {
 
     @POST("api/orders/create")
     Call<Order> createOrder(@Body OrderRequest request);
+
+    @GET("api/liveboard/published")
+    Call<List<PublicReservation>> getPublishedReservations();
 }
