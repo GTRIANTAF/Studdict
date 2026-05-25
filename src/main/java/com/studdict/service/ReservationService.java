@@ -96,6 +96,9 @@ public class ReservationService {
         table.setIsAvailable(false);
         studyTableRepository.save(table);
 
+        // Notify the Live Board!
+        publishReservation(reservation.getReservationId(), subject.getSubjectId(), table.getId());
+
         return reservation.getReservationId();
     }
 
@@ -140,5 +143,16 @@ public class ReservationService {
             table.setSoftLockExpiration(null);
             studyTableRepository.save(table);
         }
+    }
+
+    // --- LIVE BOARD METHODS ---
+
+    // Matches the UML Sequence Diagram exactly
+    public void publishReservation(Long reservationId, Long subjectId, Integer tableId) {
+        System.out.println("✅ [LiveBoard] Published! Reservation: " + reservationId + ", Subject: " + subjectId + ", Table: " + tableId);
+    }
+
+    public List<Reservation> getPublishedReservations() {
+        return reservationRepository.findByVisibilityAndStatus("Public", "CONFIRMED");
     }
 }

@@ -22,12 +22,32 @@ public class EBookService {
      * UC7 - Ψηφιακός Δανεισμός E-book (Βασική Ροή).
      * Διαθέσιμο μόνο όταν ο φοιτητής έχει ενεργό, έγκυρο Check-in σε κράτηση που δεν έχει λήξει.
      */
+    /**
+     * Υλοποιεί το requestAccess() του Sequence Diagram
+     */
+    public boolean requestAccess(Long checkInId) {
+        CheckIn checkIn = checkInRepository.findById(checkInId)
+                .orElseThrow(() -> new RuntimeException("Το Check-in δεν βρέθηκε."));
+        if (!checkIn.isSuccessful() || isReservationExpired(checkIn.getReservation())) {
+            throw new RuntimeException("Check-in Required (ή η κράτηση έληξε).");
+        }
+        return true;
+    }
+
     public List<EBook> executeSearch(String keyword) {
         // Υλοποιεί το SearchCtrl.executeSearch() του Sequence Diagram
         return eBookRepository.findAll().stream()
                 .filter(b -> b.getTitle().toLowerCase().contains(keyword.toLowerCase()) || 
                              b.getAuthor().toLowerCase().contains(keyword.toLowerCase()))
                 .toList();
+    }
+
+    /**
+     * Υλοποιεί το requestLoan() του Sequence Diagram
+     */
+    public EBookLoan requestLoan(Long checkInId, Long ebookId) {
+        EBookLicense license = checkAvailability(ebookId);
+        return createLoan(checkInId, license);
     }
 
     public EBookLicense checkAvailability(Long ebookId) {
@@ -85,18 +105,36 @@ public class EBookService {
         }
     }
 
+    /**
+     * Καλείται από το TimerSystem όταν λήξει η κράτηση (όπως προστέθηκε στο Sequence Diagram)
+     */
+    public void signalExpiry(Long checkInId) {
+        revokeLoan(checkInId);
+    }
+
+    /**
+     * Καλείται από το CheckoutService κατά το Standard Check-out
+     */
+    public void notifyCheckoutCompleted(Long checkInId) {
+        revokeLoan(checkInId);
+    }
+
     // --- Βοηθητικές μέθοδοι ---
 
     public void releaseLoan(EBookLoan loan) {
-        loan.setActive(false);
-        loan.setEndTime(LocalDateTime.now());
+        // Re-fetch to attach to the current Hibernate session and avoid LazyInitializationException
+        EBookLoan attachedLoan = loanRepository.findById(loan.getLoanId())
+                .orElseThrow(() -> new RuntimeException("Ο δανεισμός δεν βρέθηκε."));
 
-        EBookLicense license = loan.getLicense();
+        attachedLoan.setActive(false);
+        attachedLoan.setEndTime(LocalDateTime.now());
+
+        EBookLicense license = attachedLoan.getLicense();
         if (license != null) {
             license.setAvailable(true);
             licenseRepository.save(license);
         }
-        loanRepository.save(loan);
+        loanRepository.save(attachedLoan);
     }
 
     private boolean isReservationExpired(Reservation reservation) {
