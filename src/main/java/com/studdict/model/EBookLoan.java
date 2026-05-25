@@ -2,6 +2,7 @@ package com.studdict.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ebook_loans")
@@ -21,11 +22,13 @@ public class EBookLoan {
     @Column(name = "is_active")
     private boolean isActive;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "license_id")
     private EBookLicense license;
 
     // Updated to link directly to Maria's CheckIn entity
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "check_in_id", nullable = false)
     private CheckIn checkIn;

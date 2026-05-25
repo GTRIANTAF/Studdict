@@ -31,6 +31,18 @@ public class ScreenVenues extends Activity {
             Intent intent = new Intent(this, ScreenLiveBoard.class);
             startActivity(intent);
         });
+
+        View navOrder = findViewById(R.id.navOrder);
+        navOrder.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenOrderMenu.class);
+            startActivity(intent);
+        });
+
+        View navEbook = findViewById(R.id.navEbook);
+        navEbook.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenEBookVault.class);
+            startActivity(intent);
+        });
     }
 
     private void selectVenue(long venueId, String venueName) {

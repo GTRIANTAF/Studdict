@@ -102,24 +102,24 @@ public class ScreenOrderMenu extends Activity {
             holder.txtName.setText(item.getName());
             holder.txtPrice.setText("$" + String.format("%.2f", item.getPrice()));
 
-            Integer qtyVal = cart.get(item.getId());
+            Integer qtyVal = cart.get(item.getItemId());
             int qty = qtyVal != null ? qtyVal : 0;
             holder.txtQty.setText(String.valueOf(qty));
 
             holder.btnAdd.setOnClickListener(v -> {
-                Integer qVal = cart.get(item.getId());
+                Integer qVal = cart.get(item.getItemId());
                 int q = (qVal != null ? qVal : 0) + 1;
-                cart.put(item.getId(), q);
+                cart.put(item.getItemId(), q);
                 notifyItemChanged(position);
             });
 
             holder.btnRemove.setOnClickListener(v -> {
-                Integer qVal = cart.get(item.getId());
+                Integer qVal = cart.get(item.getItemId());
                 int q = qVal != null ? qVal : 0;
                 if (q > 0) {
                     q--;
-                    if (q == 0) cart.remove(item.getId());
-                    else cart.put(item.getId(), q);
+                    if (q == 0) cart.remove(item.getItemId());
+                    else cart.put(item.getItemId(), q);
                     notifyItemChanged(position);
                 }
             });
