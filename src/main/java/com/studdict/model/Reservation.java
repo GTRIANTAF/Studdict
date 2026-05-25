@@ -3,6 +3,7 @@ package com.studdict.model;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -32,6 +33,7 @@ public abstract class Reservation {
     @Column(name = "visibility")
     protected String visibility;
 
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "table_id")
     private StudyTable table;

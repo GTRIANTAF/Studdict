@@ -15,4 +15,6 @@ public interface EBookLoanRepository extends JpaRepository<EBookLoan, Long> {
     // ώστε να απελευθερωθούν αυτόματα οι άδειες κατά το Check-out ή τη λήξη της κράτησης.
     @Query("SELECT l FROM EBookLoan l WHERE l.checkIn.checkInId = :checkInId AND l.isActive = true")
     List<EBookLoan> findActiveLoansByCheckIn(@Param("checkInId") Long checkInId);
+
+    List<EBookLoan> findByIsActiveTrue();
 }
