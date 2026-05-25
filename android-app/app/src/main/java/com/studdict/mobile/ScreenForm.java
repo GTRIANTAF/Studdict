@@ -147,14 +147,14 @@ public class ScreenForm extends Activity {
     private void selectDate(Button selected, String dateValue) {
         selectedDate = dateValue;
         todayButton.setBackgroundResource(R.drawable.pill_inactive);
-        todayButton.setTextColor(getResources().getColor(R.color.studdict_muted));
+        todayButton.setTextColor(getColor(R.color.studdict_muted));
         tomorrowButton.setBackgroundResource(R.drawable.pill_inactive);
-        tomorrowButton.setTextColor(getResources().getColor(R.color.studdict_muted));
+        tomorrowButton.setTextColor(getColor(R.color.studdict_muted));
         thirdDateButton.setBackgroundResource(R.drawable.pill_inactive);
-        thirdDateButton.setTextColor(getResources().getColor(R.color.studdict_muted));
+        thirdDateButton.setTextColor(getColor(R.color.studdict_muted));
 
         selected.setBackgroundResource(R.drawable.pill_active);
-        selected.setTextColor(getResources().getColor(R.color.studdict_surface));
+        selected.setTextColor(getColor(R.color.studdict_surface));
     }
 
     private void selectPrivateMode() {

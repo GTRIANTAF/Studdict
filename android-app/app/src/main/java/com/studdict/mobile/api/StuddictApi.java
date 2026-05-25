@@ -1,16 +1,19 @@
 package com.studdict.mobile.api;
 
-import com.studdict.mobile.model.ReservationRequest;
-import com.studdict.mobile.model.StudyTable;
-import com.studdict.mobile.model.RegisterRequest;
-import com.studdict.mobile.model.LoginRequest;
-import com.studdict.mobile.model.Student;
-import com.studdict.mobile.model.MenuItem;
-import com.studdict.mobile.model.OrderRequest;
-import com.studdict.mobile.model.Order;
+import com.studdict.mobile.model.Bill;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
+import com.studdict.mobile.model.KitchenOrder;
+import com.studdict.mobile.model.LoginRequest;
+import com.studdict.mobile.model.MenuItem;
+import com.studdict.mobile.model.Order;
+import com.studdict.mobile.model.OrderItemRequest;
+import com.studdict.mobile.model.OrderRequest;
 import com.studdict.mobile.model.PublicReservation;
+import com.studdict.mobile.model.RegisterRequest;
+import com.studdict.mobile.model.ReservationRequest;
+import com.studdict.mobile.model.Student;
+import com.studdict.mobile.model.StudyTable;
 
 import java.util.List;
 
@@ -72,8 +75,15 @@ public interface StuddictApi {
     @GET("api/ebooks/search")
     Call<List<EBook>> executeSearch(@Query("keyword") String keyword);
 
+    // Gap 1: separate availability check before requestLoan
+    @GET("api/ebooks/availability/{ebookId}")
+    Call<Boolean> checkEBookAvailability(@Path("ebookId") long ebookId);
+
     @POST("api/ebooks/loan")
     Call<EBookLoan> requestLoan(@Query("checkInId") long checkInId, @Query("ebookId") long ebookId);
+
+    @GET("api/ebooks/loan/{loanId}")
+    Call<EBookLoan> getLoanStatus(@Path("loanId") long loanId);
 
     @POST("api/ebooks/return/{loanId}")
     Call<String> requestReturn(@Path("loanId") long loanId);
@@ -82,8 +92,28 @@ public interface StuddictApi {
     @GET("api/orders/catalog")
     Call<List<MenuItem>> readCatalog();
 
+    // Gap 5: addProduct per-item validation
+    @POST("api/orders/cart/add")
+    Call<Boolean> addCartItem(@Query("menuItemId") long menuItemId, @Query("quantity") int quantity);
+
+    // Gap 6: processSummary before showing OrderReview
+    @POST("api/orders/summary")
+    Call<Boolean> processSummary(@Body List<OrderItemRequest> items);
+
     @POST("api/orders/create")
     Call<Order> createOrder(@Body OrderRequest request);
+
+    // Gap 7: cancel order calls backend
+    @POST("api/orders/cancel")
+    Call<String> cancelOrder();
+
+    // Gap 8: kitchen screen polling
+    @GET("api/orders/kitchen/active")
+    Call<List<KitchenOrder>> getKitchenOrders();
+
+    // Gap 9: bill screen lookup
+    @GET("api/bills/table/{tableId}")
+    Call<Bill> getBillByTable(@Path("tableId") int tableId);
 
     @GET("api/liveboard/published")
     Call<List<PublicReservation>> getPublishedReservations();

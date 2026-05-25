@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.studdict.mobile.api.ApiClient;
 import com.studdict.mobile.model.MenuItem;
+import com.studdict.mobile.model.OrderItemRequest;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,7 +31,14 @@ public class ScreenOrderMenu extends Activity {
 
     private RecyclerView recyclerMenu;
     private MenuAdapter adapter;
-    private Map<Long, Integer> cart = new HashMap<>(); // MenuItem ID to Quantity
+    private TextView txtSubtotal;
+    private Map<Long, Integer> cart = new HashMap<>();
+    private List<MenuItem> menuItems = new ArrayList<>();
+
+    // UC8 Gap 5: callback interface for addProduct validation
+    interface OnAddValidationListener {
+        void validate(long menuItemId, int newQuantity, Runnable onSuccess);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +47,7 @@ public class ScreenOrderMenu extends Activity {
 
         recyclerMenu = findViewById(R.id.recyclerMenu);
         recyclerMenu.setLayoutManager(new LinearLayoutManager(this));
+        txtSubtotal = findViewById(R.id.txtCartSubtotal);
 
         Button btnReviewOrder = findViewById(R.id.btnReviewOrder);
         btnReviewOrder.setOnClickListener(v -> {
@@ -46,18 +55,83 @@ public class ScreenOrderMenu extends Activity {
                 Toast.makeText(this, "Your cart is empty", Toast.LENGTH_SHORT).show();
                 return;
             }
-            Intent intent = new Intent(this, ScreenOrderSummary.class);
-            // In a real app we'd pass the cart via intent or shared ViewModel. 
-            // For simplicity we pass the cart items.
-            ArrayList<String> cartItems = new ArrayList<>();
-            for (Map.Entry<Long, Integer> entry : cart.entrySet()) {
-                cartItems.add(entry.getKey() + ":" + entry.getValue());
-            }
-            intent.putStringArrayListExtra("CART_ITEMS", cartItems);
-            startActivity(intent);
+            // UC8 Gap 6: processSummary called before opening OrderReview (per sequence diagram)
+            List<OrderItemRequest> items = buildOrderItems();
+            ApiClient.getApi().processSummary(items).enqueue(new Callback<Boolean>() {
+                @Override
+                public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                    if (response.isSuccessful()) {
+                        navigateToSummary();
+                    } else {
+                        Toast.makeText(ScreenOrderMenu.this, "Cannot proceed with order.", Toast.LENGTH_SHORT).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Boolean> call, Throwable t) {
+                    navigateToSummary(); // Demo mode
+                }
+            });
         });
 
         fetchCatalog();
+    }
+
+    // UC8 Gap 5: validates item with backend before adding to local cart
+    private void validateAndAddItem(long menuItemId, int newQty, Runnable onSuccess) {
+        ApiClient.getApi().addCartItem(menuItemId, newQty).enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
+                    onSuccess.run();
+                } else {
+                    Toast.makeText(ScreenOrderMenu.this, "Item not available.", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Boolean> call, Throwable t) {
+                onSuccess.run(); // Demo mode: allow add
+            }
+        });
+    }
+
+    // UC8: Cart: updateSubtotal()
+    private void updateSubtotal() {
+        double total = 0;
+        for (Map.Entry<Long, Integer> entry : cart.entrySet()) {
+            for (MenuItem item : menuItems) {
+                if (item.getItemId().equals(entry.getKey())) {
+                    total += item.getPrice() * entry.getValue();
+                    break;
+                }
+            }
+        }
+        txtSubtotal.setText(total == 0 ? "Cart: €0.00" : String.format("Cart: €%.2f", total));
+    }
+
+    private List<OrderItemRequest> buildOrderItems() {
+        List<OrderItemRequest> items = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : cart.entrySet()) {
+            items.add(new OrderItemRequest(entry.getKey(), entry.getValue()));
+        }
+        return items;
+    }
+
+    private void navigateToSummary() {
+        Map<Long, MenuItem> itemMap = new HashMap<>();
+        for (MenuItem item : menuItems) itemMap.put(item.getItemId(), item);
+
+        ArrayList<String> cartItems = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : cart.entrySet()) {
+            MenuItem item = itemMap.get(entry.getKey());
+            String name = item != null ? item.getName() : "Item #" + entry.getKey();
+            double price = item != null ? item.getPrice() : 0.0;
+            cartItems.add(entry.getKey() + "|" + entry.getValue() + "|" + name + "|" + price);
+        }
+        Intent intent = new Intent(this, ScreenOrderSummary.class);
+        intent.putStringArrayListExtra("CART_ITEMS", cartItems);
+        startActivity(intent);
     }
 
     private void fetchCatalog() {
@@ -65,28 +139,64 @@ public class ScreenOrderMenu extends Activity {
             @Override
             public void onResponse(Call<List<MenuItem>> call, Response<List<MenuItem>> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    adapter = new MenuAdapter(response.body(), cart);
-                    recyclerMenu.setAdapter(adapter);
+                    loadMenu(response.body());
                 } else {
-                    Toast.makeText(ScreenOrderMenu.this, "Failed to load catalog", Toast.LENGTH_SHORT).show();
+                    loadDummyMenu();
                 }
             }
 
             @Override
             public void onFailure(Call<List<MenuItem>> call, Throwable t) {
-                Toast.makeText(ScreenOrderMenu.this, "Network Error", Toast.LENGTH_SHORT).show();
+                loadDummyMenu();
             }
         });
+    }
+
+    private void loadMenu(List<MenuItem> items) {
+        menuItems = items;
+        adapter = new MenuAdapter(menuItems, cart, this::updateSubtotal, this::validateAndAddItem);
+        recyclerMenu.setAdapter(adapter);
+    }
+
+    private void loadDummyMenu() {
+        loadMenu(getDummyMenuItems());
+        Toast.makeText(this, "Offline: showing demo menu.", Toast.LENGTH_SHORT).show();
+    }
+
+    private List<MenuItem> getDummyMenuItems() {
+        List<MenuItem> items = new ArrayList<>();
+        String[][] data = {
+            {"1", "Espresso",       "Strong black coffee",        "2.50"},
+            {"2", "Cappuccino",     "Coffee with steamed milk",   "3.20"},
+            {"3", "Club Sandwich",  "Chicken, lettuce, tomato",   "5.50"},
+            {"4", "Croissant",      "Buttery French pastry",      "2.00"},
+            {"5", "Orange Juice",   "Freshly squeezed",           "3.00"},
+            {"6", "Mineral Water",  "Still or sparkling",         "1.50"},
+        };
+        for (String[] d : data) {
+            MenuItem item = new MenuItem();
+            item.setItemId(Long.parseLong(d[0]));
+            item.setName(d[1]);
+            item.setDescription(d[2]);
+            item.setPrice(Double.parseDouble(d[3]));
+            items.add(item);
+        }
+        return items;
     }
 
     // --- Adapter ---
     private static class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
         private final List<MenuItem> items;
         private final Map<Long, Integer> cart;
+        private final Runnable onCartChanged;
+        private final OnAddValidationListener onAdd;
 
-        MenuAdapter(List<MenuItem> items, Map<Long, Integer> cart) {
+        MenuAdapter(List<MenuItem> items, Map<Long, Integer> cart,
+                    Runnable onCartChanged, OnAddValidationListener onAdd) {
             this.items = items;
             this.cart = cart;
+            this.onCartChanged = onCartChanged;
+            this.onAdd = onAdd;
         }
 
         @NonNull
@@ -100,35 +210,37 @@ public class ScreenOrderMenu extends Activity {
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
             MenuItem item = items.get(position);
             holder.txtName.setText(item.getName());
-            holder.txtPrice.setText("$" + String.format("%.2f", item.getPrice()));
+            holder.txtPrice.setText(String.format("€%.2f", item.getPrice()));
 
-            Integer qtyVal = cart.get(item.getId());
-            int qty = qtyVal != null ? qtyVal : 0;
-            holder.txtQty.setText(String.valueOf(qty));
+            Integer qtyVal = cart.get(item.getItemId());
+            holder.txtQty.setText(String.valueOf(qtyVal != null ? qtyVal : 0));
 
             holder.btnAdd.setOnClickListener(v -> {
-                Integer qVal = cart.get(item.getId());
-                int q = (qVal != null ? qVal : 0) + 1;
-                cart.put(item.getId(), q);
-                notifyItemChanged(position);
+                Integer qVal = cart.get(item.getItemId());
+                int newQty = (qVal != null ? qVal : 0) + 1;
+                // UC8 Gap 5: validate with backend before committing to local cart
+                onAdd.validate(item.getItemId(), newQty, () -> {
+                    cart.put(item.getItemId(), newQty);
+                    notifyItemChanged(position);
+                    onCartChanged.run();
+                });
             });
 
             holder.btnRemove.setOnClickListener(v -> {
-                Integer qVal = cart.get(item.getId());
+                Integer qVal = cart.get(item.getItemId());
                 int q = qVal != null ? qVal : 0;
                 if (q > 0) {
                     q--;
-                    if (q == 0) cart.remove(item.getId());
-                    else cart.put(item.getId(), q);
+                    if (q == 0) cart.remove(item.getItemId());
+                    else cart.put(item.getItemId(), q);
                     notifyItemChanged(position);
+                    onCartChanged.run();
                 }
             });
         }
 
         @Override
-        public int getItemCount() {
-            return items.size();
-        }
+        public int getItemCount() { return items.size(); }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView txtName, txtPrice, txtQty;

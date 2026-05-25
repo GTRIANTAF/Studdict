@@ -6,6 +6,13 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.studdict.mobile.api.ApiClient;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class ScreenVenues extends Activity {
 
@@ -30,6 +37,34 @@ public class ScreenVenues extends Activity {
         navLiveBoard.setOnClickListener(v -> {
             Intent intent = new Intent(this, ScreenLiveBoard.class);
             startActivity(intent);
+        });
+
+        View navOrder = findViewById(R.id.navOrder);
+        navOrder.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenOrderMenu.class);
+            startActivity(intent);
+        });
+
+        View navEbook = findViewById(R.id.navEbook);
+        navEbook.setOnClickListener(v -> {
+            // UC7: Start - Select Digital Vault & Check-in Verification
+            long mockCheckInId = 1L; // Mock check-in ID
+            ApiClient.getApi().requestAccess(mockCheckInId).enqueue(new Callback<Boolean>() {
+                @Override
+                public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                    if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
+                        Intent intent = new Intent(ScreenVenues.this, ScreenEBookVault.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(ScreenVenues.this, "Check-in Required", Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Boolean> call, Throwable t) {
+                    Toast.makeText(ScreenVenues.this, "Network Error: Check-in verification failed", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
     }
 

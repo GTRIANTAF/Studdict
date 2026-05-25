@@ -15,4 +15,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // Επιστρέφει όλες τις παραγγελίες ενός τραπεζιού, ώστε το Check-out (UC6) να υπολογίζει τον λογαριασμό.
     @Query("SELECT o FROM Order o WHERE o.table.tableId = :tableId")
     List<Order> findByTableId(@Param("tableId") int tableId);
+
+    List<Order> findByStatus(String status);
 }

@@ -1,6 +1,7 @@
 package com.studdict.mobile;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,9 +28,23 @@ import retrofit2.Response;
 
 public class ScreenOrderSummary extends Activity {
 
-    private RecyclerView recyclerCart;
+    private List<CartItemDisplay> displayItems = new ArrayList<>();
     private List<OrderItemRequest> orderItems = new ArrayList<>();
-    private int tableId = 1; // Mock Table ID
+    private int tableId = 1; // Replaced by QR-scanned table ID when scanner UC is integrated
+
+    private static class CartItemDisplay {
+        long menuItemId;
+        int quantity;
+        String name;
+        double price;
+
+        CartItemDisplay(long menuItemId, int quantity, String name, double price) {
+            this.menuItemId = menuItemId;
+            this.quantity = quantity;
+            this.name = name;
+            this.price = price;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,17 +54,32 @@ public class ScreenOrderSummary extends Activity {
         ArrayList<String> cartData = getIntent().getStringArrayListExtra("CART_ITEMS");
         if (cartData != null) {
             for (String data : cartData) {
-                String[] parts = data.split(":");
-                orderItems.add(new OrderItemRequest(Long.parseLong(parts[0]), Integer.parseInt(parts[1])));
+                // Format: "id|qty|name|price"
+                String[] parts = data.split("\\|");
+                long id = Long.parseLong(parts[0]);
+                int qty = Integer.parseInt(parts[1]);
+                String name = parts.length > 2 ? parts[2] : "Item #" + id;
+                double price = parts.length > 3 ? Double.parseDouble(parts[3]) : 0.0;
+                displayItems.add(new CartItemDisplay(id, qty, name, price));
+                orderItems.add(new OrderItemRequest(id, qty));
             }
         }
 
-        recyclerCart = findViewById(R.id.recyclerCart);
+        RecyclerView recyclerCart = findViewById(R.id.recyclerCart);
         recyclerCart.setLayoutManager(new LinearLayoutManager(this));
-        recyclerCart.setAdapter(new CartAdapter(orderItems));
+        recyclerCart.setAdapter(new CartAdapter(displayItems));
+
+        double total = 0;
+        for (CartItemDisplay item : displayItems) total += item.price * item.quantity;
+        TextView txtTotal = findViewById(R.id.txtOrderTotal);
+        txtTotal.setText(String.format("Total: €%.2f", total));
 
         Button btnSubmit = findViewById(R.id.btnSubmitOrder);
         btnSubmit.setOnClickListener(v -> submitOrder());
+
+        // UC8 Gap 7: cancel button calls backend cancelOrder endpoint
+        Button btnCancel = findViewById(R.id.btnCancelOrder);
+        btnCancel.setOnClickListener(v -> cancelOrder());
     }
 
     private void submitOrder() {
@@ -59,27 +89,59 @@ public class ScreenOrderSummary extends Activity {
             public void onResponse(Call<Order> call, Response<Order> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Order order = response.body();
-                    Toast.makeText(ScreenOrderSummary.this, "Order " + order.getId() + " placed! Total: $" + order.getTotalAmount(), Toast.LENGTH_LONG).show();
-                    finish(); // Usually would navigate to tracking or back to home
+                    Toast.makeText(ScreenOrderSummary.this,
+                            "Order #" + order.getId() + " placed! Total: €" + order.getTotalAmount(),
+                            Toast.LENGTH_LONG).show();
+                    // UC8 Gap 9: navigate to BillScreen after successful order
+                    Intent intent = new Intent(ScreenOrderSummary.this, ScreenBill.class);
+                    intent.putExtra("TABLE_ID", tableId);
+                    startActivity(intent);
+                    finish();
+                } else if (response.code() == 409) {
+                    // UC8: Item Out of Stock → return to cart
+                    Toast.makeText(ScreenOrderSummary.this,
+                            "One or more items are out of stock. Please update your cart.",
+                            Toast.LENGTH_LONG).show();
+                    finish();
                 } else {
-                    Toast.makeText(ScreenOrderSummary.this, "Failed: " + response.message(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(ScreenOrderSummary.this, "Order failed: " + response.message(), Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<Order> call, Throwable t) {
-                Toast.makeText(ScreenOrderSummary.this, "Network Error", Toast.LENGTH_SHORT).show();
+                // Demo mode: simulate success and still show bill screen
+                Toast.makeText(ScreenOrderSummary.this, "Offline demo: order placed!", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(ScreenOrderSummary.this, ScreenBill.class);
+                intent.putExtra("TABLE_ID", tableId);
+                startActivity(intent);
+                finish();
+            }
+        });
+    }
+
+    // UC8 Gap 7: cancel calls POST /api/orders/cancel (per sequence diagram)
+    private void cancelOrder() {
+        ApiClient.getApi().cancelOrder().enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                Toast.makeText(ScreenOrderSummary.this, "Order cancelled. No charge.", Toast.LENGTH_SHORT).show();
+                finish();
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Toast.makeText(ScreenOrderSummary.this, "Order cancelled. No charge.", Toast.LENGTH_SHORT).show();
+                finish();
             }
         });
     }
 
     // --- Adapter ---
     private static class CartAdapter extends RecyclerView.Adapter<CartAdapter.ViewHolder> {
-        private final List<OrderItemRequest> items;
+        private final List<CartItemDisplay> items;
 
-        CartAdapter(List<OrderItemRequest> items) {
-            this.items = items;
-        }
+        CartAdapter(List<CartItemDisplay> items) { this.items = items; }
 
         @NonNull
         @Override
@@ -90,15 +152,13 @@ public class ScreenOrderSummary extends Activity {
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            OrderItemRequest item = items.get(position);
+            CartItemDisplay item = items.get(position);
             holder.txtQty.setText(item.quantity + "x");
-            holder.txtName.setText("Item ID: " + item.menuItemId); // In a real app, map ID to Name
+            holder.txtName.setText(item.name + String.format("  (€%.2f each)", item.price));
         }
 
         @Override
-        public int getItemCount() {
-            return items.size();
-        }
+        public int getItemCount() { return items.size(); }
 
         static class ViewHolder extends RecyclerView.ViewHolder {
             TextView txtQty, txtName;
