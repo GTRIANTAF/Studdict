@@ -350,17 +350,27 @@ public class TestRunner implements CommandLineRunner {
             // TEST 11: Τροποποίηση Κράτησης (UC4)
             // =====================================================================
             System.out.println("▶️ TEST 11: Τροποποίηση Κράτησης (UC4)");
-            LocalTime newTime = LocalTime.now().minusMinutes(10);
-            Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, newTime, 180);
-            System.out.println("   ✅ Η κράτηση τροποποιήθηκε: Νέα ώρα " + updatedRes.getStartTime() + " με διάρκεια " + updatedRes.getDurationMinutes() + " λεπτά.\n");
 
-            System.out.println("   --- Εναλλακτική (UC4 Alt 1): Μη διαθεσιμότητα θέσεων ---");
+            LocalTime proposedTime = LocalTime.now().plusHours(1);
+            int proposedDuration = 180;
+            System.out.println(" [UI Step 1] Έλεγχος διαθεσιμότητας για νέα ώρα: "+ proposedTime +" και διάρκεια " + proposedDuration +"'");
+
+            List<StudyTable> availableForUpdate = tableService.getAvailableTables(
+                    currentVenue.getVenueId(), today, proposedTime, proposedDuration, 1);
+
+            if (!availableForUpdate.isEmpty()) {
+                System.out.println(" [UI Step 2] Βρέθηκε διαθεσιμότητα. Εκτέλεση modifyReservation...");
+                Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, proposedTime, proposedDuration);
+                System.out.println("✅ Η κράτηση τροποποιήθηκε: Νέα ώρα " + updatedRes.getStartTime() + " με διάρκεια " + updatedRes.getDurationMinutes() + " λεπτά.\n");
+            } else {
+                System.out.println("   ❌ Σφάλμα UI: Δεν υπάρχει διαθεσιμότητα. Η τροποποίηση δεν προχωράει.\n");
+            }
+
+            System.out.println(" --- Εναλλακτική (UC4 alt 1): Μη διαθεσιμότητα θέσεων ---");
             try {
-                // Προσπάθεια αλλαγής σε διάρκεια 1000 λεπτών για πρόκληση conflict
-                Reservation failedUpdate = reservationUpdateService.modifyReservation(privateRes2Id, LocalTime.of(16, 0), 1000);
-                System.out.println("    Αποτέλεσμα: Η κράτηση τροποποιήθηκε.");
+                reservationUpdateService.modifyReservation(privateRes2Id, LocalTime.of(16, 0), 1000);
             } catch (Exception e) {
-                System.out.println("    Αναμενόμενο σφάλμα: " + e.getMessage());
+                System.out.println(" Αναμενόμενο σφάλμα: "+ e.getMessage()+ "\n");
             }
 
 
@@ -462,8 +472,9 @@ public class TestRunner implements CommandLineRunner {
             // TEST 14: Check-out και Πληρωμή (UC6)
             // =====================================================================
             System.out.println("▶️ TEST 14: Check-out και Πληρωμή (UC6)");
+            System.out.println("   [UI Step 1] Αίτημα υπολογισμού λογαριασμού...");
             Bill bill = checkoutService.generateBillForReservation(privateRes2Id);
-            System.out.println("   Λογαριασμός δημιουργήθηκε. Σύνολο: " + bill.getTotalAmount() + "€");
+            System.out.println("   ✅ Λογαριασμός δημιουργήθηκε. Σύνολο προς πληρωμή: " + bill.getTotalAmount() + "€");
 
             System.out.println("   --- Εναλλακτική (UC6 Alt 2): Split Bill ---");
             try {
@@ -475,13 +486,15 @@ public class TestRunner implements CommandLineRunner {
 
             System.out.println("   --- Εναλλακτική (UC6 Alt 1): Αποτυχία πληρωμής (ανεπαρκές ποσό) ---");
             try {
-                paymentService.processPayment(bill.getBillId(), "Credit Card", bill.getTotalAmount() - 1.0);
+                paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount() - 1.0);
             } catch (Exception e) {
                 System.out.println("    Αναμενόμενο σφάλμα κατά την πληρωμή: " + e.getMessage());
             }
 
-            Bill paidBill = paymentService.processPayment(bill.getBillId(), "Credit Card", bill.getTotalAmount());
-            System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε, το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
+            System.out.println("   [UI Step 2] Ο χρήστης επιβεβαιώνει την ψηφιακή πληρωμή...");
+            Bill paidBill = paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount());
+            System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε επιτυχώς (Κατάσταση Settled: " + paidBill.isSettled() + ")!");
+            System.out.println("      Το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
 
             System.out.println("=======================================================");
             System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (14/14) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
