@@ -98,6 +98,22 @@ public class EBookService {
         return loan;
     }
 
+    // Used by the Android reader screen to poll for external loan termination
+    public EBookLoan getLoanStatus(Long loanId) {
+        return loanRepository.findById(loanId)
+                .orElseThrow(() -> new RuntimeException("Ο δανεισμός δεν βρέθηκε."));
+    }
+
+    // UC7 Timer branch: called by LoanExpiryScheduler every minute
+    public void revokeExpiredLoans() {
+        for (EBookLoan loan : loanRepository.findByIsActiveTrue()) {
+            CheckIn checkIn = loan.getCheckIn();
+            if (checkIn != null && isReservationExpired(checkIn.getReservation())) {
+                releaseLoan(loan);
+            }
+        }
+    }
+
     public void revokeLoan(Long checkInId) {
         List<EBookLoan> activeLoans = loanRepository.findActiveLoansByCheckIn(checkInId);
         for (EBookLoan loan : activeLoans) {

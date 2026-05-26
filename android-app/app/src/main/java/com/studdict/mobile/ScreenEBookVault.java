@@ -30,7 +30,7 @@ public class ScreenEBookVault extends Activity {
 
     private RecyclerView recyclerBooks;
     private EBookAdapter adapter;
-    private long mockCheckInId = 1L; // Mock check-in ID for demonstration
+    private long mockCheckInId = 1L; // Replaced by scanner check-in ID when UC5 is integrated
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +46,26 @@ public class ScreenEBookVault extends Activity {
         recyclerBooks.setAdapter(adapter);
 
         btnSearch.setOnClickListener(v -> performSearch(editSearch.getText().toString()));
+
+        verifyCheckIn();
+    }
+
+    // UC7: Verify the student has an active check-in before granting vault access
+    private void verifyCheckIn() {
+        ApiClient.getApi().requestAccess(mockCheckInId).enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                if (!response.isSuccessful() || Boolean.FALSE.equals(response.body())) {
+                    Toast.makeText(ScreenEBookVault.this, "Check-in required to access the E-Book Vault.", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Boolean> call, Throwable t) {
+                Toast.makeText(ScreenEBookVault.this, "Offline mode: demo books available.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void performSearch(String keyword) {
@@ -61,32 +81,94 @@ public class ScreenEBookVault extends Activity {
 
             @Override
             public void onFailure(Call<List<EBook>> call, Throwable t) {
-                Toast.makeText(ScreenEBookVault.this, "Network Error", Toast.LENGTH_SHORT).show();
+                adapter.setBooks(getDummyBooks(keyword));
+                Toast.makeText(ScreenEBookVault.this, "Offline: showing demo results.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    // UC7 Gap 1: checkAvailability is a separate client call before requestLoan
     private void requestLoan(EBook book) {
+        ApiClient.getApi().checkEBookAvailability(book.getId()).enqueue(new Callback<Boolean>() {
+            @Override
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
+                    createLoan(book);
+                } else {
+                    Toast.makeText(ScreenEBookVault.this, "No license available for this book.", Toast.LENGTH_LONG).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Boolean> call, Throwable t) {
+                createLoan(book); // Demo mode: proceed
+            }
+        });
+    }
+
+    private void createLoan(EBook book) {
         ApiClient.getApi().requestLoan(mockCheckInId, book.getId()).enqueue(new Callback<EBookLoan>() {
             @Override
             public void onResponse(Call<EBookLoan> call, Response<EBookLoan> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(ScreenEBookVault.this, "Loan Successful!", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(ScreenEBookVault.this, ScreenEBookReader.class);
-                    intent.putExtra("LOAN_ID", response.body().getLoanId());
-                    intent.putExtra("BOOK_TITLE", book.getTitle());
-                    intent.putExtra("BOOK_CONTENT", book.getContent());
-                    startActivity(intent);
+                    openReader(response.body().getLoanId(), book);
+                } else if (response.code() == 403) {
+                    Toast.makeText(ScreenEBookVault.this, "Check-in is no longer valid. Please check in again.", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(ScreenEBookVault.this, "Not available or Check-In invalid.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ScreenEBookVault.this, "No license available for this book.", Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
             public void onFailure(Call<EBookLoan> call, Throwable t) {
-                Toast.makeText(ScreenEBookVault.this, "Network Error", Toast.LENGTH_SHORT).show();
+                // Demo mode: pass -1L so ScreenEBookReader skips loan-status polling
+                Toast.makeText(ScreenEBookVault.this, "Offline demo: opening book.", Toast.LENGTH_SHORT).show();
+                openReader(-1L, book);
             }
         });
+    }
+
+    private void openReader(long loanId, EBook book) {
+        String content = book.getContent() != null ? book.getContent()
+                : "Demo excerpt of \"" + book.getTitle() + "\" by " + book.getAuthor()
+                + ".\n\n[Connect to backend for full text.]";
+        Intent intent = new Intent(this, ScreenEBookReader.class);
+        intent.putExtra("LOAN_ID", loanId);
+        intent.putExtra("BOOK_TITLE", book.getTitle());
+        intent.putExtra("BOOK_CONTENT", content);
+        startActivity(intent);
+    }
+
+    private List<EBook> getDummyBooks(String keyword) {
+        List<EBook> all = new ArrayList<>();
+        String[][] data = {
+            {"1", "Introduction to Algorithms", "Cormen, Leiserson, Rivest, Stein",
+                "Chapter 1: The Role of Algorithms in Computing\n\nAn algorithm is any well-defined computational procedure..."},
+            {"2", "Clean Code", "Robert C. Martin",
+                "Chapter 1: Clean Code\n\nThere are two things about software — its beauty and its mess..."},
+            {"3", "Design Patterns", "Gang of Four",
+                "Chapter 1: Introduction\n\nDesigning object-oriented software is hard..."},
+            {"4", "Database System Concepts", "Silberschatz, Korth, Sudarshan",
+                "Chapter 1: Introduction\n\nA database-management system (DBMS) is a collection of interrelated data..."},
+            {"5", "Operating System Concepts", "Silberschatz, Galvin, Gagne",
+                "Chapter 1: Introduction\n\nAn operating system is a program that manages a computer's hardware..."},
+        };
+        for (String[] d : data) {
+            EBook book = new EBook();
+            book.setId(Long.parseLong(d[0]));
+            book.setTitle(d[1]);
+            book.setAuthor(d[2]);
+            book.setContent(d[3] + "\n\n[Demo content — connect to backend for full text.]");
+            all.add(book);
+        }
+        if (keyword.isEmpty()) return all;
+        String kw = keyword.toLowerCase();
+        List<EBook> filtered = new ArrayList<>();
+        for (EBook b : all) {
+            if (b.getTitle().toLowerCase().contains(kw) || b.getAuthor().toLowerCase().contains(kw))
+                filtered.add(b);
+        }
+        return filtered.isEmpty() ? all : filtered;
     }
 
     // --- Adapter ---

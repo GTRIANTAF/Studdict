@@ -25,5 +25,8 @@
         <activity android:name=".ScreenEBookReader" />
         <activity android:name=".ScreenOrderMenu" />
         <activity android:name=".ScreenOrderSummary" />
+        <activity android:name=".ScreenBill" />
+        <activity android:name=".ScreenKitchenOrders" />
+        <activity android:name=".ScreenLiveBoard" />
     </application>
 </manifest>

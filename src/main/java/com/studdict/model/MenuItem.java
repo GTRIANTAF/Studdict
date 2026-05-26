@@ -14,8 +14,8 @@ public class MenuItem {
     private String name;
     private double price;
 
-    @Column(name = "is_available")
-    private boolean isAvailable;
+    @Column(name = "is_available", columnDefinition = "boolean default true")
+    private boolean isAvailable = true;
 
     private String category;
 
