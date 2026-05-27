@@ -7,6 +7,7 @@ import com.studdict.model.Student;
 import com.studdict.repository.InviteCodeRepository;
 import com.studdict.repository.ParticipantRepository;
 import com.studdict.repository.ReservationRepository;
+import com.studdict.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +23,16 @@ public class InviteCodeService {
     private final InviteCodeRepository inviteCodeRepository;
     private final ParticipantRepository participantRepository;
     private final ReservationRepository reservationRepository;
+    private final StudentRepository studentRepository;
 
     public InviteCodeService(InviteCodeRepository inviteCodeRepository,
                              ParticipantRepository participantRepository,
-                             ReservationRepository reservationRepository) {
+                             ReservationRepository reservationRepository,
+                             StudentRepository studentRepository) {
         this.inviteCodeRepository = inviteCodeRepository;
         this.participantRepository = participantRepository;
         this.reservationRepository = reservationRepository;
+        this.studentRepository = studentRepository;
     }
 
     public InviteCode generateInviteCode(Reservation reservation, Student host) {
@@ -47,6 +51,21 @@ public class InviteCodeService {
         inviteCode.setActive(true);
 
         return inviteCodeRepository.save(inviteCode);
+    }
+
+    public InviteCode generateInviteCode(Long reservationId, String hostId) {
+        if (reservationId == null || hostId == null || hostId.isBlank()) {
+            return null;
+        }
+
+        Optional<Reservation> reservationOptional = reservationRepository.findById(reservationId);
+        Optional<Student> hostOptional = studentRepository.findById(hostId);
+
+        if (reservationOptional.isEmpty() || hostOptional.isEmpty()) {
+            return null;
+        }
+
+        return generateInviteCode(reservationOptional.get(), hostOptional.get());
     }
 
     public InviteCode findCode(String code) {
@@ -93,7 +112,8 @@ public class InviteCodeService {
             return false;
         }
 
-        long participantsCount = participantRepository.countByReservationId(reservation.getReservationId());
+        long participantsCount =
+                participantRepository.countByReservationId(reservation.getReservationId());
 
         return participantsCount < reservation.getNumberOfPeople();
     }

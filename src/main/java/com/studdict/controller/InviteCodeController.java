@@ -1,7 +1,6 @@
 package com.studdict.controller;
 
 import com.studdict.model.InviteCode;
-import com.studdict.model.Reservation;
 import com.studdict.model.Student;
 import com.studdict.service.InviteCodeService;
 import org.springframework.web.bind.annotation.*;
@@ -19,8 +18,8 @@ public class InviteCodeController {
     @PostMapping("/generate")
     public InviteCode generateInviteCode(@RequestBody GenerateInviteCodeRequest request) {
         return inviteCodeService.generateInviteCode(
-                request.getReservation(),
-                request.getHost()
+                request.getReservationId(),
+                request.getHostId()
         );
     }
 
@@ -48,23 +47,23 @@ public class InviteCodeController {
 
     public static class GenerateInviteCodeRequest {
 
-        private Reservation reservation;
-        private Student host;
+        private Long reservationId;
+        private String hostId;
 
-        public Reservation getReservation() {
-            return reservation;
+        public Long getReservationId() {
+            return reservationId;
         }
 
-        public void setReservation(Reservation reservation) {
-            this.reservation = reservation;
+        public void setReservationId(Long reservationId) {
+            this.reservationId = reservationId;
         }
 
-        public Student getHost() {
-            return host;
+        public String getHostId() {
+            return hostId;
         }
 
-        public void setHost(Student host) {
-            this.host = host;
+        public void setHostId(String hostId) {
+            this.hostId = hostId;
         }
     }
 

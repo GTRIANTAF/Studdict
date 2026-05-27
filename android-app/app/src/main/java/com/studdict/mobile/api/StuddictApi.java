@@ -3,6 +3,8 @@ package com.studdict.mobile.api;
 import com.studdict.mobile.model.Bill;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
+import com.studdict.mobile.model.GenerateInviteCodeRequest;
+import com.studdict.mobile.model.InviteCode;
 import com.studdict.mobile.model.KitchenOrder;
 import com.studdict.mobile.model.LoginRequest;
 import com.studdict.mobile.model.MenuItem;
@@ -61,6 +63,10 @@ public interface StuddictApi {
             @Query("studentId") String studentId
     );
 
+    // --- UC3: Invite Code Reservation Join ---
+    @POST("invite-code/generate")
+    Call<InviteCode> generateInviteCode(@Body GenerateInviteCodeRequest request);
+
     // --- UC11 & UC12: Account Creation & Login ---
     @POST("api/students/register")
     Call<Student> registerStudent(@Body RegisterRequest request);
@@ -75,7 +81,6 @@ public interface StuddictApi {
     @GET("api/ebooks/search")
     Call<List<EBook>> executeSearch(@Query("keyword") String keyword);
 
-    // Gap 1: separate availability check before requestLoan
     @GET("api/ebooks/availability/{ebookId}")
     Call<Boolean> checkEBookAvailability(@Path("ebookId") long ebookId);
 
@@ -92,26 +97,21 @@ public interface StuddictApi {
     @GET("api/orders/catalog")
     Call<List<MenuItem>> readCatalog();
 
-    // Gap 5: addProduct per-item validation
     @POST("api/orders/cart/add")
     Call<Boolean> addCartItem(@Query("menuItemId") long menuItemId, @Query("quantity") int quantity);
 
-    // Gap 6: processSummary before showing OrderReview
     @POST("api/orders/summary")
     Call<Boolean> processSummary(@Body List<OrderItemRequest> items);
 
     @POST("api/orders/create")
     Call<Order> createOrder(@Body OrderRequest request);
 
-    // Gap 7: cancel order calls backend
     @POST("api/orders/cancel")
     Call<String> cancelOrder();
 
-    // Gap 8: kitchen screen polling
     @GET("api/orders/kitchen/active")
     Call<List<KitchenOrder>> getKitchenOrders();
 
-    // Gap 9: bill screen lookup
     @GET("api/bills/table/{tableId}")
     Call<Bill> getBillByTable(@Path("tableId") int tableId);
 
