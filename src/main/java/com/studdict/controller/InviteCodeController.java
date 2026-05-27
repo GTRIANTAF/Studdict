@@ -1,7 +1,6 @@
 package com.studdict.controller;
 
 import com.studdict.model.InviteCode;
-import com.studdict.model.Student;
 import com.studdict.service.InviteCodeService;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +31,21 @@ public class InviteCodeController {
     public boolean joinReservation(@RequestBody JoinReservationRequest request) {
         return inviteCodeService.joinReservation(
                 request.getCode(),
-                request.getGuest()
+                request.getGuestId()
+        );
+    }
+
+    @PostMapping("/join-result")
+    public JoinReservationResponse joinReservationWithResult(@RequestBody JoinReservationRequest request) {
+        InviteCodeService.JoinReservationResult result =
+                inviteCodeService.joinReservationWithResult(
+                        request.getCode(),
+                        request.getGuestId()
+                );
+
+        return new JoinReservationResponse(
+                result.name(),
+                getJoinMessage(result)
         );
     }
 
@@ -43,6 +56,30 @@ public class InviteCodeController {
         }
 
         return "Ο κωδικός πρόσκλησης είναι λανθασμένος, ληγμένος ή η κράτηση είναι πλήρης.";
+    }
+
+    private String getJoinMessage(InviteCodeService.JoinReservationResult result) {
+        if (result == InviteCodeService.JoinReservationResult.SUCCESS) {
+            return "Η συμμετοχή στην κράτηση ολοκληρώθηκε επιτυχώς.";
+        }
+
+        if (result == InviteCodeService.JoinReservationResult.RESERVATION_FULL) {
+            return "Η συγκεκριμένη κράτηση είναι ήδη πλήρης.";
+        }
+
+        if (result == InviteCodeService.JoinReservationResult.ALREADY_PARTICIPANT) {
+            return "Ο φοιτητής συμμετέχει ήδη σε αυτή την κράτηση.";
+        }
+
+        if (result == InviteCodeService.JoinReservationResult.STUDENT_NOT_FOUND) {
+            return "Δεν βρέθηκε ο φοιτητής.";
+        }
+
+        if (result == InviteCodeService.JoinReservationResult.RESERVATION_NOT_FOUND) {
+            return "Δεν βρέθηκε η κράτηση που αντιστοιχεί στον κωδικό.";
+        }
+
+        return "Ο κωδικός πρόσκλησης είναι λανθασμένος ή ληγμένος.";
     }
 
     public static class GenerateInviteCodeRequest {
@@ -83,7 +120,7 @@ public class InviteCodeController {
     public static class JoinReservationRequest {
 
         private String code;
-        private Student guest;
+        private String guestId;
 
         public String getCode() {
             return code;
@@ -93,12 +130,31 @@ public class InviteCodeController {
             this.code = code;
         }
 
-        public Student getGuest() {
-            return guest;
+        public String getGuestId() {
+            return guestId;
         }
 
-        public void setGuest(Student guest) {
-            this.guest = guest;
+        public void setGuestId(String guestId) {
+            this.guestId = guestId;
+        }
+    }
+
+    public static class JoinReservationResponse {
+
+        private String status;
+        private String message;
+
+        public JoinReservationResponse(String status, String message) {
+            this.status = status;
+            this.message = message;
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public String getMessage() {
+            return message;
         }
     }
 }

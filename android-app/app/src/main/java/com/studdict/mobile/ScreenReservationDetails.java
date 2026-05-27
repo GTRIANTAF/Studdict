@@ -1,6 +1,7 @@
 package com.studdict.mobile;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -97,9 +98,10 @@ public class ScreenReservationDetails extends Activity {
         Button joinWithCodeButton = new Button(this);
         joinWithCodeButton.setText("Join with Invite Code");
         joinWithCodeButton.setAllCaps(false);
-        joinWithCodeButton.setOnClickListener(v ->
-                Toast.makeText(this, "Next: UC3 Join Reservation", Toast.LENGTH_LONG).show()
-        );
+        joinWithCodeButton.setOnClickListener(v -> {
+            Intent intent = new Intent(ScreenReservationDetails.this, ScreenInviteCodeInput.class);
+            startActivity(intent);
+        });
         root.addView(joinWithCodeButton);
 
         Button checkInButton = new Button(this);

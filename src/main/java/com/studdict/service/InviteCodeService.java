@@ -133,6 +133,10 @@ public class InviteCodeService {
         return joinReservation(inviteCode, guest);
     }
 
+    public boolean joinReservation(String code, String guestId) {
+        return joinReservationWithResult(code, guestId) == JoinReservationResult.SUCCESS;
+    }
+
     public boolean joinReservation(InviteCode inviteCode, Student guest) {
         if (inviteCode == null || guest == null || !inviteCode.isValid()) {
             return false;
@@ -189,6 +193,60 @@ public class InviteCodeService {
                 .orElse(false);
     }
 
+    public JoinReservationResult joinReservationWithResult(String code, String guestId) {
+        if (code == null || code.isBlank()) {
+            return JoinReservationResult.INVALID_OR_EXPIRED_CODE;
+        }
+
+        if (guestId == null || guestId.isBlank()) {
+            return JoinReservationResult.STUDENT_NOT_FOUND;
+        }
+
+        Optional<Student> guestOptional = studentRepository.findById(guestId);
+
+        if (guestOptional.isEmpty()) {
+            return JoinReservationResult.STUDENT_NOT_FOUND;
+        }
+
+        InviteCode inviteCode = findCode(code);
+
+        if (inviteCode == null || !inviteCode.isValid()) {
+            return JoinReservationResult.INVALID_OR_EXPIRED_CODE;
+        }
+
+        Reservation reservation = inviteCode.getReservation();
+
+        if (reservation == null || reservation.getReservationId() == null) {
+            return JoinReservationResult.RESERVATION_NOT_FOUND;
+        }
+
+        if (!checkAvailability(reservation)) {
+            return JoinReservationResult.RESERVATION_FULL;
+        }
+
+        Student guest = guestOptional.get();
+
+        List<ReservationParticipant> participants =
+                participantRepository.findByReservationId(reservation.getReservationId());
+
+        boolean alreadyParticipant = participants.stream()
+                .anyMatch(participant -> guest.getStudentId().equals(participant.getStudentId()));
+
+        if (alreadyParticipant) {
+            return JoinReservationResult.ALREADY_PARTICIPANT;
+        }
+
+        ReservationParticipant participant = new ReservationParticipant();
+        participant.setReservationId(reservation.getReservationId());
+        participant.setStudentId(guest.getStudentId());
+        participant.setRole("Guest");
+        participant.setCheckedIn(false);
+
+        participantRepository.save(participant);
+
+        return JoinReservationResult.SUCCESS;
+    }
+
     private String generateUniqueCode() {
         String code;
 
@@ -197,5 +255,14 @@ public class InviteCodeService {
         } while (inviteCodeRepository.findByCode(code) != null);
 
         return code;
+    }
+
+    public enum JoinReservationResult {
+        SUCCESS,
+        INVALID_OR_EXPIRED_CODE,
+        RESERVATION_NOT_FOUND,
+        RESERVATION_FULL,
+        STUDENT_NOT_FOUND,
+        ALREADY_PARTICIPANT
     }
 }

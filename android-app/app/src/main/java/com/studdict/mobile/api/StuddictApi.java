@@ -5,6 +5,8 @@ import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
 import com.studdict.mobile.model.GenerateInviteCodeRequest;
 import com.studdict.mobile.model.InviteCode;
+import com.studdict.mobile.model.InviteJoinResponse;
+import com.studdict.mobile.model.JoinInviteCodeRequest;
 import com.studdict.mobile.model.KitchenOrder;
 import com.studdict.mobile.model.LoginRequest;
 import com.studdict.mobile.model.MenuItem;
@@ -16,6 +18,7 @@ import com.studdict.mobile.model.RegisterRequest;
 import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.Student;
 import com.studdict.mobile.model.StudyTable;
+import com.studdict.mobile.model.ValidateInviteCodeRequest;
 
 import java.util.List;
 
@@ -66,6 +69,15 @@ public interface StuddictApi {
     // --- UC3: Invite Code Reservation Join ---
     @POST("invite-code/generate")
     Call<InviteCode> generateInviteCode(@Body GenerateInviteCodeRequest request);
+
+    @POST("invite-code/validate")
+    Call<Boolean> validateInviteCode(@Body ValidateInviteCodeRequest request);
+
+    @POST("invite-code/join")
+    Call<Boolean> joinReservationWithInviteCode(@Body JoinInviteCodeRequest request);
+
+    @POST("invite-code/join-result")
+    Call<InviteJoinResponse> joinReservationWithInviteCodeResult(@Body JoinInviteCodeRequest request);
 
     // --- UC11 & UC12: Account Creation & Login ---
     @POST("api/students/register")
