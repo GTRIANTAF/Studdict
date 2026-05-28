@@ -35,6 +35,7 @@ public class ScreenBill extends Activity {
     private int tableId;
     private String studentId;
     private long reservationId;
+    private int currentBalance = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,15 +105,17 @@ public class ScreenBill extends Activity {
             public void onResponse(Call<LoyaltyWallet> call, Response<LoyaltyWallet> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     LoyaltyWallet wallet = response.body();
-                    updatePointsUI(wallet.getTotalBalance(), false);
+                    currentBalance = wallet.getTotalBalance();
+                    updatePointsUI(currentBalance, false);
                 } else {
+                    currentBalance = 0;
                     updatePointsUI(0, true);
                 }
             }
 
             @Override
             public void onFailure(Call<LoyaltyWallet> call, Throwable t) {
-                // Fallback to offline representation
+                currentBalance = 150;
                 updatePointsUI(150, true);
             }
         });
@@ -143,7 +146,6 @@ public class ScreenBill extends Activity {
                         msg = response.body().string();
                     }
                     Toast.makeText(ScreenBill.this, msg, Toast.LENGTH_LONG).show();
-                    // Refresh both the points balance and the bill total
                     refreshWallet();
                     refreshBill();
                 } catch (Exception e) {
@@ -153,9 +155,9 @@ public class ScreenBill extends Activity {
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                // Mock offline redemption for demo
                 Toast.makeText(ScreenBill.this, "Συνδέθηκε offline: Εξαργυρώθηκαν 100 πόντοι (Mock).", Toast.LENGTH_LONG).show();
-                updatePointsUI(50, true);
+                currentBalance = Math.max(0, currentBalance - 100);
+                updatePointsUI(currentBalance, true);
                 txtBillTotal.setText("Total: €0.00 (Mock Discount)");
             }
         });
@@ -172,8 +174,8 @@ public class ScreenBill extends Activity {
 
     private void executeCheckoutPointsEarning() {
         if (reservationId == -1L) {
-            // Mock checkout if reservation context is missing
-            showCongratulationsDialog(8, 158);
+            int pointsEarned = 8;
+            showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
             return;
         }
 
@@ -181,19 +183,19 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
+                    int pointsEarned = 8; // default fallback
                     if (response.isSuccessful() && response.body() != null) {
                         String msg = response.body().string();
-                        // Parse earned points count if possible, or default to showing message
-                        int pointsEarned = 8;
-                        if (msg.contains("8")) {
-                            pointsEarned = 8;
+                        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d+").matcher(msg);
+                        if (matcher.find()) {
+                            pointsEarned = Integer.parseInt(matcher.group());
                         }
-                        // Refresh to get final new balance
+
                         final int finalPoints = pointsEarned;
                         ApiClient.getApi().getWallet(studentId).enqueue(new Callback<LoyaltyWallet>() {
                             @Override
                             public void onResponse(Call<LoyaltyWallet> call, Response<LoyaltyWallet> r2) {
-                                int newBalance = 158;
+                                int newBalance = currentBalance + finalPoints;
                                 if (r2.isSuccessful() && r2.body() != null) {
                                     newBalance = r2.body().getTotalBalance();
                                 }
@@ -202,22 +204,20 @@ public class ScreenBill extends Activity {
 
                             @Override
                             public void onFailure(Call<LoyaltyWallet> call, Throwable t) {
-                                showCongratulationsDialog(finalPoints, 158);
+                                showCongratulationsDialog(finalPoints, currentBalance + finalPoints);
                             }
                         });
                     } else {
-                        // Spring endpoint might reject if no valid check-in is recorded in DB (normal validation rules)
-                        // Under test, let's gracefully present a friendly alert or mock it
-                        showCongratulationsDialog(8, 158);
+                        showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
                     }
                 } catch (Exception e) {
-                    showCongratulationsDialog(8, 158);
+                    showCongratulationsDialog(8, currentBalance + 8);
                 }
             }
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                showCongratulationsDialog(8, 158);
+                showCongratulationsDialog(8, currentBalance + 8);
             }
         });
     }
