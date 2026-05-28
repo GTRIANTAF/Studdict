@@ -99,13 +99,14 @@ public class ScreenMyBookings extends Activity {
             card.addView(info);
 
             LinearLayout buttonLayout = new LinearLayout(this);
-            buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+            buttonLayout.setOrientation(LinearLayout.VERTICAL);
 
             Button btnModify = new Button(this);
             btnModify.setText("MODIFY");
-            btnModify.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            btnModify.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             btnModify.setOnClickListener(v -> {
                 Intent intent = new Intent(ScreenMyBookings.this, ScreenForm.class);
+                intent.putExtra("IS_MODIFY", true);
                 intent.putExtra("RESERVATION_ID", res.getReservationId());
                 intent.putExtra("VENUE_ID", 1L); // Hardcoding to 1L because Venue is not mapped in Android StudyTable
                 intent.putExtra("STUDENT_ID", studentId);
@@ -115,7 +116,7 @@ public class ScreenMyBookings extends Activity {
 
             Button btnCheckIn = new Button(this);
             btnCheckIn.setText("CHECK-IN");
-            btnCheckIn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            btnCheckIn.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             btnCheckIn.setOnClickListener(v -> {
                 // Mocking UC5: QR Scanner Check-in
                 Toast.makeText(ScreenMyBookings.this, "Opening QR Scanner for Check-in (UC5)...", Toast.LENGTH_SHORT).show();
@@ -124,7 +125,7 @@ public class ScreenMyBookings extends Activity {
 
             Button btnCheckout = new Button(this);
             btnCheckout.setText("CHECKOUT");
-            btnCheckout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+            btnCheckout.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             btnCheckout.setOnClickListener(v -> {
                 Toast.makeText(ScreenMyBookings.this, "Proceeding to Checkout...", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(ScreenMyBookings.this, ScreenBill.class);
