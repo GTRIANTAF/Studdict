@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,6 +33,16 @@ public class ScreenVenues extends Activity {
 
         venueCeid.setOnClickListener(v -> selectVenue(1L, "CEID LIBRARY"));
         venueCafe.setOnClickListener(v -> selectVenue(2L, "PATRAS CITY CAFE"));
+
+        Button modifyBtn = findViewById(R.id.modifyReservationBtn);
+        if (modifyBtn != null) {
+            modifyBtn.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ScreenForm.class);
+                intent.putExtra("IS_MODIFY", true);
+                intent.putExtra("RESERVATION_ID", 100L); // Mock reservation ID
+                startActivity(intent);
+            });
+        }
 
         View navLiveBoard = findViewById(R.id.navLiveBoard);
         navLiveBoard.setOnClickListener(v -> {
