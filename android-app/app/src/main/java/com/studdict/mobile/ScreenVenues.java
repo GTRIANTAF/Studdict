@@ -24,7 +24,7 @@ public class ScreenVenues extends Activity {
         String studentName = getIntent().getStringExtra("STUDENT_NAME");
         TextView greetingText = findViewById(R.id.greetingText);
         if (studentName != null && !studentName.isEmpty() && greetingText != null) {
-            greetingText.setText("Hello, " + studentName + "! 👋");
+            greetingText.setText("Hey " + studentName + "!");
         }
 
         LinearLayout venueCeid = findViewById(R.id.venueCeid);
