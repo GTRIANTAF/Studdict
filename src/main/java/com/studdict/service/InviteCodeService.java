@@ -7,6 +7,7 @@ import com.studdict.model.Student;
 import com.studdict.repository.InviteCodeRepository;
 import com.studdict.repository.ParticipantRepository;
 import com.studdict.repository.ReservationRepository;
+import com.studdict.repository.StudentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +23,16 @@ public class InviteCodeService {
     private final InviteCodeRepository inviteCodeRepository;
     private final ParticipantRepository participantRepository;
     private final ReservationRepository reservationRepository;
+    private final StudentRepository studentRepository;
 
     public InviteCodeService(InviteCodeRepository inviteCodeRepository,
                              ParticipantRepository participantRepository,
-                             ReservationRepository reservationRepository) {
+                             ReservationRepository reservationRepository,
+                             StudentRepository studentRepository) {
         this.inviteCodeRepository = inviteCodeRepository;
         this.participantRepository = participantRepository;
         this.reservationRepository = reservationRepository;
+        this.studentRepository = studentRepository;
     }
 
     public InviteCode generateInviteCode(Reservation reservation, Student host) {
@@ -47,6 +51,21 @@ public class InviteCodeService {
         inviteCode.setActive(true);
 
         return inviteCodeRepository.save(inviteCode);
+    }
+
+    public InviteCode generateInviteCode(Long reservationId, String hostId) {
+        if (reservationId == null || hostId == null || hostId.isBlank()) {
+            return null;
+        }
+
+        Optional<Reservation> reservationOptional = reservationRepository.findById(reservationId);
+        Optional<Student> hostOptional = studentRepository.findById(hostId);
+
+        if (reservationOptional.isEmpty() || hostOptional.isEmpty()) {
+            return null;
+        }
+
+        return generateInviteCode(reservationOptional.get(), hostOptional.get());
     }
 
     public InviteCode findCode(String code) {
@@ -93,7 +112,8 @@ public class InviteCodeService {
             return false;
         }
 
-        long participantsCount = participantRepository.countByReservationId(reservation.getReservationId());
+        long participantsCount =
+                participantRepository.countByReservationId(reservation.getReservationId());
 
         return participantsCount < reservation.getNumberOfPeople();
     }
@@ -111,6 +131,10 @@ public class InviteCodeService {
     public boolean joinReservation(String code, Student guest) {
         InviteCode inviteCode = findCode(code);
         return joinReservation(inviteCode, guest);
+    }
+
+    public boolean joinReservation(String code, String guestId) {
+        return joinReservationWithResult(code, guestId) == JoinReservationResult.SUCCESS;
     }
 
     public boolean joinReservation(InviteCode inviteCode, Student guest) {
@@ -169,6 +193,60 @@ public class InviteCodeService {
                 .orElse(false);
     }
 
+    public JoinReservationResult joinReservationWithResult(String code, String guestId) {
+        if (code == null || code.isBlank()) {
+            return JoinReservationResult.INVALID_OR_EXPIRED_CODE;
+        }
+
+        if (guestId == null || guestId.isBlank()) {
+            return JoinReservationResult.STUDENT_NOT_FOUND;
+        }
+
+        Optional<Student> guestOptional = studentRepository.findById(guestId);
+
+        if (guestOptional.isEmpty()) {
+            return JoinReservationResult.STUDENT_NOT_FOUND;
+        }
+
+        InviteCode inviteCode = findCode(code);
+
+        if (inviteCode == null || !inviteCode.isValid()) {
+            return JoinReservationResult.INVALID_OR_EXPIRED_CODE;
+        }
+
+        Reservation reservation = inviteCode.getReservation();
+
+        if (reservation == null || reservation.getReservationId() == null) {
+            return JoinReservationResult.RESERVATION_NOT_FOUND;
+        }
+
+        if (!checkAvailability(reservation)) {
+            return JoinReservationResult.RESERVATION_FULL;
+        }
+
+        Student guest = guestOptional.get();
+
+        List<ReservationParticipant> participants =
+                participantRepository.findByReservationId(reservation.getReservationId());
+
+        boolean alreadyParticipant = participants.stream()
+                .anyMatch(participant -> guest.getStudentId().equals(participant.getStudentId()));
+
+        if (alreadyParticipant) {
+            return JoinReservationResult.ALREADY_PARTICIPANT;
+        }
+
+        ReservationParticipant participant = new ReservationParticipant();
+        participant.setReservationId(reservation.getReservationId());
+        participant.setStudentId(guest.getStudentId());
+        participant.setRole("Guest");
+        participant.setCheckedIn(false);
+
+        participantRepository.save(participant);
+
+        return JoinReservationResult.SUCCESS;
+    }
+
     private String generateUniqueCode() {
         String code;
 
@@ -177,5 +255,14 @@ public class InviteCodeService {
         } while (inviteCodeRepository.findByCode(code) != null);
 
         return code;
+    }
+
+    public enum JoinReservationResult {
+        SUCCESS,
+        INVALID_OR_EXPIRED_CODE,
+        RESERVATION_NOT_FOUND,
+        RESERVATION_FULL,
+        STUDENT_NOT_FOUND,
+        ALREADY_PARTICIPANT
     }
 }

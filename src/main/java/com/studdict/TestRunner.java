@@ -163,7 +163,7 @@ public class TestRunner implements CommandLineRunner {
 
                 // ΑΠΟΘΗΚΕΥΟΥΜΕ ΤΟ ID ΣΤΗ ΜΕΤΑΒΛΗΤΗ (ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: savePrivateReservation)
                 privateRes1Id = reservationService.savePrivateReservation(
-                        "S1", selectedTable.getId(), today, LocalTime.of(10, 0), 120);
+                        "S1", selectedTable.getId(), today, LocalTime.of(10, 0), 120, 1);
                 System.out.println("    Επιτυχία! Κωδικός Κράτησης: " + privateRes1Id);
 
                 // --- 🚀 ΝΕΟ: ΕΛΕΓΧΟΣ QR LINKING ---
@@ -188,7 +188,7 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("▶️ TEST 2: Η Μαρία (S2) κάνει Private κράτηση στο Τραπέζι 2");
             // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: savePrivateReservation
             Long privateRes2Id = reservationService.savePrivateReservation(
-                    "S2", table2.getId(), today, LocalTime.of(12, 0), 120);
+                    "S2", table2.getId(), today, LocalTime.of(12, 0), 120, 2);
 
             ReservationParticipant guest1 = new ReservationParticipant();
             guest1.setReservationId(privateRes2Id);
@@ -204,7 +204,7 @@ public class TestRunner implements CommandLineRunner {
             System.out.println(" TEST 3: Η Ελένη (S4) ανοίγει Public Τραπέζι για 'Μαθηματικά' στο Τραπέζι 3");
             // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: savePublicReservation
             Long publicResId = reservationService.savePublicReservation(
-                    "S4", table3.getId(), today, LocalTime.of(16, 0), 180, "Μαθηματικά");
+                    "S4", table3.getId(), today, LocalTime.of(16, 0), 180, 2, "Μαθηματικά");
             System.out.println("    Επιτυχία! Το Public τραπέζι άνοιξε (Κωδικός: " + publicResId + ")");
 
             System.out.println(" TEST 4: Ο Γιάννης (S1) κάνει Join στο τραπέζι της Ελένης");
@@ -312,7 +312,7 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("    Η Μαρία σκανάρει το σωστό QR-2. Αποτέλεσμα Check-in: " + successfulCheckIn.isSuccessful() + " στις " + successfulCheckIn.getCheckInTime());
 
             System.out.println("   --- Εναλλακτική (UC5 Alt 2): Λάθος ώρα Check-in ---");
-            Long futureResId = reservationService.savePrivateReservation("S2", table2.getId(), today.plusDays(1), LocalTime.of(12, 0), 120);
+            Long futureResId = reservationService.savePrivateReservation("S2", table2.getId(), today.plusDays(1), LocalTime.of(12, 0), 120, 2);
             com.studdict.service.CheckInService.ReservationValidationResult timeValidation = checkInService.validateReservation(futureResId, "QR-2");
             System.out.println("    Έλεγχος Check-in για μελλοντική κράτηση. Αποτέλεσμα Validation: " + timeValidation);
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
@@ -8,25 +9,35 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
+
+        <activity android:name=".ScreenReservationDetails" />
+        <activity android:name=".ScreenInviteCodeInput" />
+
+        <activity android:name=".ScreenBill" />
+        <activity android:name=".ScreenEBookReader" />
+        <activity android:name=".ScreenEBookVault" />
+        <activity android:name=".ScreenKitchenOrders" />
+        <activity android:name=".ScreenLiveBoard" />
+        <activity android:name=".ScreenLogin" />
+        <activity android:name=".ScreenOrderMenu" />
+        <activity android:name=".ScreenOrderSummary" />
+        <activity android:name=".ScreenRegister" />
+
+        <activity android:name=".ScreenConfirm" />
+        <activity android:name=".ScreenTables" />
+        <activity android:name=".ScreenForm" />
+
         <activity
-            android:name=".ScreenLogin"
+            android:name=".ScreenVenues"
             android:exported="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
         </activity>
-        <activity android:name=".ScreenRegister" />
-        <activity android:name=".ScreenVenues" />
-        <activity android:name=".ScreenForm" />
-        <activity android:name=".ScreenTables" />
-        <activity android:name=".ScreenConfirm" />
-        <activity android:name=".ScreenEBookVault" />
-        <activity android:name=".ScreenEBookReader" />
-        <activity android:name=".ScreenOrderMenu" />
-        <activity android:name=".ScreenOrderSummary" />
-        <activity android:name=".ScreenBill" />
-        <activity android:name=".ScreenKitchenOrders" />
-        <activity android:name=".ScreenLiveBoard" />
+
     </application>
+
 </manifest>
