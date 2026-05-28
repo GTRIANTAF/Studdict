@@ -11,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.studdict.mobile.api.ApiClient;
+import com.studdict.mobile.model.InviteJoinResponse;
 import com.studdict.mobile.model.JoinInviteCodeRequest;
 import com.studdict.mobile.model.ValidateInviteCodeRequest;
 
@@ -83,7 +84,7 @@ public class ScreenInviteCodeInput extends Activity {
         String code = codeInput.getText().toString().trim();
 
         if (code.isEmpty()) {
-            statusText.setText("Please enter an invite code.");
+            showMessage("Please enter an invite code.");
             return;
         }
 
@@ -99,18 +100,13 @@ public class ScreenInviteCodeInput extends Activity {
                 if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
                     joinReservation(code);
                 } else {
-                    statusText.setText("Invalid or expired invite code. Please try again.");
-                    Toast.makeText(
-                            ScreenInviteCodeInput.this,
-                            "Invalid or expired invite code.",
-                            Toast.LENGTH_LONG
-                    ).show();
+                    showMessage("Invalid or expired invite code. Please try again.");
                 }
             }
 
             @Override
             public void onFailure(Call<Boolean> call, Throwable t) {
-                statusText.setText("Network Error: " + t.getMessage());
+                showMessage("Network Error: " + t.getMessage());
             }
         });
     }
@@ -118,30 +114,26 @@ public class ScreenInviteCodeInput extends Activity {
     private void joinReservation(String code) {
         JoinInviteCodeRequest request = new JoinInviteCodeRequest(code, guestId);
 
-        ApiClient.getApi().joinReservationWithInviteCode(request).enqueue(new Callback<Boolean>() {
+        ApiClient.getApi().joinReservationWithInviteCodeResult(request).enqueue(new Callback<InviteJoinResponse>() {
             @Override
-            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
-                    statusText.setText("Successfully joined the reservation.");
-                    Toast.makeText(
-                            ScreenInviteCodeInput.this,
-                            "Successfully joined the reservation.",
-                            Toast.LENGTH_LONG
-                    ).show();
+            public void onResponse(Call<InviteJoinResponse> call, Response<InviteJoinResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    InviteJoinResponse result = response.body();
+                    showMessage(result.getMessage());
                 } else {
-                    statusText.setText("The reservation is full or you have already joined.");
-                    Toast.makeText(
-                            ScreenInviteCodeInput.this,
-                            "Could not join reservation.",
-                            Toast.LENGTH_LONG
-                    ).show();
+                    showMessage("Could not join reservation. HTTP " + response.code());
                 }
             }
 
             @Override
-            public void onFailure(Call<Boolean> call, Throwable t) {
-                statusText.setText("Network Error: " + t.getMessage());
+            public void onFailure(Call<InviteJoinResponse> call, Throwable t) {
+                showMessage("Network Error: " + t.getMessage());
             }
         });
+    }
+
+    private void showMessage(String message) {
+        statusText.setText(message);
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 }

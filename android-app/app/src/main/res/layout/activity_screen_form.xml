@@ -402,7 +402,7 @@
                         android:layout_width="0dp"
                         android:layout_marginEnd="12dp"
                         android:layout_weight="1"
-                        android:hint="Reservation ID"
+                        android:hint="Invite Code"
                         android:inputType="number" />
                 </LinearLayout>
 
@@ -412,7 +412,7 @@
                     android:layout_height="52dp"
                     android:layout_marginTop="12dp"
                     android:background="@drawable/pill_inactive"
-                    android:text="Join Table"
+                    android:text="Join Reservation"
                     android:textAllCaps="false"
                     android:textColor="@color/studdict_text"
                     android:textStyle="bold" />
