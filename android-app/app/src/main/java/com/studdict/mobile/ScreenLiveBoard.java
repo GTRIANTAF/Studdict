@@ -82,33 +82,8 @@ public class ScreenLiveBoard extends Activity {
             infoText.setTextColor(Color.BLACK);
             row.addView(infoText);
 
-            Button joinButton = new Button(this);
-            joinButton.setText("JOIN RESERVATION");
-            joinButton.setOnClickListener(v -> joinReservation(res.getReservationId()));
-            row.addView(joinButton);
-
             liveBoardContainer.addView(row);
         }
     }
 
-    private void joinReservation(Long reservationId) {
-        // Assume student S1 is joining for testing purposes
-        ApiClient.getApi().joinPublicReservation(reservationId, "S1").enqueue(new Callback<String>() {
-            @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(ScreenLiveBoard.this, "Successfully joined!", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(ScreenLiveBoard.this, ScreenConfirm.class);
-                    startActivity(intent);
-                } else {
-                    Toast.makeText(ScreenLiveBoard.this, "Failed to join: " + response.message(), Toast.LENGTH_SHORT).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                Toast.makeText(ScreenLiveBoard.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 }

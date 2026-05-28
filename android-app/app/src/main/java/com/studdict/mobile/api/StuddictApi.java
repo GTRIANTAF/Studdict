@@ -15,6 +15,7 @@ import com.studdict.mobile.model.OrderItemRequest;
 import com.studdict.mobile.model.OrderRequest;
 import com.studdict.mobile.model.PublicReservation;
 import com.studdict.mobile.model.RegisterRequest;
+import com.studdict.mobile.model.Reservation;
 import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.Student;
 import com.studdict.mobile.model.StudyTable;
@@ -129,4 +130,7 @@ public interface StuddictApi {
 
     @GET("api/liveboard/published")
     Call<List<PublicReservation>> getPublishedReservations();
+
+    @GET("api/reservations/student/{studentId}")
+    Call<List<Reservation>> getStudentReservations(@Path("studentId") String studentId);
 }

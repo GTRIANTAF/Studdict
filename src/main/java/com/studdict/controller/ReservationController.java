@@ -50,4 +50,10 @@ public class ReservationController {
         reservationService.discardReservation(reservationId);
         return ResponseEntity.ok("Η κράτηση ακυρώθηκε.");
     }
+
+    // Λήψη ενεργών κρατήσεων φοιτητή
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<?> getReservationsByStudent(@PathVariable String studentId) {
+        return ResponseEntity.ok(reservationService.getReservationsByStudent(studentId));
+    }
 }
