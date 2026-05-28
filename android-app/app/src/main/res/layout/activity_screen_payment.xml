@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/studdict_background"
+    android:padding="24dp">
+
+    <!-- Header Section -->
+    <TextView
+        android:id="@+id/tvHeaderTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Ολοκλήρωση Συναλλαγής"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="@color/studdict_text"
+        android:gravity="center"
+        android:layout_marginTop="32dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/tvHeaderSubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Εξόφληση Λογαριασμού"
+        android:textSize="16sp"
+        android:textColor="@color/studdict_muted"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tvHeaderTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Amount Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardAmount"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="48dp"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="12dp"
+        app:cardBackgroundColor="@color/studdict_surface"
+        app:strokeWidth="1dp"
+        app:strokeColor="#1A000000"
+        app:layout_constraintTop_toBottomOf="@id/tvHeaderSubtitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="32dp"
+            android:background="?attr/selectableItemBackground">
+
+            <TextView
+                android:id="@+id/tvAmountLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Συνολικό Ποσό"
+                android:textSize="16sp"
+                android:textColor="@color/studdict_muted"
+                android:textStyle="bold"
+                android:textAllCaps="true"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <TextView
+                android:id="@+id/tvTotalAmount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="12.50 €"
+                android:textSize="48sp"
+                android:textStyle="bold"
+                android:textColor="@color/studdict_text"
+                android:layout_marginTop="16dp"
+                app:layout_constraintTop_toBottomOf="@id/tvAmountLabel"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Payment Methods Section -->
+    <TextView
+        android:id="@+id/tvPaymentMethodLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Επιλογή Μεθόδου"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/studdict_text"
+        android:layout_marginTop="48dp"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintTop_toBottomOf="@id/cardAmount"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Digital Payment Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDigitalPayment"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:text="Ψηφιακή Πληρωμή"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        app:cornerRadius="16dp"
+        app:backgroundTint="@color/studdict_primary"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="16dp"
+        app:icon="@android:drawable/ic_secure"
+        app:iconGravity="textStart"
+        app:iconPadding="12dp"
+        app:iconTint="#FFFFFF"
+        app:layout_constraintTop_toBottomOf="@id/tvPaymentMethodLabel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Cash Payment Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCashPayment"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:text="Πληρωμή στο Ταμείο"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textAllCaps="false"
+        app:cornerRadius="16dp"
+        app:strokeColor="@color/studdict_primary"
+        app:strokeWidth="2dp"
+        android:textColor="@color/studdict_primary"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/btnDigitalPayment"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
