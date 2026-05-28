@@ -19,6 +19,7 @@ import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.Student;
 import com.studdict.mobile.model.StudyTable;
 import com.studdict.mobile.model.ValidateInviteCodeRequest;
+import com.studdict.mobile.model.LoyaltyWallet;
 
 import java.util.List;
 
@@ -43,6 +44,27 @@ public interface StuddictApi {
     Call<List<StudyTable>> getMatchmakingTables(
             @Query("venueId") long venueId,
             @Query("subjectName") String subjectName
+    );
+
+    @GET("api/gamification/wallet/{studentId}")
+    Call<LoyaltyWallet> getWallet(@Path("studentId") String studentId);
+
+    @POST("api/gamification/validate")
+    Call<Boolean> validatePoints(
+            @Query("studentId") String studentId,
+            @Query("points") int points
+    );
+
+    @POST("api/gamification/redeem")
+    Call<okhttp3.ResponseBody> redeemPoints(
+            @Query("studentId") String studentId,
+            @Query("pointsToRedeem") int points
+    );
+
+    @POST("api/gamification/earn")
+    Call<okhttp3.ResponseBody> earnPoints(
+            @Query("studentId") String studentId,
+            @Query("reservationId") long reservationId
     );
 
     @POST("api/tables/{tableId}/lock")
