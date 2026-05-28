@@ -70,8 +70,15 @@ public class ScreenForm extends Activity {
 
             privateChoiceCard.setVisibility(View.GONE);
             publicChoiceCard.setVisibility(View.GONE);
-            findViewById(R.id.joinPublicButton).setVisibility(View.GONE);
-            joinReservationInput.setVisibility(View.GONE);
+            
+            View typeTitle = findViewById(R.id.reservationTypeTitle);
+            if (typeTitle != null) typeTitle.setVisibility(View.GONE);
+            
+            View joinTitle = findViewById(R.id.joinReservationTitle);
+            if (joinTitle != null) joinTitle.setVisibility(View.GONE);
+            
+            View joinContainer = findViewById(R.id.joinReservationContainer);
+            if (joinContainer != null) joinContainer.setVisibility(View.GONE);
 
             Button searchBtn = findViewById(R.id.searchButton);
             searchBtn.setText("Έλεγχος Διαθεσιμότητας");
