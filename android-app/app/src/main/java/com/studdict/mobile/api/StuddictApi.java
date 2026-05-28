@@ -61,6 +61,16 @@ public interface StuddictApi {
     @POST("api/reservations/public")
     Call<Long> createPublicReservation(@Body ReservationRequest request);
 
+    @POST("api/reservations/{reservationId}/modify")
+    Call<Boolean> modifyReservation(
+            @Path("reservationId") long reservationId,
+            @Query("time") String time,
+            @Query("duration") int duration
+    );
+
+    @POST("payments/process")
+    Call<com.studdict.mobile.model.PaymentResponse> processPayment(@Body com.studdict.mobile.model.PaymentRequest request);
+
     @POST("api/reservations/{reservationId}/join")
     Call<String> joinPublicReservation(
             @Path("reservationId") long reservationId,

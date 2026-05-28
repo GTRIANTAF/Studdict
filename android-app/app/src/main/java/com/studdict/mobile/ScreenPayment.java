@@ -83,12 +83,13 @@ public class ScreenPayment extends AppCompatActivity {
         StuddictApi api = ApiClient.getRetrofitInstance().create(StuddictApi.class);
 
         // Κλήση στο backend (Προσαρμοσμένο στο UC6 processPayment)
-        Call<ResponseBody> call = api.processPayment(billId, "CARD", totalAmount);
+        com.studdict.mobile.model.PaymentRequest req = new com.studdict.mobile.model.PaymentRequest(billId, "CARD", totalAmount);
+        Call<com.studdict.mobile.model.PaymentResponse> call = api.processPayment(req);
 
-        call.enqueue(new Callback<ResponseBody>() {
+        call.enqueue(new Callback<com.studdict.mobile.model.PaymentResponse>() {
             @Override
-            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                if (response.isSuccessful()) {
+            public void onResponse(Call<com.studdict.mobile.model.PaymentResponse> call, Response<com.studdict.mobile.model.PaymentResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
                     // Επιτυχής Πληρωμή -> Μετάβαση στην ScreenSuccess
                     Intent intent = new Intent(ScreenPayment.this, ScreenSuccess.class);
                     intent.putExtra("BILL_ID", billId);
@@ -96,7 +97,8 @@ public class ScreenPayment extends AppCompatActivity {
                     finish();
                 } else {
                     // Αποτυχία (π.χ. Insufficient Balance)
-                    Toast.makeText(ScreenPayment.this, "Αποτυχία πληρωμής. Παρακαλώ δοκιμάστε ξανά.", Toast.LENGTH_LONG).show();
+                    String msg = (response.body() != null) ? response.body().getMessage() : "Αποτυχία πληρωμής. Παρακαλώ δοκιμάστε ξανά.";
+                    Toast.makeText(ScreenPayment.this, msg, Toast.LENGTH_LONG).show();
                     btnDigitalPayment.setEnabled(true);
                     btnDigitalPayment.setText("Ψηφιακή Πληρωμή");
                     startTimeoutTimer(); // Επανεκκίνηση του χρόνου
@@ -104,7 +106,7 @@ public class ScreenPayment extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<ResponseBody> call, Throwable t) {
+            public void onFailure(Call<com.studdict.mobile.model.PaymentResponse> call, Throwable t) {
                 Toast.makeText(ScreenPayment.this, "Σφάλμα σύνδεσης με το διακομιστή.", Toast.LENGTH_LONG).show();
                 btnDigitalPayment.setEnabled(true);
                 btnDigitalPayment.setText("Ψηφιακή Πληρωμή");
