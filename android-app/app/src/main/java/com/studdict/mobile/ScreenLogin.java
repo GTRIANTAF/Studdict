@@ -44,6 +44,7 @@ public class ScreenLogin extends Activity {
                         Toast.makeText(ScreenLogin.this, "Welcome " + response.body().getFirstName(), Toast.LENGTH_SHORT).show();
                         // Proceed to home/venues
                         Intent intent = new Intent(ScreenLogin.this, ScreenVenues.class);
+                        intent.putExtra("STUDENT_NAME", response.body().getFirstName());
                         startActivity(intent);
                         finish();
                     } else {

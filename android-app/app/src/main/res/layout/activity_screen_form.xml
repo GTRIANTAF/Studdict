@@ -435,6 +435,9 @@
         android:paddingEnd="16dp">
 
         <LinearLayout
+            android:id="@+id/navHome"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -449,30 +452,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="HOME"
-                android:textColor="@color/studdict_muted"
-                android:textSize="10sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/navScanQR"
-            android:clickable="true"
-            android:focusable="true"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📷"
-                android:textSize="20sp" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="SCAN"
-                android:textColor="@color/studdict_muted"
+                android:textColor="@color/studdict_primary"
                 android:textSize="10sp"
                 android:textStyle="bold" />
         </LinearLayout>
@@ -489,18 +469,44 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📅"
+                android:text="🗺️"
                 android:textSize="20sp" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="BOOKING"
-                android:textColor="@color/studdict_primary"
+                android:text="LIVE BOARD"
+                android:textColor="@color/studdict_muted"
                 android:textSize="10sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/navMyBookings"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📅"
+                android:textSize="20sp" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="MY BOOKINGS"
+                android:textColor="@color/studdict_muted"
+                android:textSize="10sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/navOrder"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -521,6 +527,9 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/navProfile"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
