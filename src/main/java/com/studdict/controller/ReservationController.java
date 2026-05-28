@@ -19,7 +19,8 @@ public class ReservationController {
     public ResponseEntity<Long> createPrivateReservation(@RequestBody ReservationRequestDTO request) {
         Long resId = reservationService.savePrivateReservation(
                 request.getStudentId(), request.getTableId(),
-                request.getDate(), request.getTime(), request.getDuration()
+                request.getDate(), request.getTime(), request.getDuration(),
+                request.getNumberOfPeople()
         );
         return ResponseEntity.ok(resId);
     }
@@ -30,6 +31,7 @@ public class ReservationController {
         Long resId = reservationService.savePublicReservation(
                 request.getStudentId(), request.getTableId(),
                 request.getDate(), request.getTime(), request.getDuration(),
+                request.getNumberOfPeople(),
                 request.getSubjectName()
         );
         return ResponseEntity.ok(resId);
@@ -47,5 +49,11 @@ public class ReservationController {
     public ResponseEntity<String> cancelReservation(@PathVariable Long reservationId) {
         reservationService.discardReservation(reservationId);
         return ResponseEntity.ok("Η κράτηση ακυρώθηκε.");
+    }
+
+    // Λήψη ενεργών κρατήσεων φοιτητή
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<?> getReservationsByStudent(@PathVariable String studentId) {
+        return ResponseEntity.ok(reservationService.getReservationsByStudent(studentId));
     }
 }

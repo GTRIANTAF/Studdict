@@ -59,15 +59,24 @@ public class ScreenConfirm extends Activity {
         summaryMode.setText("Mode: " + (isPublic ? "Public (" + subject + ")" : "Private"));
 
         findViewById(R.id.backButton).setOnClickListener(view -> finish());
-        
+
         Button confirmBtn = findViewById(R.id.confirmButton);
         confirmBtn.setOnClickListener(view -> submitReservation());
+
+        android.view.View navHome = findViewById(R.id.navHome);
+        if (navHome != null) {
+            navHome.setOnClickListener(v -> {
+                android.content.Intent intent = new android.content.Intent(this, ScreenVenues.class);
+                intent.setFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
+        }
     }
 
     private void submitReservation() {
         ReservationRequest request = new ReservationRequest(
                 studentId,
-                (int)tableId,
+                (int) tableId,
                 date,
                 time,
                 duration,
@@ -86,12 +95,25 @@ public class ScreenConfirm extends Activity {
             @Override
             public void onResponse(Call<Long> call, Response<Long> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Long resId = response.body();
-                    Toast.makeText(ScreenConfirm.this, "Success! Reservation #" + resId, Toast.LENGTH_LONG).show();
-                    
-                    // Return to home screen
-                    Intent intent = new Intent(ScreenConfirm.this, ScreenVenues.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Long reservationId = response.body();
+
+                    Toast.makeText(
+                            ScreenConfirm.this,
+                            "Reservation confirmed #" + reservationId,
+                            Toast.LENGTH_LONG
+                    ).show();
+
+                    Intent intent = new Intent(ScreenConfirm.this, ScreenReservationDetails.class);
+                    intent.putExtra("RESERVATION_ID", reservationId);
+                    intent.putExtra("TABLE_ID", tableId);
+                    intent.putExtra("TABLE_NUMBER", tableNumber);
+                    intent.putExtra("VENUE_NAME", venueName);
+                    intent.putExtra("DATE", date);
+                    intent.putExtra("TIME", time);
+                    intent.putExtra("DURATION", duration);
+                    intent.putExtra("CAPACITY", capacity);
+                    intent.putExtra("STUDENT_ID", studentId);
+
                     startActivity(intent);
                     finish();
                 } else {

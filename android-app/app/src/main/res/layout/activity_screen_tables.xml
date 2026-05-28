@@ -77,4 +77,23 @@
         </LinearLayout>
     </ScrollView>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="78dp"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bottom_nav"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <TextView style="@style/BottomNavItem" android:text="HOME" />
+        <TextView style="@style/BottomNavItem" android:text="BOOKING" android:textStyle="bold" />
+        <TextView style="@style/BottomNavItem" android:text="ORDER" />
+        <TextView style="@style/BottomNavItem" android:text="WALLET" />
+        <TextView style="@style/BottomNavItem" android:text="PROFILE" />
+    </LinearLayout>
 </FrameLayout>

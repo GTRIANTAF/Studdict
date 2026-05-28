@@ -24,7 +24,7 @@ public class ScreenVenues extends Activity {
         String studentName = getIntent().getStringExtra("STUDENT_NAME");
         TextView greetingText = findViewById(R.id.greetingText);
         if (studentName != null && !studentName.isEmpty() && greetingText != null) {
-            greetingText.setText("Hello, " + studentName + "! 👋");
+            greetingText.setText("Hey " + studentName + "!");
         }
 
         LinearLayout venueCeid = findViewById(R.id.venueCeid);
@@ -36,6 +36,13 @@ public class ScreenVenues extends Activity {
         View navLiveBoard = findViewById(R.id.navLiveBoard);
         navLiveBoard.setOnClickListener(v -> {
             Intent intent = new Intent(this, ScreenLiveBoard.class);
+            startActivity(intent);
+        });
+
+        View navMyBookings = findViewById(R.id.navMyBookings);
+        navMyBookings.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenMyBookings.class);
+            intent.putExtra("STUDENT_ID", getIntent().getStringExtra("STUDENT_ID"));
             startActivity(intent);
         });
 
