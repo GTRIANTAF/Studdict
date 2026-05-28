@@ -84,15 +84,6 @@ public class ScreenVenues extends Activity {
                 }
             });
         });
-
-        View navCheckout = findViewById(R.id.navCheckout);
-        if (navCheckout != null) {
-            navCheckout.setOnClickListener(v -> {
-                Intent intent = new Intent(this, ScreenBill.class);
-                intent.putExtra("TABLE_ID", 1); // Pass a default or current table ID
-                startActivity(intent);
-            });
-        }
     }
 
     private void selectVenue(long venueId, String venueName) {

@@ -118,8 +118,16 @@ public class ScreenMyBookings extends Activity {
             btnCheckIn.setText("CHECK-IN");
             btnCheckIn.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             btnCheckIn.setOnClickListener(v -> {
-                // Mocking UC5: QR Scanner Check-in
-                Toast.makeText(ScreenMyBookings.this, "Opening QR Scanner for Check-in (UC5)...", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(ScreenMyBookings.this, ScreenCheckIn.class);
+                intent.putExtra("RESERVATION_ID", res.getReservationId());
+                intent.putExtra("STUDENT_ID", studentId);
+
+                if (res.getTable() != null) {
+                    intent.putExtra("TABLE_NUMBER", res.getTable().getTableNumber());
+                    intent.putExtra("DUMMY_QR", res.getTable().getQrCodeString());
+                }
+
+                startActivity(intent);
             });
             buttonLayout.addView(btnCheckIn);
 
@@ -130,6 +138,8 @@ public class ScreenMyBookings extends Activity {
                 Toast.makeText(ScreenMyBookings.this, "Proceeding to Checkout...", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(ScreenMyBookings.this, ScreenBill.class);
                 intent.putExtra("TABLE_ID", res.getTable() != null ? (int) res.getTable().getId() : 1);
+                intent.putExtra("STUDENT_ID", studentId);
+                intent.putExtra("RESERVATION_ID", res.getReservationId());
                 startActivity(intent);
             });
             buttonLayout.addView(btnCheckout);

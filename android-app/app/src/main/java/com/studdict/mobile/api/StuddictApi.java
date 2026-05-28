@@ -1,8 +1,14 @@
 package com.studdict.mobile.api;
 
 import com.studdict.mobile.model.Bill;
+import com.studdict.mobile.model.CheckInRequest;
+import com.studdict.mobile.model.CheckInResponse;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
+import com.studdict.mobile.model.GenerateInviteCodeRequest;
+import com.studdict.mobile.model.InviteCode;
+import com.studdict.mobile.model.InviteJoinResponse;
+import com.studdict.mobile.model.JoinInviteCodeRequest;
 import com.studdict.mobile.model.KitchenOrder;
 import com.studdict.mobile.model.LoginRequest;
 import com.studdict.mobile.model.MenuItem;
@@ -11,9 +17,12 @@ import com.studdict.mobile.model.OrderItemRequest;
 import com.studdict.mobile.model.OrderRequest;
 import com.studdict.mobile.model.PublicReservation;
 import com.studdict.mobile.model.RegisterRequest;
+import com.studdict.mobile.model.Reservation;
 import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.Student;
 import com.studdict.mobile.model.StudyTable;
+import com.studdict.mobile.model.ValidateInviteCodeRequest;
+import com.studdict.mobile.model.LoyaltyWallet;
 
 import java.util.List;
 
@@ -40,6 +49,28 @@ public interface StuddictApi {
             @Query("subjectName") String subjectName
     );
 
+    @GET("api/gamification/wallet/{studentId}")
+    Call<LoyaltyWallet> getWallet(@Path("studentId") String studentId);
+
+    @POST("api/gamification/validate")
+    Call<Boolean> validatePoints(
+            @Query("studentId") String studentId,
+            @Query("points") int points
+    );
+
+    @POST("api/gamification/redeem")
+    Call<okhttp3.ResponseBody> redeemPoints(
+            @Query("studentId") String studentId,
+            @Query("pointsToRedeem") int points,
+            @Query("tableId") Integer tableId
+    );
+
+    @POST("api/gamification/earn")
+    Call<okhttp3.ResponseBody> earnPoints(
+            @Query("studentId") String studentId,
+            @Query("reservationId") long reservationId
+    );
+
     @POST("api/tables/{tableId}/lock")
     Call<Boolean> lockTable(
             @Path("tableId") int tableId,
@@ -55,21 +86,28 @@ public interface StuddictApi {
     @POST("api/reservations/public")
     Call<Long> createPublicReservation(@Body ReservationRequest request);
 
-    @POST("api/reservations/{reservationId}/modify")
-    Call<Boolean> modifyReservation(
-            @Path("reservationId") long reservationId,
-            @Query("time") String time,
-            @Query("duration") int duration
-    );
-
-    @POST("payments/process")
-    Call<com.studdict.mobile.model.PaymentResponse> processPayment(@Body com.studdict.mobile.model.PaymentRequest request);
-
     @POST("api/reservations/{reservationId}/join")
     Call<String> joinPublicReservation(
             @Path("reservationId") long reservationId,
             @Query("studentId") String studentId
     );
+
+    // --- UC3: Invite Code Reservation Join ---
+    @POST("invite-code/generate")
+    Call<InviteCode> generateInviteCode(@Body GenerateInviteCodeRequest request);
+
+    @POST("invite-code/validate")
+    Call<Boolean> validateInviteCode(@Body ValidateInviteCodeRequest request);
+
+    @POST("invite-code/join")
+    Call<Boolean> joinReservationWithInviteCode(@Body JoinInviteCodeRequest request);
+
+    @POST("invite-code/join-result")
+    Call<InviteJoinResponse> joinReservationWithInviteCodeResult(@Body JoinInviteCodeRequest request);
+
+    // --- UC5: Check-in with reservation and QR ---
+    @POST("check-in/perform")
+    Call<CheckInResponse> performCheckIn(@Body CheckInRequest request);
 
     // --- UC11 & UC12: Account Creation & Login ---
     @POST("api/students/register")
@@ -85,7 +123,6 @@ public interface StuddictApi {
     @GET("api/ebooks/search")
     Call<List<EBook>> executeSearch(@Query("keyword") String keyword);
 
-    // Gap 1: separate availability check before requestLoan
     @GET("api/ebooks/availability/{ebookId}")
     Call<Boolean> checkEBookAvailability(@Path("ebookId") long ebookId);
 
@@ -102,26 +139,21 @@ public interface StuddictApi {
     @GET("api/orders/catalog")
     Call<List<MenuItem>> readCatalog();
 
-    // Gap 5: addProduct per-item validation
     @POST("api/orders/cart/add")
     Call<Boolean> addCartItem(@Query("menuItemId") long menuItemId, @Query("quantity") int quantity);
 
-    // Gap 6: processSummary before showing OrderReview
     @POST("api/orders/summary")
     Call<Boolean> processSummary(@Body List<OrderItemRequest> items);
 
     @POST("api/orders/create")
     Call<Order> createOrder(@Body OrderRequest request);
 
-    // Gap 7: cancel order calls backend
     @POST("api/orders/cancel")
     Call<String> cancelOrder();
 
-    // Gap 8: kitchen screen polling
     @GET("api/orders/kitchen/active")
     Call<List<KitchenOrder>> getKitchenOrders();
 
-    // Gap 9: bill screen lookup
     @GET("api/bills/table/{tableId}")
     Call<Bill> getBillByTable(@Path("tableId") int tableId);
 

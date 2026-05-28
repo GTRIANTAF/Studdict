@@ -13,16 +13,13 @@ public final class ApiClient {
 
     public static StuddictApi getApi() {
         if (api == null) {
-            api = getRetrofitInstance().create(StuddictApi.class);
+            Retrofit retrofit = new Retrofit.Builder()
+                    .baseUrl(BASE_URL)
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build();
+            api = retrofit.create(StuddictApi.class);
         }
 
         return api;
-    }
-
-    public static Retrofit getRetrofitInstance() {
-        return new Retrofit.Builder()
-                .baseUrl(BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
     }
 }

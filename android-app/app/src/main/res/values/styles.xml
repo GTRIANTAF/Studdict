@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@color/studdict_background</item>
         <item name="android:navigationBarColor">@color/studdict_surface</item>
-        <item name="colorAccent">@color/studdict_primary</item>
-        <item name="colorPrimary">@color/studdict_primary</item>
+        <item name="android:colorAccent">@color/studdict_primary</item>
         <item name="android:windowBackground">@color/studdict_background</item>
     </style>
 
