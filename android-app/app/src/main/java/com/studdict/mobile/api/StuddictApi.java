@@ -15,6 +15,7 @@ import com.studdict.mobile.model.OrderItemRequest;
 import com.studdict.mobile.model.OrderRequest;
 import com.studdict.mobile.model.PublicReservation;
 import com.studdict.mobile.model.RegisterRequest;
+import com.studdict.mobile.model.Reservation;
 import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.Student;
 import com.studdict.mobile.model.StudyTable;
@@ -130,19 +131,6 @@ public interface StuddictApi {
     @GET("api/liveboard/published")
     Call<List<PublicReservation>> getPublishedReservations();
 
-    // UC4: Modify Reservation
-    @POST("api/reservations/{reservationId}/modify")
-    Call<Boolean> modifyReservation(
-            @Path("reservationId") long reservationId,
-            @Query("newTime") String newTime,
-            @Query("newDuration") int newDuration
-    );
-
-    // UC6: Checkout
-    @POST("api/payments/process")
-    Call<okhttp3.ResponseBody> processPayment(
-            @Query("billId") long billId,
-            @Query("method") String method,
-            @Query("amount") double amount
-    );
+    @GET("api/reservations/student/{studentId}")
+    Call<List<Reservation>> getStudentReservations(@Path("studentId") String studentId);
 }

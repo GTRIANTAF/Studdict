@@ -11,6 +11,7 @@
         android:usesCleartextTraffic="true">
 
         <activity android:name=".ScreenReservationDetails" />
+        <activity android:name=".ScreenMyBookings" />
         <activity android:name=".ScreenInviteCodeInput" />
 
         <activity android:name=".ScreenBill" />

@@ -50,6 +50,13 @@ public class ScreenVenues extends Activity {
             startActivity(intent);
         });
 
+        View navMyBookings = findViewById(R.id.navMyBookings);
+        navMyBookings.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenMyBookings.class);
+            intent.putExtra("STUDENT_ID", getIntent().getStringExtra("STUDENT_ID"));
+            startActivity(intent);
+        });
+
         View navOrder = findViewById(R.id.navOrder);
         navOrder.setOnClickListener(v -> {
             Intent intent = new Intent(this, ScreenOrderMenu.class);

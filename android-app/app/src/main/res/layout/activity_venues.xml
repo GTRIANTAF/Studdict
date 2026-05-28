@@ -277,6 +277,9 @@
         android:paddingEnd="16dp">
 
         <LinearLayout
+            android:id="@+id/navHome"
+            android:clickable="true"
+            android:focusable="true"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
@@ -297,7 +300,7 @@
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/navScanQR"
+            android:id="@+id/navLiveBoard"
             android:clickable="true"
             android:focusable="true"
             android:layout_width="0dp"
@@ -308,19 +311,19 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📷"
+                android:text="🗺️"
                 android:textSize="20sp" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="SCAN"
+                android:text="LIVE BOARD"
                 android:textColor="@color/studdict_muted"
                 android:textSize="10sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/navLiveBoard"
+            android:id="@+id/navMyBookings"
             android:clickable="true"
             android:focusable="true"
             android:layout_width="0dp"
@@ -336,7 +339,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="BOOKING"
+                android:text="MY BOOKINGS"
                 android:textColor="@color/studdict_muted"
                 android:textSize="10sp"
                 android:textStyle="bold" />
