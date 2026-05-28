@@ -128,7 +128,7 @@ public class ScreenBill extends Activity {
         if (points >= 100) {
             btnRedeemPoints.setEnabled(true);
             btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF8F00"))); // Active Orange
-            btnRedeemPoints.setText("Εξαργύρωση 100 Πόντων (-5.00€)");
+            btnRedeemPoints.setText("Εξαργύρωση 100 Πόντων (-3.00€)");
         } else {
             btnRedeemPoints.setEnabled(false);
             btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#BDBDBD"))); // Disabled Grey
@@ -141,7 +141,7 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
-                    String msg = "Επιτυχής εξαργύρωση! Εφαρμόστηκε έκπτωση 5.00€.";
+                    String msg = "Επιτυχής εξαργύρωση! Εφαρμόστηκε έκπτωση 3.00€.";
                     if (response.isSuccessful() && response.body() != null) {
                         msg = response.body().string();
                     }
@@ -174,7 +174,7 @@ public class ScreenBill extends Activity {
 
     private void executeCheckoutPointsEarning() {
         if (reservationId == -1L) {
-            int pointsEarned = 8;
+            int pointsEarned = 25;
             showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
             return;
         }
@@ -183,7 +183,7 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
-                    int pointsEarned = 8; // default fallback
+                    int pointsEarned = 25; // default fallback
                     if (response.isSuccessful() && response.body() != null) {
                         String msg = response.body().string();
                         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d+").matcher(msg);
@@ -211,13 +211,13 @@ public class ScreenBill extends Activity {
                         showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
                     }
                 } catch (Exception e) {
-                    showCongratulationsDialog(8, currentBalance + 8);
+                    showCongratulationsDialog(25, currentBalance + 25);
                 }
             }
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                showCongratulationsDialog(8, currentBalance + 8);
+                showCongratulationsDialog(25, currentBalance + 25);
             }
         });
     }
