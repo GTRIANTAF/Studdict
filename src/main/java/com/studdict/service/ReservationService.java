@@ -157,4 +157,8 @@ public class ReservationService {
     public List<Reservation> getPublishedReservations() {
         return reservationRepository.findByVisibilityAndStatus("Public", "CONFIRMED");
     }
+
+    public List<Reservation> getReservationsByStudent(String studentId) {
+        return reservationRepository.findActiveReservationsByStudent(studentId);
+    }
 }
