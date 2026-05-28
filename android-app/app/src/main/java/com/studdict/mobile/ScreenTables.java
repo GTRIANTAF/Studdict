@@ -52,6 +52,15 @@ public class ScreenTables extends Activity {
         findViewById(R.id.backButton).setOnClickListener(view -> finish());
 
         fetchAvailableTables();
+
+        android.view.View navHome = findViewById(R.id.navHome);
+        if (navHome != null) {
+            navHome.setOnClickListener(v -> {
+                android.content.Intent intent = new android.content.Intent(this, ScreenVenues.class);
+                intent.setFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            });
+        }
     }
 
     private void fetchAvailableTables() {
