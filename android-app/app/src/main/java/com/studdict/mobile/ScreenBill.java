@@ -1,7 +1,6 @@
 package com.studdict.mobile;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.TextView;
@@ -36,11 +35,6 @@ public class ScreenBill extends Activity {
         txtBillTable.setText("Table: " + tableId);
         btnClose.setOnClickListener(v -> finish());
 
-        Button btnCheckout = findViewById(R.id.btnCheckout);
-        
-        // Initial state
-        btnCheckout.setEnabled(false);
-
         ApiClient.getApi().getBillByTable(tableId).enqueue(new Callback<Bill>() {
             @Override
             public void onResponse(Call<Bill> call, Response<Bill> response) {
@@ -49,20 +43,6 @@ public class ScreenBill extends Activity {
                     txtBillId.setText("Bill #" + bill.getBillId());
                     txtBillTotal.setText(String.format("Total: €%.2f", bill.getTotalAmount()));
                     txtBillStatus.setText(bill.isSettled() ? "Status: Paid" : "Status: Pending payment");
-                    
-                    if (!bill.isSettled()) {
-                        btnCheckout.setEnabled(true);
-                        btnCheckout.setOnClickListener(v -> {
-                            Intent intent = new Intent(ScreenBill.this, ScreenPayment.class);
-                            intent.putExtra("BILL_ID", bill.getBillId());
-                            intent.putExtra("TOTAL_AMOUNT", bill.getTotalAmount());
-                            startActivity(intent);
-                            finish();
-                        });
-                    } else {
-                        btnCheckout.setEnabled(false);
-                        btnCheckout.setText("Already Paid");
-                    }
                 } else {
                     txtBillId.setText("Bill");
                     txtBillTotal.setText("Total: —");
@@ -76,17 +56,6 @@ public class ScreenBill extends Activity {
                 txtBillId.setText("Demo Bill");
                 txtBillTotal.setText("Total: see receipt");
                 txtBillStatus.setText("Status: Pending payment");
-                
-                // Allow proceeding to payment even in demo mode (for UI testing)
-                btnCheckout.setEnabled(true);
-                btnCheckout.setOnClickListener(v -> {
-                    Intent intent = new Intent(ScreenBill.this, ScreenPayment.class);
-                    intent.putExtra("BILL_ID", 999L);
-                    intent.putExtra("TOTAL_AMOUNT", 12.50);
-                    startActivity(intent);
-                    finish();
-                });
-                
                 Toast.makeText(ScreenBill.this, "Offline: bill details unavailable.", Toast.LENGTH_SHORT).show();
             }
         });

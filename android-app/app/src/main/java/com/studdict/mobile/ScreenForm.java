@@ -19,7 +19,6 @@ import com.studdict.mobile.model.ValidateInviteCodeRequest;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
-import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,11 +35,9 @@ public class ScreenForm extends Activity {
     private String selectedTime = "10:00";
     private int selectedDuration = 120;
 
-    private boolean isModifyMode = false;
-    private long reservationIdToModify = -1L;
     private Button timeButton, durationButton;
     private Button todayButton, tomorrowButton, thirdDateButton;
-    private TextView groupSizeText, headerTitle;
+    private TextView groupSizeText;
     private LinearLayout privateChoiceCard, publicChoiceCard;
     private EditText subjectInput, joinReservationInput;
 
@@ -49,12 +46,11 @@ public class ScreenForm extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screen_form);
 
-        headerTitle = findViewById(R.id.headerTitle);
-
         selectedVenueId = getIntent().getLongExtra("VENUE_ID", 1L);
         venueName = getIntent().getStringExtra("VENUE_NAME");
         if (venueName == null) venueName = "CEID LIBRARY";
 
+        TextView headerTitle = findViewById(R.id.headerTitle);
         if (headerTitle != null) {
             headerTitle.setText(venueName);
         }
@@ -62,8 +58,8 @@ public class ScreenForm extends Activity {
         bindViews();
         setupDateChips();
 
-        isModifyMode = getIntent().getBooleanExtra("IS_MODIFY", false);
-        reservationIdToModify = getIntent().getLongExtra("RESERVATION_ID", -1L);
+        boolean isModifyMode = getIntent().getBooleanExtra("IS_MODIFY", false);
+        long reservationIdToModify = getIntent().getLongExtra("RESERVATION_ID", -1L);
 
         if (isModifyMode) {
             if (headerTitle != null) headerTitle.setText("Τροποποίηση Κράτησης");
@@ -83,25 +79,9 @@ public class ScreenForm extends Activity {
             Button searchBtn = findViewById(R.id.searchButton);
             searchBtn.setText("Έλεγχος Διαθεσιμότητας");
         }
-
         findViewById(R.id.backButton).setOnClickListener(view -> finish());
-        findViewById(R.id.searchButton).setOnClickListener(view -> {
-            if (isModifyMode) {
-                checkAvailabilityForUpdate();
-            } else {
-                proceedToTables();
-            }
-        });
+        findViewById(R.id.searchButton).setOnClickListener(view -> proceedToTables());
         findViewById(R.id.joinPublicButton).setOnClickListener(view -> joinPublicReservation());
-
-        android.view.View navHome = findViewById(R.id.navHome);
-        if (navHome != null) {
-            navHome.setOnClickListener(v -> {
-                android.content.Intent intent = new android.content.Intent(this, ScreenVenues.class);
-                intent.setFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-            });
-        }
     }
 
     private void bindViews() {
@@ -142,70 +122,26 @@ public class ScreenForm extends Activity {
     }
 
     private void joinPublicReservation() {
-        String inviteCode = joinReservationInput.getText().toString().trim();
-
-        if (inviteCode.isEmpty()) {
-            Toast.makeText(this, "Enter invite code", Toast.LENGTH_SHORT).show();
+        String resIdStr = joinReservationInput.getText().toString();
+        if (resIdStr.isEmpty()) {
+            Toast.makeText(this, "Enter Reservation ID", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        ValidateInviteCodeRequest request = new ValidateInviteCodeRequest(inviteCode);
-
-        ApiClient.getApi().validateInviteCode(request).enqueue(new Callback<Boolean>() {
+        long resId = Long.parseLong(resIdStr);
+        ApiClient.getApi().joinPublicReservation(resId, "S1").enqueue(new Callback<String>() {
             @Override
-            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
-                    submitInviteJoin(inviteCode);
+            public void onResponse(Call<String> call, Response<String> response) {
+                if (response.isSuccessful()) {
+                    Toast.makeText(ScreenForm.this, "Joined successfully!", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(
-                            ScreenForm.this,
-                            "Invalid or expired invite code.",
-                            Toast.LENGTH_LONG
-                    ).show();
+                    Toast.makeText(ScreenForm.this, "Failed to join.", Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<Boolean> call, Throwable t) {
-                Toast.makeText(
-                        ScreenForm.this,
-                        "Network Error: " + t.getMessage(),
-                        Toast.LENGTH_LONG
-                ).show();
-            }
-        });
-    }
-
-    private void submitInviteJoin(String inviteCode) {
-        JoinInviteCodeRequest request = new JoinInviteCodeRequest(inviteCode, "S2");
-
-        ApiClient.getApi().joinReservationWithInviteCodeResult(request).enqueue(new Callback<InviteJoinResponse>() {
-            @Override
-            public void onResponse(Call<InviteJoinResponse> call, Response<InviteJoinResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(
-                            ScreenForm.this,
-                            response.body().getMessage(),
-                            Toast.LENGTH_LONG
-                    ).show();
-
-                    joinReservationInput.setText("");
-                } else {
-                    Toast.makeText(
-                            ScreenForm.this,
-                            "Could not join reservation. HTTP " + response.code(),
-                            Toast.LENGTH_LONG
-                    ).show();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<InviteJoinResponse> call, Throwable t) {
-                Toast.makeText(
-                        ScreenForm.this,
-                        "Network Error: " + t.getMessage(),
-                        Toast.LENGTH_LONG
-                ).show();
+            public void onFailure(Call<String> call, Throwable t) {
+                Toast.makeText(ScreenForm.this, "Network Error", Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -284,38 +220,5 @@ public class ScreenForm extends Activity {
                 durationButton.setText(durations[which] + "  v");
             })
             .show();
-    }
-
-    private void checkAvailabilityForUpdate() {
-        Button searchBtn = findViewById(R.id.searchButton);
-        searchBtn.setText("Έλεγχος...");
-        searchBtn.setEnabled(false);
-
-        ApiClient.getApi().getAvailableTables(selectedVenueId, selectedDate, selectedTime, selectedDuration, groupSize)
-                .enqueue(new Callback<List<StudyTable>>() {
-                    @Override
-                    public void onResponse(Call<List<StudyTable>> call, Response<List<StudyTable>> response) {
-                        searchBtn.setText("Έλεγχος Διαθεσιμότητας");
-                        searchBtn.setEnabled(true);
-
-                        if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
-                            Intent intent = new Intent(ScreenForm.this, ScreenConfirm.class);
-                            intent.putExtra("RESERVATION_ID", reservationIdToModify);
-                            intent.putExtra("NEW_DATE", selectedDate);
-                            intent.putExtra("NEW_TIME", selectedTime);
-                            intent.putExtra("NEW_DURATION", selectedDuration);
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(ScreenForm.this, "Δεν υπάρχει διαθεσιμότητα για αυτή την ώρα", Toast.LENGTH_LONG).show();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<StudyTable>> call, Throwable t) {
-                        searchBtn.setText("Έλεγχος Διαθεσιμότητας");
-                        searchBtn.setEnabled(true);
-                        Toast.makeText(ScreenForm.this, "Σφάλμα δικτύου", Toast.LENGTH_SHORT).show();
-                    }
-                });
     }
 }
