@@ -65,10 +65,10 @@ public class GamificationServiceTest {
         wallet.setTotalBalance(10);
         when(walletRepository.findById("S1")).thenReturn(Optional.of(wallet));
 
-        int pointsEarned = gamificationService.creditPointsForStudy("S1", 60); // 60 mins -> 4 points
+        int pointsEarned = gamificationService.creditPointsForStudy("S1", 60); // Flat 50 points per checkout
 
-        assertEquals(4, pointsEarned);
-        assertEquals(14, wallet.getTotalBalance());
+        assertEquals(50, pointsEarned);
+        assertEquals(60, wallet.getTotalBalance());
         verify(walletRepository, times(1)).save(wallet);
     }
 }
