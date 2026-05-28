@@ -203,12 +203,18 @@ public class TestRunner implements CommandLineRunner {
             // =====================================================================
             System.out.println(" TEST 3: Η Ελένη (S4) ανοίγει Public Τραπέζι για 'Μαθηματικά' στο Τραπέζι 3");
             // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: savePublicReservation
+            LocalTime activeCheckInStartTime = LocalTime.now().minusMinutes(10);
+
             Long publicResId = reservationService.savePublicReservation(
-                    "S4", table3.getId(), today, LocalTime.of(16, 0), 180, 2, "Μαθηματικά");
+                    "S4", table3.getId(), today, activeCheckInStartTime, 180, 2, "Μαθηματικά");
             System.out.println("    Επιτυχία! Το Public τραπέζι άνοιξε (Κωδικός: " + publicResId + ")");
 
             System.out.println(" TEST 4: Ο Γιάννης (S1) κάνει Join στο τραπέζι της Ελένης");
             reservationService.joinPublicReservation(publicResId, "S1");
+            participantRepository.findByReservationId(publicResId).forEach(participant -> {
+                participant.setCheckedIn(false);
+                participantRepository.save(participant);
+            });
             System.out.println("    Επιτυχία! Ο Γιάννης προστέθηκε στην Public κράτηση.\n");
 
             System.out.println("   --- Εναλλακτική (UC2 Alt 3): Μη διαθεσιμότητα κατάλληλου τραπεζιού ---");
