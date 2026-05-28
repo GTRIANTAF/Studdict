@@ -40,6 +40,24 @@ public class InviteCodeService {
             return null;
         }
 
+        if (reservation.getReservationId() != null) {
+            Optional<InviteCode> existingInviteCode =
+                    inviteCodeRepository.findFirstByReservation_ReservationIdOrderByCreatedAtAsc(
+                            reservation.getReservationId()
+                    );
+
+            if (existingInviteCode.isPresent()) {
+                InviteCode inviteCode = existingInviteCode.get();
+
+                if (!inviteCode.isActive()) {
+                    inviteCode.setActive(true);
+                    inviteCodeRepository.save(inviteCode);
+                }
+
+                return inviteCode;
+            }
+        }
+
         String code = generateUniqueCode();
 
         InviteCode inviteCode = new InviteCode();
