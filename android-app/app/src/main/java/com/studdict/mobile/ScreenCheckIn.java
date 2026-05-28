@@ -341,6 +341,10 @@ public class ScreenCheckIn extends Activity {
             @Override
             public void onResponse(Call<CheckInResponse> call, Response<CheckInResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccessful()) {
+                    CheckInResponse body = response.body();
+                    if (body.getCheckInId() != null && tableNumber > 0) {
+                        new SessionManager(ScreenCheckIn.this).setCheckIn(body.getCheckInId(), tableNumber);
+                    }
                     openSuccessScreen(selectedParticipantIds.size());
                     return;
                 }
