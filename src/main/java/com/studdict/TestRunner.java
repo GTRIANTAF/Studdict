@@ -496,6 +496,21 @@ public class TestRunner implements CommandLineRunner {
             System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε επιτυχώς (Κατάσταση Settled: " + paidBill.isSettled() + ")!");
             System.out.println("      Το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
 
+            System.out.println("\n▶️ EXTRA: Δημιουργία επιπλέον δοκιμαστικών κρατήσεων για ελέγχους (Άλλες μέρες/ώρες)...");
+            // Αυριο
+            reservationService.savePrivateReservation("S3", table1.getId(), today.plusDays(1), LocalTime.of(10, 0), 120, 2);
+            reservationService.savePrivateReservation("S4", table2.getId(), today.plusDays(1), LocalTime.of(14, 0), 120, 3);
+            reservationService.savePublicReservation("S1", tables.get(3).getId(), today.plusDays(1), LocalTime.of(18, 0), 180, 2, "Φυσική");
+            
+            // Μεθαύριο
+            reservationService.savePrivateReservation("S2", table1.getId(), today.plusDays(2), LocalTime.of(9, 0), 120, 1);
+            reservationService.savePrivateReservation("S3", tables.get(4).getId(), today.plusDays(2), LocalTime.of(16, 0), 240, 4);
+
+            // Σε 3 μέρες
+            reservationService.savePublicReservation("S1", tables.get(5).getId(), today.plusDays(3), LocalTime.of(11, 0), 120, 2, "Δίκτυα");
+
+            System.out.println("   ✅ Επιπλέον κρατήσεις προστέθηκαν επιτυχώς!\n");
+
             System.out.println("=======================================================");
             System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (14/14) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
             System.out.println("=======================================================");
