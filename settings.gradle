@@ -1,0 +1,4 @@
+rootProject.name = "Studdict"
+include ":android-app"
+project(":android-app").projectDir = new File(settingsDir, "android-app")
+include ":android-app:app"

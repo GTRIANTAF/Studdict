@@ -117,4 +117,20 @@ public interface StuddictApi {
 
     @GET("api/liveboard/published")
     Call<List<PublicReservation>> getPublishedReservations();
+
+    // UC4: Modify Reservation
+    @POST("api/reservations/{reservationId}/modify")
+    Call<Boolean> modifyReservation(
+            @Path("reservationId") long reservationId,
+            @Query("newTime") String newTime,
+            @Query("newDuration") int newDuration
+    );
+
+    // UC6: Checkout
+    @POST("api/payments/process")
+    Call<okhttp3.ResponseBody> processPayment(
+            @Query("billId") long billId,
+            @Query("method") String method,
+            @Query("amount") double amount
+    );
 }

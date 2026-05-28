@@ -11,10 +11,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.studdict.mobile.api.ApiClient;
+import com.studdict.mobile.model.StudyTable;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -31,9 +33,11 @@ public class ScreenForm extends Activity {
     private String selectedTime = "10:00";
     private int selectedDuration = 120;
 
+    private boolean isModifyMode = false;
+    private long reservationIdToModify = -1L;
     private Button timeButton, durationButton;
     private Button todayButton, tomorrowButton, thirdDateButton;
-    private TextView groupSizeText;
+    private TextView groupSizeText, headerTitle;
     private LinearLayout privateChoiceCard, publicChoiceCard;
     private EditText subjectInput, joinReservationInput;
 
@@ -42,11 +46,12 @@ public class ScreenForm extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_screen_form);
 
+        headerTitle = findViewById(R.id.headerTitle);
+
         selectedVenueId = getIntent().getLongExtra("VENUE_ID", 1L);
         venueName = getIntent().getStringExtra("VENUE_NAME");
         if (venueName == null) venueName = "CEID LIBRARY";
 
-        TextView headerTitle = findViewById(R.id.headerTitle);
         if (headerTitle != null) {
             headerTitle.setText(venueName);
         }
@@ -54,8 +59,29 @@ public class ScreenForm extends Activity {
         bindViews();
         setupDateChips();
 
+        isModifyMode = getIntent().getBooleanExtra("IS_MODIFY", false);
+        reservationIdToModify = getIntent().getLongExtra("RESERVATION_ID", -1L);
+
+        if (isModifyMode) {
+            if (headerTitle != null) headerTitle.setText("Τροποποίηση Κράτησης");
+
+            privateChoiceCard.setVisibility(View.GONE);
+            publicChoiceCard.setVisibility(View.GONE);
+            findViewById(R.id.joinPublicButton).setVisibility(View.GONE);
+            joinReservationInput.setVisibility(View.GONE);
+
+            Button searchBtn = findViewById(R.id.searchButton);
+            searchBtn.setText("Έλεγχος Διαθεσιμότητας");
+        }
+
         findViewById(R.id.backButton).setOnClickListener(view -> finish());
-        findViewById(R.id.searchButton).setOnClickListener(view -> proceedToTables());
+        findViewById(R.id.searchButton).setOnClickListener(view -> {
+            if (isModifyMode) {
+                checkAvailabilityForUpdate();
+            } else {
+                proceedToTables();
+            }
+        });
         findViewById(R.id.joinPublicButton).setOnClickListener(view -> joinPublicReservation());
     }
 
@@ -195,5 +221,38 @@ public class ScreenForm extends Activity {
                 durationButton.setText(durations[which] + "  v");
             })
             .show();
+    }
+
+    private void checkAvailabilityForUpdate() {
+        Button searchBtn = findViewById(R.id.searchButton);
+        searchBtn.setText("Έλεγχος...");
+        searchBtn.setEnabled(false);
+
+        ApiClient.getApi().getAvailableTables(selectedVenueId, selectedDate, selectedTime, selectedDuration, groupSize)
+                .enqueue(new Callback<List<StudyTable>>() {
+                    @Override
+                    public void onResponse(Call<List<StudyTable>> call, Response<List<StudyTable>> response) {
+                        searchBtn.setText("Έλεγχος Διαθεσιμότητας");
+                        searchBtn.setEnabled(true);
+
+                        if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                            Intent intent = new Intent(ScreenForm.this, ScreenConfirm.class);
+                            intent.putExtra("RESERVATION_ID", reservationIdToModify);
+                            intent.putExtra("NEW_DATE", selectedDate);
+                            intent.putExtra("NEW_TIME", selectedTime);
+                            intent.putExtra("NEW_DURATION", selectedDuration);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(ScreenForm.this, "Δεν υπάρχει διαθεσιμότητα για αυτή την ώρα", Toast.LENGTH_LONG).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<StudyTable>> call, Throwable t) {
+                        searchBtn.setText("Έλεγχος Διαθεσιμότητας");
+                        searchBtn.setEnabled(true);
+                        Toast.makeText(ScreenForm.this, "Σφάλμα δικτύου", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }
