@@ -236,20 +236,40 @@
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/joinReservationInput"
-                    android:layout_width="0dp"
+                <TextView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="Reservation ID"
-                    android:inputType="number" />
+                    android:text="Or join an existing reservation"
+                    android:textColor="@color/studdict_text"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/joinReservationInput"
+                        style="@style/StuddictInput"
+                        android:layout_width="0dp"
+                        android:layout_marginEnd="12dp"
+                        android:layout_weight="1"
+                        android:hint="Invite Code"
+                        android:inputType="number" />
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/joinPublicButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:text="Join" />
+                    android:layout_width="match_parent"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/pill_inactive"
+                    android:text="Join Reservation"
+                    android:textAllCaps="false"
+                    android:textColor="@color/studdict_text"
+                    android:textStyle="bold" />
             </LinearLayout>
 
         </LinearLayout>
