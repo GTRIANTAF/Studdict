@@ -24,10 +24,26 @@ public class StudyTableService {
 
     // UML: Table.findAvailable(venueId, date, time, duration, minCapacity) -> ΓΙΑ UC1
     public List<StudyTable> getAvailableTables(Long venueId, LocalDate date, LocalTime time, int duration, int minCapacity) {
-        // Επιστρέφει τα ελεύθερα τραπέζια που χωράνε την παρέα (Βασική Ροή UC1)
         List<StudyTable> tables = studyTableRepository.findByVenue_VenueIdAndIsAvailableTrue(venueId);
+        LocalTime requestedEnd = time.plusMinutes(duration);
+
         return tables.stream()
                 .filter(t -> t.getCapacity() >= minCapacity)
+                .filter(t -> {
+                    List<Reservation> existingReservations = reservationRepository.findByTable_TableIdAndStatus(t.getId(), "CONFIRMED");
+                    for (Reservation r : existingReservations) {
+                        if (r.getReservationDate() != null && r.getReservationDate().equals(date)) {
+                            LocalTime rStart = r.getStartTime();
+                            LocalTime rEnd = rStart.plusMinutes(r.getDurationMinutes());
+                            
+                            // Overlap condition: requestedStart < rEnd AND requestedEnd > rStart
+                            if (time.isBefore(rEnd) && requestedEnd.isAfter(rStart)) {
+                                return false; // Not available
+                            }
+                        }
+                    }
+                    return true;
+                })
                 .toList();
     }
 

@@ -87,7 +87,7 @@ public class TestRunner implements CommandLineRunner {
                 ebook.setIsbn("978-0133943030");
                 ebook.setCategory("Computer Science");
                 ebook = eBookRepository.save(ebook);
-                
+
                 EBookLicense license = new EBookLicense();
                 license.setEbook(ebook);
                 license.setAvailable(true);
@@ -121,7 +121,7 @@ public class TestRunner implements CommandLineRunner {
             try {
                 Student newStudent = studentService.registerStudent("Γιώργος", "Τ.", "giorgos@upatras.gr", "pass123", "Πανεπιστήμιο Πατρών", "CEID");
                 System.out.println("   ✅ Επιτυχής εγγραφή φοιτητή: " + newStudent.getEmail());
-                
+
                 System.out.println("   --- Εναλλακτική (UC11 Alt 1): Το Email υπάρχει ήδη ---");
                 studentService.registerStudent("Γιώργος", "Τ.", "giorgos@upatras.gr", "pass123", "Πανεπιστήμιο Πατρών", "CEID");
             } catch (Exception e) {
@@ -378,27 +378,27 @@ public class TestRunner implements CommandLineRunner {
             // TEST 12: Παραγγελία F&B (UC8)
             // =====================================================================
             System.out.println("▶️ TEST 12: Παραγγελία F&B (UC8)");
-            
+
             // 1. LoadCatalogCtrl
             List<MenuItem> catalog = orderService.readCatalog();
             MenuItem coffee = catalog.get(0);
-            
+
             // 2. AddProductCtrl
             List<OrderItemRequest> orderItems = new java.util.ArrayList<>();
             orderService.addProduct(orderItems, coffee.getItemId(), 2);
-            
+
             // 3. ProcessSummaryCtrl
             orderService.processSummary(orderItems);
-            
+
             // 4. ValidateOrderCtrl
             orderService.verifyAvailability(orderItems);
-            
+
             // 5. CreateOrderCtrl
             Order order = orderService.createOrder(table2.getId(), orderItems);
-            
+
             // 6. UpdateBillCtrl
             orderService.calculateCost(order);
-            
+
             System.out.println("   ✅ Η παραγγελία δημιουργήθηκε με συνολικό κόστος: " + order.getTotalAmount() + "€\n");
 
             System.out.println("   --- Εναλλακτική (UC8 Alt 1): Προϊόν μη διαθέσιμο ---");
@@ -432,14 +432,14 @@ public class TestRunner implements CommandLineRunner {
             // =====================================================================
             System.out.println("▶️ TEST 13: Ψηφιακός Δανεισμός E-book (UC7)");
             EBook ebook = eBookRepository.findAll().get(0);
-            
+
             System.out.println("    Εκτέλεση requestAccess()...");
             boolean accessGranted = eBookService.requestAccess(successfulCheckIn.getCheckInId());
-            
+
             System.out.println("    Εκτέλεση requestLoan()...");
             EBookLoan loan = eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
             System.out.println("   ✅ Ο δανεισμός E-book ξεκίνησε στις: " + loan.getStartTime());
-            
+
             // Alt 3: Early Return
             System.out.println("   --- Εναλλακτική 3: Πρόωρη επιστροφή του E-book ---");
             EBookLoan checkedLoan = eBookService.checkRequest(loan.getLoanId());
@@ -462,7 +462,7 @@ public class TestRunner implements CommandLineRunner {
             } catch (Exception e) {
                 System.out.println("    Αναμενόμενο σφάλμα διαθεσιμότητας E-book: " + e.getMessage());
             }
-            
+
             System.out.println("   --- Εναλλακτική (UC7 Alt 4): Revocation via Expiry ---");
             eBookService.revokeLoan(successfulCheckIn.getCheckInId());
             System.out.println("    Η revokeLoan κλήθηκε επιτυχώς (προσομοίωση από TimerSystem).\n");
