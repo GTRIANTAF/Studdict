@@ -79,6 +79,7 @@ public class ScreenVenues extends Activity {
         Intent intent = new Intent(this, ScreenForm.class);
         intent.putExtra("VENUE_ID", venueId);
         intent.putExtra("VENUE_NAME", venueName);
+        intent.putExtra("STUDENT_ID", getIntent().getStringExtra("STUDENT_ID"));
         startActivity(intent);
     }
 }
