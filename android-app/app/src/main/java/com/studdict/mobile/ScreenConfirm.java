@@ -18,10 +18,14 @@ public class ScreenConfirm extends Activity {
 
     private long venueId;
     private long tableId;
+    private long reservationIdToModify = -1L;
     private String venueName, date, time, subject;
     private int duration, capacity, tableNumber;
     private boolean isPublic;
+    private boolean isModifyMode = false;
     private String studentId = "S1"; // Hardcoded for mockup
+    private String newDate;
+    private String newTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
