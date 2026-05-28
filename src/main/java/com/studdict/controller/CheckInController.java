@@ -1,5 +1,7 @@
 package com.studdict.controller;
 
+import com.studdict.dto.CheckInRequestDTO;
+import com.studdict.dto.CheckInResponseDTO;
 import com.studdict.model.CheckIn;
 import com.studdict.model.ReservationParticipant;
 import com.studdict.service.CheckInService;
@@ -37,6 +39,15 @@ public class CheckInController {
                 request.getReservationId(),
                 request.getQrData(),
                 request.getParticipantIds()
+        );
+    }
+
+    @PostMapping("/perform")
+    public CheckInResponseDTO performCheckIn(@RequestBody CheckInRequestDTO request) {
+        return checkInService.performCheckIn(
+                request.getReservationId(),
+                request.getStudentId(),
+                request.getQrData()
         );
     }
 

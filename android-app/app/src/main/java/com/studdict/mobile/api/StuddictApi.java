@@ -1,6 +1,8 @@
 package com.studdict.mobile.api;
 
 import com.studdict.mobile.model.Bill;
+import com.studdict.mobile.model.CheckInRequest;
+import com.studdict.mobile.model.CheckInResponse;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
 import com.studdict.mobile.model.GenerateInviteCodeRequest;
@@ -79,6 +81,10 @@ public interface StuddictApi {
 
     @POST("invite-code/join-result")
     Call<InviteJoinResponse> joinReservationWithInviteCodeResult(@Body JoinInviteCodeRequest request);
+
+    // --- UC5: Check-in with reservation and QR ---
+    @POST("check-in/perform")
+    Call<CheckInResponse> performCheckIn(@Body CheckInRequest request);
 
     // --- UC11 & UC12: Account Creation & Login ---
     @POST("api/students/register")
