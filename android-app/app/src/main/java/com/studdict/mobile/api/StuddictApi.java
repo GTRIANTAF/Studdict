@@ -1,6 +1,10 @@
 package com.studdict.mobile.api;
 
 import com.studdict.mobile.model.Bill;
+import com.studdict.mobile.model.CheckIn;
+import com.studdict.mobile.model.CheckInRequest;
+import com.studdict.mobile.model.CheckInResponse;
+import com.studdict.mobile.model.ConfirmCheckInRequest;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
 import com.studdict.mobile.model.GenerateInviteCodeRequest;
@@ -16,10 +20,13 @@ import com.studdict.mobile.model.OrderRequest;
 import com.studdict.mobile.model.PublicReservation;
 import com.studdict.mobile.model.RegisterRequest;
 import com.studdict.mobile.model.Reservation;
+import com.studdict.mobile.model.ReservationParticipant;
 import com.studdict.mobile.model.ReservationRequest;
 import com.studdict.mobile.model.Student;
 import com.studdict.mobile.model.StudyTable;
+import com.studdict.mobile.model.ValidateCheckInRequest;
 import com.studdict.mobile.model.ValidateInviteCodeRequest;
+import com.studdict.mobile.model.LoyaltyWallet;
 
 import java.util.List;
 
@@ -44,6 +51,28 @@ public interface StuddictApi {
     Call<List<StudyTable>> getMatchmakingTables(
             @Query("venueId") long venueId,
             @Query("subjectName") String subjectName
+    );
+
+    @GET("api/gamification/wallet/{studentId}")
+    Call<LoyaltyWallet> getWallet(@Path("studentId") String studentId);
+
+    @POST("api/gamification/validate")
+    Call<Boolean> validatePoints(
+            @Query("studentId") String studentId,
+            @Query("points") int points
+    );
+
+    @POST("api/gamification/redeem")
+    Call<okhttp3.ResponseBody> redeemPoints(
+            @Query("studentId") String studentId,
+            @Query("pointsToRedeem") int points,
+            @Query("tableId") Integer tableId
+    );
+
+    @POST("api/gamification/earn")
+    Call<okhttp3.ResponseBody> earnPoints(
+            @Query("studentId") String studentId,
+            @Query("reservationId") long reservationId
     );
 
     @POST("api/tables/{tableId}/lock")
@@ -79,6 +108,19 @@ public interface StuddictApi {
 
     @POST("invite-code/join-result")
     Call<InviteJoinResponse> joinReservationWithInviteCodeResult(@Body JoinInviteCodeRequest request);
+
+    // --- UC5: Check-in with reservation and QR ---
+    @POST("check-in/validate")
+    Call<String> validateCheckIn(@Body ValidateCheckInRequest request);
+
+    @GET("check-in/participants")
+    Call<List<ReservationParticipant>> getCheckInParticipants(@Query("reservationId") long reservationId);
+
+    @POST("check-in/confirm")
+    Call<CheckInResponse> confirmCheckIn(@Body ConfirmCheckInRequest request);
+
+    @POST("check-in/perform")
+    Call<CheckInResponse> performCheckIn(@Body CheckInRequest request);
 
     // --- UC11 & UC12: Account Creation & Login ---
     @POST("api/students/register")
