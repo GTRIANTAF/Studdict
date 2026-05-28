@@ -59,7 +59,8 @@ public interface StuddictApi {
     @POST("api/gamification/redeem")
     Call<okhttp3.ResponseBody> redeemPoints(
             @Query("studentId") String studentId,
-            @Query("pointsToRedeem") int points
+            @Query("pointsToRedeem") int points,
+            @Query("tableId") Integer tableId
     );
 
     @POST("api/gamification/earn")

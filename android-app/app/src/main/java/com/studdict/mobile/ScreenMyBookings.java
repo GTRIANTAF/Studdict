@@ -129,6 +129,8 @@ public class ScreenMyBookings extends Activity {
                 Toast.makeText(ScreenMyBookings.this, "Proceeding to Checkout...", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(ScreenMyBookings.this, ScreenBill.class);
                 intent.putExtra("TABLE_ID", res.getTable() != null ? (int) res.getTable().getId() : 1);
+                intent.putExtra("STUDENT_ID", studentId);
+                intent.putExtra("RESERVATION_ID", res.getReservationId());
                 startActivity(intent);
             });
             buttonLayout.addView(btnCheckout);

@@ -31,10 +31,16 @@ public class GamificationController {
     }
 
     @PostMapping("/redeem")
-    public String redeemPoints(@RequestParam String studentId, @RequestParam int pointsToRedeem) {
+    public String redeemPoints(
+            @RequestParam String studentId,
+            @RequestParam int pointsToRedeem,
+            @RequestParam(required = false) Integer tableId) {
         boolean success = gamificationService.redeemPoints(studentId, pointsToRedeem);
         if (success) {
             double discount = gamificationService.calculateDiscount(pointsToRedeem);
+            if (tableId != null) {
+                gamificationService.applyDiscountToBill(tableId, discount);
+            }
             return "Επιτυχής εξαργύρωση! Κερδίσατε έκπτωση " + discount + " ευρώ.";
         }
         return "Αποτυχία εξαργύρωσης. Ελέγξτε το υπόλοιπό σας.";
