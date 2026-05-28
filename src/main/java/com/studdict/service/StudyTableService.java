@@ -24,6 +24,11 @@ public class StudyTableService {
 
     // UML: Table.findAvailable(venueId, date, time, duration, minCapacity) -> ΓΙΑ UC1
     public List<StudyTable> getAvailableTables(Long venueId, LocalDate date, LocalTime time, int duration, int minCapacity) {
+        // Αν ο χρήστης ψάχνει για ημερομηνία/ώρα που έχει ήδη περάσει, δεν του δείχνουμε κανένα τραπέζι!
+        if (java.time.LocalDateTime.of(date, time).isBefore(java.time.LocalDateTime.now())) {
+            return new ArrayList<>();
+        }
+
         List<StudyTable> allTables = studyTableRepository.findByVenue_VenueId(venueId);
         
         // Καθαρισμός expired soft locks on-the-fly ΚΑΙ corrupted tables

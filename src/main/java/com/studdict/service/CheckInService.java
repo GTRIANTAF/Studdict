@@ -366,15 +366,11 @@ public class CheckInService {
             return false;
         }
 
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDateTime = LocalDateTime.of(reservation.getReservationDate(), reservation.getStartTime());
+        LocalDateTime endDateTime = startDateTime.plusMinutes(reservation.getDurationMinutes());
 
-        LocalTime startTime = reservation.getStartTime();
-        LocalTime endTime = startTime.plusMinutes(reservation.getDurationMinutes());
-
-        return reservation.getReservationDate().equals(today)
-                && !now.isBefore(startTime)
-                && !now.isAfter(endTime);
+        return !now.isBefore(startDateTime) && now.isBefore(endDateTime);
     }
 
     public enum ReservationValidationResult {
