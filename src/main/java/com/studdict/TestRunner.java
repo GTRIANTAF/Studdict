@@ -19,6 +19,7 @@ import com.studdict.service.StudentService;
 import com.studdict.dto.OrderItemRequest;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -203,7 +204,7 @@ public class TestRunner implements CommandLineRunner {
             // =====================================================================
             System.out.println(" TEST 3: Η Ελένη (S4) ανοίγει Public Τραπέζι για 'Μαθηματικά' στο Τραπέζι 3");
             // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: savePublicReservation
-            LocalTime activeCheckInStartTime = LocalTime.now().minusMinutes(10);
+            LocalTime activeCheckInStartTime = LocalTime.now().plusMinutes(1);
 
             Long publicResId = reservationService.savePublicReservation(
                     "S4", table3.getId(), today, activeCheckInStartTime, 180, 2, "Μαθηματικά");
@@ -501,6 +502,23 @@ public class TestRunner implements CommandLineRunner {
             Bill paidBill = paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount());
             System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε επιτυχώς (Κατάσταση Settled: " + paidBill.isSettled() + ")!");
             System.out.println("      Το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
+
+            System.out.println("\n▶️ EXTRA: Δημιουργία επιπλέον δοκιμαστικών κρατήσεων για ελέγχους (Άλλες μέρες/ώρες)...");
+            // Αυριο
+            reservationService.savePrivateReservation("S3", table1.getId(), today.plusDays(1), LocalTime.of(10, 0), 120, 2);
+            reservationService.savePrivateReservation("S4", table2.getId(), today.plusDays(1), LocalTime.of(14, 0), 120, 3);
+            reservationService.savePublicReservation("S1", tables.get(3).getId(), today.plusDays(1), LocalTime.of(18, 0), 180, 2, "Φυσική");
+            
+            // Μεθαύριο
+            reservationService.savePrivateReservation("S2", table1.getId(), today.plusDays(2), LocalTime.of(9, 0), 120, 1);
+            reservationService.savePrivateReservation("S3", tables.get(4).getId(), today.plusDays(2), LocalTime.of(16, 0), 240, 4);
+
+            // ΔΥΝΑΜΙΚΗ ΚΡΑΤΗΣΗ ΓΙΑ ΤΕΣΤ Check-In: Ξεκινάει "πριν από μισή ώρα" και διαρκεί 2 ώρες!
+            // Χρησιμοποιούμε LocalDateTime.now() για να χειρίζεται σωστά την αλλαγή ημέρας (τα μεσάνυχτα)!
+            LocalDateTime testStart = LocalDateTime.now().minusMinutes(30);
+            reservationService.savePrivateReservation("S1", table3.getId(), testStart.toLocalDate(), testStart.toLocalTime(), 120, 2);
+
+            System.out.println("   ✅ Επιπλέον κρατήσεις προστέθηκαν επιτυχώς!\n");
 
             System.out.println("=======================================================");
             System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (14/14) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");
