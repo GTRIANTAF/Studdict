@@ -50,6 +50,18 @@
         android:layout_marginBottom="32dp"/>
 
     <Button
+        android:id="@+id/btnCheckout"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginBottom="16dp"
+        android:text="Proceed to Checkout"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/button_primary" />
+
+    <Button
         android:id="@+id/btnCloseBill"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
