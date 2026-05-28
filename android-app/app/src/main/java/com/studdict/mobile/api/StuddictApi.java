@@ -1,16 +1,24 @@
 package com.studdict.mobile.api;
 
-import com.studdict.mobile.model.ReservationRequest;
-import com.studdict.mobile.model.StudyTable;
-import com.studdict.mobile.model.RegisterRequest;
-import com.studdict.mobile.model.LoginRequest;
-import com.studdict.mobile.model.Student;
-import com.studdict.mobile.model.MenuItem;
-import com.studdict.mobile.model.OrderRequest;
-import com.studdict.mobile.model.Order;
+import com.studdict.mobile.model.Bill;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
+import com.studdict.mobile.model.GenerateInviteCodeRequest;
+import com.studdict.mobile.model.InviteCode;
+import com.studdict.mobile.model.InviteJoinResponse;
+import com.studdict.mobile.model.JoinInviteCodeRequest;
+import com.studdict.mobile.model.KitchenOrder;
+import com.studdict.mobile.model.LoginRequest;
+import com.studdict.mobile.model.MenuItem;
+import com.studdict.mobile.model.Order;
+import com.studdict.mobile.model.OrderItemRequest;
+import com.studdict.mobile.model.OrderRequest;
 import com.studdict.mobile.model.PublicReservation;
+import com.studdict.mobile.model.RegisterRequest;
+import com.studdict.mobile.model.ReservationRequest;
+import com.studdict.mobile.model.Student;
+import com.studdict.mobile.model.StudyTable;
+import com.studdict.mobile.model.ValidateInviteCodeRequest;
 
 import java.util.List;
 
@@ -58,6 +66,19 @@ public interface StuddictApi {
             @Query("studentId") String studentId
     );
 
+    // --- UC3: Invite Code Reservation Join ---
+    @POST("invite-code/generate")
+    Call<InviteCode> generateInviteCode(@Body GenerateInviteCodeRequest request);
+
+    @POST("invite-code/validate")
+    Call<Boolean> validateInviteCode(@Body ValidateInviteCodeRequest request);
+
+    @POST("invite-code/join")
+    Call<Boolean> joinReservationWithInviteCode(@Body JoinInviteCodeRequest request);
+
+    @POST("invite-code/join-result")
+    Call<InviteJoinResponse> joinReservationWithInviteCodeResult(@Body JoinInviteCodeRequest request);
+
     // --- UC11 & UC12: Account Creation & Login ---
     @POST("api/students/register")
     Call<Student> registerStudent(@Body RegisterRequest request);
@@ -72,8 +93,14 @@ public interface StuddictApi {
     @GET("api/ebooks/search")
     Call<List<EBook>> executeSearch(@Query("keyword") String keyword);
 
+    @GET("api/ebooks/availability/{ebookId}")
+    Call<Boolean> checkEBookAvailability(@Path("ebookId") long ebookId);
+
     @POST("api/ebooks/loan")
     Call<EBookLoan> requestLoan(@Query("checkInId") long checkInId, @Query("ebookId") long ebookId);
+
+    @GET("api/ebooks/loan/{loanId}")
+    Call<EBookLoan> getLoanStatus(@Path("loanId") long loanId);
 
     @POST("api/ebooks/return/{loanId}")
     Call<String> requestReturn(@Path("loanId") long loanId);
@@ -82,8 +109,23 @@ public interface StuddictApi {
     @GET("api/orders/catalog")
     Call<List<MenuItem>> readCatalog();
 
+    @POST("api/orders/cart/add")
+    Call<Boolean> addCartItem(@Query("menuItemId") long menuItemId, @Query("quantity") int quantity);
+
+    @POST("api/orders/summary")
+    Call<Boolean> processSummary(@Body List<OrderItemRequest> items);
+
     @POST("api/orders/create")
     Call<Order> createOrder(@Body OrderRequest request);
+
+    @POST("api/orders/cancel")
+    Call<String> cancelOrder();
+
+    @GET("api/orders/kitchen/active")
+    Call<List<KitchenOrder>> getKitchenOrders();
+
+    @GET("api/bills/table/{tableId}")
+    Call<Bill> getBillByTable(@Path("tableId") int tableId);
 
     @GET("api/liveboard/published")
     Call<List<PublicReservation>> getPublishedReservations();

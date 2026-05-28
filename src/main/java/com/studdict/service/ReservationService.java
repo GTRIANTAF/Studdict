@@ -22,7 +22,7 @@ public class ReservationService {
 
     // USE CASE 1: ΙΔΙΩΤΙΚΗ ΚΡΑΤΗΣΗ (Private)
     // UML: PrivateReservation.create(...) & ReservationParticipant.register(...)
-    public Long savePrivateReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration) {
+    public Long savePrivateReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration, int numberOfPeople) {
         Student student = studentRepository.findById(studentId).orElseThrow();
         StudyTable table = studyTableRepository.findById(tableId).orElseThrow();
 
@@ -31,6 +31,7 @@ public class ReservationService {
         reservation.setReservationDate(date);
         reservation.setStartTime(time);
         reservation.setDurationMinutes(duration);
+        reservation.setNumberOfPeople(numberOfPeople);
         reservation.setStatus("CONFIRMED");
         reservation.setTable(table);
 
@@ -54,7 +55,7 @@ public class ReservationService {
 
     // USE CASE 2: ΔΗΜΟΣΙΑ ΚΡΑΤΗΣΗ (Public - Matchmaking)
     // UML: PublicReservation.create(...)
-    public Long savePublicReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration, String subjectName) {
+    public Long savePublicReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration, int numberOfPeople, String subjectName) {
         Student student = studentRepository.findById(studentId).orElseThrow();
         StudyTable table = studyTableRepository.findById(tableId).orElseThrow();
 
@@ -80,6 +81,7 @@ public class ReservationService {
         reservation.setReservationDate(date);
         reservation.setStartTime(time);
         reservation.setDurationMinutes(duration);
+        reservation.setNumberOfPeople(numberOfPeople);
         reservation.setStatus("CONFIRMED");
         reservation.setStudySubject(subject);
         reservation.setTable(table);

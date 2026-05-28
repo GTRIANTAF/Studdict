@@ -3,6 +3,7 @@ package com.studdict.model;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "ebooks")
@@ -18,6 +19,7 @@ public class EBook {
     private String isbn;
     private String category;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "ebook", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EBookLicense> licenses = new ArrayList<>();
 

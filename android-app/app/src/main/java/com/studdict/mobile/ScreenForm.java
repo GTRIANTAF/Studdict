@@ -11,6 +11,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.studdict.mobile.api.ApiClient;
+import com.studdict.mobile.model.InviteJoinResponse;
+import com.studdict.mobile.model.JoinInviteCodeRequest;
+import com.studdict.mobile.model.ValidateInviteCodeRequest;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -97,26 +100,70 @@ public class ScreenForm extends Activity {
     }
 
     private void joinPublicReservation() {
-        String resIdStr = joinReservationInput.getText().toString();
-        if (resIdStr.isEmpty()) {
-            Toast.makeText(this, "Enter Reservation ID", Toast.LENGTH_SHORT).show();
+        String inviteCode = joinReservationInput.getText().toString().trim();
+
+        if (inviteCode.isEmpty()) {
+            Toast.makeText(this, "Enter invite code", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        long resId = Long.parseLong(resIdStr);
-        ApiClient.getApi().joinPublicReservation(resId, "S1").enqueue(new Callback<String>() {
+        ValidateInviteCodeRequest request = new ValidateInviteCodeRequest(inviteCode);
+
+        ApiClient.getApi().validateInviteCode(request).enqueue(new Callback<Boolean>() {
             @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(ScreenForm.this, "Joined successfully!", Toast.LENGTH_LONG).show();
+            public void onResponse(Call<Boolean> call, Response<Boolean> response) {
+                if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
+                    submitInviteJoin(inviteCode);
                 } else {
-                    Toast.makeText(ScreenForm.this, "Failed to join.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(
+                            ScreenForm.this,
+                            "Invalid or expired invite code.",
+                            Toast.LENGTH_LONG
+                    ).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                Toast.makeText(ScreenForm.this, "Network Error", Toast.LENGTH_LONG).show();
+            public void onFailure(Call<Boolean> call, Throwable t) {
+                Toast.makeText(
+                        ScreenForm.this,
+                        "Network Error: " + t.getMessage(),
+                        Toast.LENGTH_LONG
+                ).show();
+            }
+        });
+    }
+
+    private void submitInviteJoin(String inviteCode) {
+        JoinInviteCodeRequest request = new JoinInviteCodeRequest(inviteCode, "S2");
+
+        ApiClient.getApi().joinReservationWithInviteCodeResult(request).enqueue(new Callback<InviteJoinResponse>() {
+            @Override
+            public void onResponse(Call<InviteJoinResponse> call, Response<InviteJoinResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    Toast.makeText(
+                            ScreenForm.this,
+                            response.body().getMessage(),
+                            Toast.LENGTH_LONG
+                    ).show();
+
+                    joinReservationInput.setText("");
+                } else {
+                    Toast.makeText(
+                            ScreenForm.this,
+                            "Could not join reservation. HTTP " + response.code(),
+                            Toast.LENGTH_LONG
+                    ).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<InviteJoinResponse> call, Throwable t) {
+                Toast.makeText(
+                        ScreenForm.this,
+                        "Network Error: " + t.getMessage(),
+                        Toast.LENGTH_LONG
+                ).show();
             }
         });
     }
@@ -147,14 +194,14 @@ public class ScreenForm extends Activity {
     private void selectDate(Button selected, String dateValue) {
         selectedDate = dateValue;
         todayButton.setBackgroundResource(R.drawable.pill_inactive);
-        todayButton.setTextColor(getResources().getColor(R.color.studdict_muted));
+        todayButton.setTextColor(getColor(R.color.studdict_muted));
         tomorrowButton.setBackgroundResource(R.drawable.pill_inactive);
-        tomorrowButton.setTextColor(getResources().getColor(R.color.studdict_muted));
+        tomorrowButton.setTextColor(getColor(R.color.studdict_muted));
         thirdDateButton.setBackgroundResource(R.drawable.pill_inactive);
-        thirdDateButton.setTextColor(getResources().getColor(R.color.studdict_muted));
+        thirdDateButton.setTextColor(getColor(R.color.studdict_muted));
 
         selected.setBackgroundResource(R.drawable.pill_active);
-        selected.setTextColor(getResources().getColor(R.color.studdict_surface));
+        selected.setTextColor(getColor(R.color.studdict_surface));
     }
 
     private void selectPrivateMode() {
