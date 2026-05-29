@@ -53,6 +53,16 @@
             android:textColor="#757575"
             android:layout_marginBottom="16dp"/>
 
+    <Button
+        android:id="@+id/btn_redeem_points"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Εξαργύρωση 100 Πόντων (-3.00€)"
+        android:backgroundTint="#FF8F00"
+        android:textColor="#FFFFFF"
+        android:layout_marginBottom="16dp"
+        android:enabled="false"/>
+
         <!-- E-Books Borrowed This Session -->
         <TextView
             android:id="@+id/txtEbookLoansHeader"

@@ -9,9 +9,9 @@ import jakarta.persistence.Table;
 public class LoyaltyWallet {
     @Id
     private String studentId;
-    private int totalBalance = 0;
+    private int totalBalance = 100;
     private int minimumRedeemLimit = 100;
-    private double exchangeRate = 0.05; // 1 πόντος = 0.05 ευρώ
+    private double exchangeRate = 0.03; // 1 πόντος = 0.03 ευρώ
 
     public LoyaltyWallet() {}
 
