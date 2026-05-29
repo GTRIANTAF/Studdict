@@ -17,7 +17,7 @@ public class CashPaymentController {
     @PostMapping("/accept")
     public CashPaymentResponse acceptPayment(@RequestBody CashRequest request) {
         try {
-            Bill bill = paymentService.processPayment(request.getBillId(), "CASH", request.getAmountGiven());
+            Bill bill = paymentService.processPayment(request.getBillId(), "CASH", request.getAmountGiven(), request.getStudentId());
             return new CashPaymentResponse(true, "Η πληρωμή με μετρητά έγινε επιτυχώς", bill.getTotalAmount());
         } catch (Exception e) {
             return new CashPaymentResponse(false, e.getMessage(), 0.0);
@@ -27,8 +27,10 @@ public class CashPaymentController {
     public static class CashRequest {
         private Long billId;
         private Double amountGiven;
+        private String studentId;
         public Long getBillId() { return billId; }
         public double getAmountGiven() { return amountGiven; }
+        public String getStudentId() { return studentId; }
     }
 
     public static class CashPaymentResponse {
