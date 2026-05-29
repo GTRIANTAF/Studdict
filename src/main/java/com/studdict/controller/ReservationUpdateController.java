@@ -47,23 +47,23 @@ public class ReservationUpdateController {
 
     public static class ReservationUpdateResponse {
         private Long reservationId;
-        private LocalDate reservationDate;
-        private LocalTime startTime;
+        private String reservationDate;
+        private String startTime;
         private int durationMinutes;
         private String status;
 
         public ReservationUpdateResponse(Reservation reservation) {
             this.reservationId = reservation.getReservationId();
-            this.reservationDate = reservation.getReservationDate();
-            this.startTime = reservation.getStartTime();
+            this.reservationDate = reservation.getReservationDate() != null ? reservation.getReservationDate().toString() : null;
+            this.startTime = reservation.getStartTime() != null ? reservation.getStartTime().toString() : null;
             this.durationMinutes = reservation.getDurationMinutes();
             this.status = reservation.getStatus();
         }
 
         public Long getReservationId() { return reservationId; }
-        public LocalDate getReservationDate() { return reservationDate; }
-        public LocalTime getStartTime() { return startTime; }
-        public void setStartTime(LocalTime startTime) { this.startTime = startTime; }
+        public String getReservationDate() { return reservationDate; }
+        public String getStartTime() { return startTime; }
+        public void setStartTime(String startTime) { this.startTime = startTime; }
         public int getDurationMinutes() { return durationMinutes; }
     }
 }
