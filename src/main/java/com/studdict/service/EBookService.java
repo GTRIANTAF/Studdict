@@ -37,8 +37,32 @@ public class EBookService {
     public List<EBook> executeSearch(String keyword) {
         // Υλοποιεί το SearchCtrl.executeSearch() του Sequence Diagram
         return eBookRepository.findAll().stream()
-                .filter(b -> b.getTitle().toLowerCase().contains(keyword.toLowerCase()) || 
+                .filter(b -> b.getTitle().toLowerCase().contains(keyword.toLowerCase()) ||
                              b.getAuthor().toLowerCase().contains(keyword.toLowerCase()))
+                .toList();
+    }
+
+    // UC7 step 4: returns catalog with per-book availability indicator
+    public List<EBookCatalogDTO> getCatalog(String keyword) {
+        return eBookRepository.findAll().stream()
+                .filter(b -> keyword == null || keyword.isBlank()
+                        || b.getTitle().toLowerCase().contains(keyword.toLowerCase())
+                        || b.getAuthor().toLowerCase().contains(keyword.toLowerCase()))
+                .map(b -> {
+                    boolean available = b.getLicenses().stream().anyMatch(EBookLicense::isAvailable);
+                    return new EBookCatalogDTO(b.geteBookId(), b.getTitle(), b.getAuthor(), b.getCategory(), available);
+                })
+                .toList();
+    }
+
+    // Returns active loans for a check-in enriched with book title/author for the bill screen
+    public List<EBookLoanDTO> getActiveLoansWithInfo(Long checkInId) {
+        return loanRepository.findActiveLoansByCheckIn(checkInId).stream()
+                .filter(loan -> loan.getLicense() != null && loan.getLicense().getEbook() != null)
+                .map(loan -> {
+                    EBook book = loan.getLicense().getEbook();
+                    return new EBookLoanDTO(loan.getLoanId(), book.geteBookId(), book.getTitle(), book.getAuthor());
+                })
                 .toList();
     }
 

@@ -44,7 +44,23 @@ build/
 *.md
 
 .uc/
-
-### Gradle ###
 .gradle/
+**/build/
+
+### Android ###
 local.properties
+*.apk
+*.aab
+*.aar
+*.dex
+*.class
+captures/
+
+### Signing keys ###
+*.jks
+*.keystore
+
+### Logs ###
+*.log
+
+domain_model.puml
