@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalTime;
 
 @Service
-@Transactional
+@Transactional(readOnly = false)
 public class ReservationUpdateService {
 
     private final ReservationRepository reservationRepository;
