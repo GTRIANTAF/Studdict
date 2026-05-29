@@ -21,12 +21,17 @@ public class DataInitializer implements ApplicationRunner {
 
     private final MenuItemRepository menuItemRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.studdict.repository.LoyaltyWalletRepository walletRepository;
+
     public DataInitializer(MenuItemRepository menuItemRepository) {
         this.menuItemRepository = menuItemRepository;
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        initializeLoyaltyWallets();
+
         List<MenuItem> existing = menuItemRepository.findAll();
 
         if (existing.isEmpty()) {
@@ -34,6 +39,18 @@ public class DataInitializer implements ApplicationRunner {
         } else {
             fixUnavailableItems(existing);
         }
+    }
+
+    private void initializeLoyaltyWallets() {
+        String[] students = {"S1", "S2", "S3", "S4"};
+        for (String studentId : students) {
+            com.studdict.model.LoyaltyWallet wallet = walletRepository.findById(studentId)
+                    .orElseGet(() -> new com.studdict.model.LoyaltyWallet(studentId));
+            wallet.setTotalBalance(100);
+            wallet.setExchangeRate(0.03);
+            walletRepository.save(wallet);
+        }
+        System.out.println("[DataInitializer] Initialized loyalty wallets with 100 points baseline and 0.03 exchange rate.");
     }
 
     private void fixUnavailableItems(List<MenuItem> items) {

@@ -17,6 +17,9 @@ public class StudentService {
     @Autowired
     private StudentRepository studentRepository;
 
+    @Autowired
+    private GamificationService gamificationService;
+
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
 
@@ -49,10 +52,11 @@ public class StudentService {
 
         String studentId = UUID.randomUUID().toString();
 
-        // ΣΗΜΕΙΩΣΗ: Σε παραγωγικό σύστημα ο κωδικός θα αποθηκευόταν ως hash (π.χ. BCrypt).
         Student student = new Student(studentId, firstName.trim(), lastName.trim(),
                 normalizedEmail, password, university.trim(), department.trim());
-        return studentRepository.save(student);
+        Student savedStudent = studentRepository.save(student);
+        gamificationService.getWallet(studentId);
+        return savedStudent;
     }
 
     /**
