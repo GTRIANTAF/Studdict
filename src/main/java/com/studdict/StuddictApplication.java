@@ -6,8 +6,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-public class StuddictApplication {
-    public static void main(String[] args) {
+public class
+
+StuddictApplication {
+public static void main(String[] args) {
         SpringApplication.run(StuddictApplication.class, args);
     }
 }

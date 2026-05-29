@@ -5,13 +5,18 @@ import android.app.AlertDialog;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.studdict.mobile.api.ApiClient;
 import com.studdict.mobile.model.Bill;
+import com.studdict.mobile.model.EBookLoanInfo;
 import com.studdict.mobile.model.LoyaltyWallet;
+
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -29,6 +34,8 @@ public class ScreenBill extends Activity {
     private TextView txtBillTotal;
     private TextView txtBillStatus;
     private TextView tvAvailablePoints;
+    private TextView txtEbookLoansHeader;
+    private LinearLayout ebookLoansContainer;
     private Button btnRedeemPoints;
     private Button btnCloseBill;
 
@@ -54,6 +61,8 @@ public class ScreenBill extends Activity {
         txtBillTable = findViewById(R.id.txtBillTable);
         txtBillTotal = findViewById(R.id.txtBillTotal);
         txtBillStatus = findViewById(R.id.txtBillStatus);
+        txtEbookLoansHeader = findViewById(R.id.txtEbookLoansHeader);
+        ebookLoansContainer = findViewById(R.id.ebookLoansContainer);
         tvAvailablePoints = findViewById(R.id.tv_available_points);
         btnRedeemPoints = findViewById(R.id.btn_redeem_points);
         btnCloseBill = findViewById(R.id.btnCloseBill);
@@ -66,11 +75,46 @@ public class ScreenBill extends Activity {
         // Fetch Loyalty Points
         refreshWallet();
 
+        // Show e-books borrowed this session
+        loadEbookLoans();
+
         // Redeem button handler
         btnRedeemPoints.setOnClickListener(v -> redeem100Points());
 
         // Exit / Checkout handler
         btnCloseBill.setOnClickListener(v -> promptCheckout());
+    }
+
+    private void loadEbookLoans() {
+        long checkInId = new SessionManager(this).getCheckInId();
+        if (checkInId == -1L) return;
+
+        ApiClient.getApi().getActiveLoans(checkInId).enqueue(new Callback<List<EBookLoanInfo>>() {
+            @Override
+            public void onResponse(Call<List<EBookLoanInfo>> call, Response<List<EBookLoanInfo>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    showEbookLoans(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<EBookLoanInfo>> call, Throwable t) {
+                // Offline — no loan data to display
+            }
+        });
+    }
+
+    private void showEbookLoans(List<EBookLoanInfo> loans) {
+        txtEbookLoansHeader.setVisibility(View.VISIBLE);
+        ebookLoansContainer.removeAllViews();
+        for (EBookLoanInfo loan : loans) {
+            TextView tv = new TextView(this);
+            tv.setText("• " + loan.getTitle() + " — " + loan.getAuthor());
+            tv.setTextSize(14);
+            tv.setTextColor(Color.parseColor("#4A148C"));
+            tv.setPadding(0, 4, 0, 4);
+            ebookLoansContainer.addView(tv);
+        }
     }
 
     private void refreshBill() {
@@ -226,8 +270,22 @@ public class ScreenBill extends Activity {
         new AlertDialog.Builder(this)
                 .setTitle("⭐ Συγχαρητήρια! ⭐")
                 .setMessage("Κερδίσατε " + pointsEarned + " πόντους για τη μελέτη σας!\n\nΝέο υπόλοιπο: " + newBalance + " πόντοι.")
-                .setPositiveButton("Τέλεια!", (dialog, which) -> finish())
+                .setPositiveButton("Τέλεια!", (dialog, which) -> completeCheckout())
                 .setCancelable(false)
                 .show();
+    }
+
+    private void completeCheckout() {
+        SessionManager session = new SessionManager(this);
+        long checkInId = session.getCheckInId();
+        if (checkInId != -1L) {
+            // UC7 Standard Checkout: release any active ebook loans (fire and forget)
+            ApiClient.getApi().notifyCheckout(checkInId).enqueue(new Callback<String>() {
+                @Override public void onResponse(Call<String> call, Response<String> response) {}
+                @Override public void onFailure(Call<String> call, Throwable t) {}
+            });
+        }
+        session.clearCheckIn();
+        finish();
     }
 }

@@ -7,6 +7,7 @@ import com.studdict.mobile.model.CheckInResponse;
 import com.studdict.mobile.model.ConfirmCheckInRequest;
 import com.studdict.mobile.model.EBook;
 import com.studdict.mobile.model.EBookLoan;
+import com.studdict.mobile.model.EBookLoanInfo;
 import com.studdict.mobile.model.GenerateInviteCodeRequest;
 import com.studdict.mobile.model.InviteCode;
 import com.studdict.mobile.model.InviteJoinResponse;
@@ -133,6 +134,9 @@ public interface StuddictApi {
     @POST("api/ebooks/access/{checkInId}")
     Call<Boolean> requestAccess(@Path("checkInId") long checkInId);
 
+    @GET("api/ebooks/catalog")
+    Call<List<EBook>> getCatalog(@Query("keyword") String keyword);
+
     @GET("api/ebooks/search")
     Call<List<EBook>> executeSearch(@Query("keyword") String keyword);
 
@@ -147,6 +151,12 @@ public interface StuddictApi {
 
     @POST("api/ebooks/return/{loanId}")
     Call<String> requestReturn(@Path("loanId") long loanId);
+
+    @GET("api/ebooks/loans/active/{checkInId}")
+    Call<List<EBookLoanInfo>> getActiveLoans(@Path("checkInId") long checkInId);
+
+    @POST("api/ebooks/notify-checkout/{checkInId}")
+    Call<String> notifyCheckout(@Path("checkInId") long checkInId);
 
     // --- UC8: F&B Order ---
     @GET("api/orders/catalog")
