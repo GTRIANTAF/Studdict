@@ -1,5 +1,6 @@
 package com.studdict.service;
 
+import com.studdict.dto.CheckInResponseDTO;
 import com.studdict.model.CheckIn;
 import com.studdict.model.Reservation;
 import com.studdict.model.ReservationParticipant;
@@ -161,6 +162,81 @@ public class CheckInService {
         activateServices(checkedInParticipants);
 
         return checkIns;
+    }
+
+    public CheckInResponseDTO performCheckIn(Long reservationId, String studentId, String qrData) {
+        if (reservationId == null || studentId == null || studentId.isBlank()
+                || qrData == null || qrData.isBlank()) {
+            return new CheckInResponseDTO(false, "INVALID_DATA", "Λείπουν στοιχεία για το check-in.", null);
+        }
+
+        ReservationValidationResult validationResult = validateReservation(reservationId, qrData);
+        if (validationResult != ReservationValidationResult.VALID_CHECK_IN) {
+            return responseForValidationFailure(validationResult);
+        }
+
+        Optional<Reservation> reservationOptional = reservationRepository.findById(reservationId);
+        Optional<Student> studentOptional = studentRepository.findById(studentId);
+
+        if (reservationOptional.isEmpty()) {
+            return new CheckInResponseDTO(false, "RESERVATION_NOT_FOUND", "Δεν βρέθηκε η κράτηση.", null);
+        }
+
+        if (studentOptional.isEmpty()) {
+            return new CheckInResponseDTO(false, "STUDENT_NOT_FOUND", "Δεν βρέθηκε ο φοιτητής.", null);
+        }
+
+        Optional<ReservationParticipant> participantOptional =
+                participantRepository.findByReservationIdAndStudentId(reservationId, studentId);
+
+        if (participantOptional.isEmpty()) {
+            return new CheckInResponseDTO(false, "NOT_PARTICIPANT", "Ο φοιτητής δεν συμμετέχει σε αυτή την κράτηση.", null);
+        }
+
+        ReservationParticipant participant = participantOptional.get();
+
+        if (participant.isCheckedIn()) {
+            return new CheckInResponseDTO(false, "ALREADY_CHECKED_IN", "Ο φοιτητής έχει ήδη κάνει check-in.", null);
+        }
+
+        Reservation reservation = reservationOptional.get();
+        Student student = studentOptional.get();
+        StudyTable scannedTable = identifyTable(qrData);
+
+        participant.setCheckedIn(true);
+        participantRepository.save(participant);
+
+        CheckIn checkIn = new CheckIn();
+        checkIn.setReservation(reservation);
+        checkIn.setStudent(student);
+        checkIn.setTable(scannedTable);
+        checkIn.setScannedQrCode(qrData);
+        checkIn.setCheckInTime(LocalDateTime.now());
+        checkIn.setSuccessful(true);
+
+        CheckIn savedCheckIn = checkInRepository.save(checkIn);
+
+        List<ReservationParticipant> checkedInParticipants = new ArrayList<>();
+        checkedInParticipants.add(participant);
+        activateServices(checkedInParticipants);
+
+        return new CheckInResponseDTO(true, "SUCCESS", "Το check-in ολοκληρώθηκε επιτυχώς.", savedCheckIn.getCheckInId());
+    }
+
+    private CheckInResponseDTO responseForValidationFailure(ReservationValidationResult validationResult) {
+        if (validationResult == ReservationValidationResult.WRONG_TABLE) {
+            return new CheckInResponseDTO(false, "WRONG_TABLE", "Το QR code δεν αντιστοιχεί στο τραπέζι της κράτησης.", null);
+        }
+
+        if (validationResult == ReservationValidationResult.WRONG_TIME) {
+            return new CheckInResponseDTO(false, "WRONG_TIME", "Η κράτηση δεν είναι ενεργή αυτή τη χρονική στιγμή.", null);
+        }
+
+        if (validationResult == ReservationValidationResult.RESERVATION_NOT_FOUND) {
+            return new CheckInResponseDTO(false, "RESERVATION_NOT_FOUND", "Δεν βρέθηκε η κράτηση.", null);
+        }
+
+        return new CheckInResponseDTO(false, "INVALID_DATA", "Το check-in απέτυχε. Ελέγξτε τα στοιχεία της κράτησης.", null);
     }
 
         public CheckIn checkInStudent(Reservation reservation, Student student, String scannedQrCode) {
