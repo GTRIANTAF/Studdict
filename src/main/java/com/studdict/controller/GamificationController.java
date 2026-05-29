@@ -35,7 +35,7 @@ public class GamificationController {
             @RequestParam String studentId,
             @RequestParam int pointsToRedeem,
             @RequestParam(required = false) Integer tableId) {
-        boolean success = gamificationService.redeemPoints(studentId, pointsToRedeem);
+        boolean success = gamificationService.redeemPoints(studentId, pointsToRedeem, tableId);
         if (success) {
             double discount = gamificationService.calculateDiscount(pointsToRedeem);
             if (tableId != null) {
@@ -43,6 +43,6 @@ public class GamificationController {
             }
             return "Redemption successful! You got a " + discount + " euro discount.";
         }
-        return "Redemption failed. Check your balance.";
+        return "Redemption failed. Points already redeemed for this bill, or insufficient balance.";
     }
 }
