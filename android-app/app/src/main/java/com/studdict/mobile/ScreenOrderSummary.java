@@ -1,7 +1,6 @@
 package com.studdict.mobile;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -99,13 +98,13 @@ public class ScreenOrderSummary extends Activity {
             public void onResponse(Call<Order> call, Response<Order> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Order order = response.body();
+                    // UC8: the table bill is updated/refreshed on the backend, but the
+                    // student is only notified of their order total here. The bill screen
+                    // is not shown automatically — it is reached separately when the
+                    // student goes to checkout (e.g. from "My Bookings").
                     Toast.makeText(ScreenOrderSummary.this,
                             "Order #" + order.getId() + " placed! Total: €" + order.getTotalAmount(),
                             Toast.LENGTH_LONG).show();
-                    // UC8 Gap 9: navigate to BillScreen after successful order
-                    Intent intent = new Intent(ScreenOrderSummary.this, ScreenBill.class);
-                    intent.putExtra("TABLE_ID", tableId);
-                    startActivity(intent);
                     finish();
                 } else if (response.code() == 409) {
                     // UC8: Item Out of Stock → return to cart
@@ -120,11 +119,13 @@ public class ScreenOrderSummary extends Activity {
 
             @Override
             public void onFailure(Call<Order> call, Throwable t) {
-                // Demo mode: simulate success and still show bill screen
-                Toast.makeText(ScreenOrderSummary.this, "Offline demo: order placed!", Toast.LENGTH_LONG).show();
-                Intent intent = new Intent(ScreenOrderSummary.this, ScreenBill.class);
-                intent.putExtra("TABLE_ID", tableId);
-                startActivity(intent);
+                // Demo mode: simulate success. As in the online path, only notify the
+                // student of their total — the bill screen is not shown until checkout.
+                double total = 0;
+                for (CartItemDisplay item : displayItems) total += item.price * item.quantity;
+                Toast.makeText(ScreenOrderSummary.this,
+                        String.format("Offline demo: order placed! Total: €%.2f", total),
+                        Toast.LENGTH_LONG).show();
                 finish();
             }
         });

@@ -136,8 +136,10 @@ public class GamificationService {
     public void applyDiscountToBill(Integer tableId, double discount) {
         billRepository.findTopByTableIdOrderByIssueTimeDesc(tableId).ifPresent(bill -> {
             if (!bill.isSettled()) {
-                double current = bill.getTotalAmount();
-                double newTotal = Math.max(0.0, current - discount);
+                // Καταγράφουμε την έκπτωση πάνω στον λογαριασμό ώστε να διατηρηθεί αν ο
+                // φοιτητής κάνει νέα παραγγελία πριν το check-out (βλ. OrderService.createOrder).
+                bill.setDiscountAmount(bill.getDiscountAmount() + discount);
+                double newTotal = Math.max(0.0, bill.getTotalAmount() - discount);
                 bill.setTotalAmount(newTotal);
                 billRepository.save(bill);
             }

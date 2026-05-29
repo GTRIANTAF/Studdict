@@ -23,8 +23,10 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 /**
- * UC8 Gap 9 — BillScreen: refreshScreen().
- * Shown automatically after a successful order, displays the current bill for the table.
+ * UC8 — BillScreen: refreshScreen().
+ * Displays the current bill for the table. The bill is updated/refreshed on the backend
+ * as soon as an order is placed, but this screen is shown only when the student chooses
+ * to checkout (e.g. from "My Bookings") — it is not opened automatically after ordering.
  * Integrated with UC9 (Earn Points) and UC10 (Redeem Points).
  */
 public class ScreenBill extends Activity {
