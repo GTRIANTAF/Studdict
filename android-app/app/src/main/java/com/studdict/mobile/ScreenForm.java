@@ -67,6 +67,10 @@ public class ScreenForm extends Activity {
             View joinPublicBtn = findViewById(R.id.joinPublicButton);
             if (joinPublicBtn != null) joinPublicBtn.setVisibility(View.GONE);
             if (subjectInput != null) subjectInput.setVisibility(View.GONE);
+
+            if (todayButton != null) todayButton.setEnabled(false);
+            if (tomorrowButton != null) tomorrowButton.setEnabled(false);
+            if (thirdDateButton != null) thirdDateButton.setEnabled(false);
         }
 
         findViewById(R.id.backButton).setOnClickListener(view -> finish());

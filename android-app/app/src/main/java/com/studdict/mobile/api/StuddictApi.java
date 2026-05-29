@@ -98,7 +98,7 @@ public interface StuddictApi {
             @Query("studentId") String studentId
     );
 
-    @PUT("reservations/{id}modify")
+    @PUT("api/reservations/{id}/modify")
     Call<com.studdict.mobile.model.Reservation> modifyReservation(
             @Path("id") long id,
             @Body com.studdict.mobile.model.ReservationUpdateRequest request

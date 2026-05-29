@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @RestController
-@RequestMapping("/reservations")
+@RequestMapping("/api/reservations")
 public class ReservationUpdateController {
 
     private final  ReservationUpdateService updateService;
@@ -17,7 +17,7 @@ public class ReservationUpdateController {
         this.updateService = updateService;
     }
 
-    @PutMapping("/{id}modify")
+    @PutMapping("/{id}/modify")
     public ReservationUpdateResponse modifyReservation(
             @PathVariable Long id,
             @RequestBody ReservationUpdateRequest request) {
