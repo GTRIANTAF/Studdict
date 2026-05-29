@@ -38,6 +38,7 @@ public class ScreenConfirm extends Activity {
             date = i.getStringExtra("NEW_DATE");
             time = i.getStringExtra("NEW_TIME");
             duration = i.getIntExtra("NEW_DURATION", 120);
+            capacity = i.getIntExtra("NEW_CAPACITY", 1);
             venueName = "Current Venue"; 
             tableNumber = 5; // Placeholder since we skipped ScreenTables
             isPublic = false;
@@ -86,6 +87,7 @@ public class ScreenConfirm extends Activity {
     private void submitReservation() {
         if (isModifyMode) {
             com.studdict.mobile.model.ReservationUpdateRequest req = new com.studdict.mobile.model.ReservationUpdateRequest(time, duration);
+            req.setNewCapacity(capacity);
             ApiClient.getApi().modifyReservation(reservationIdToModify, req).enqueue(new Callback<com.studdict.mobile.model.Reservation>() {
                 @Override
                 public void onResponse(Call<com.studdict.mobile.model.Reservation> call, Response<com.studdict.mobile.model.Reservation> response) {
@@ -96,7 +98,13 @@ public class ScreenConfirm extends Activity {
                         startActivity(intent);
                         finish();
                     } else {
-                        Toast.makeText(ScreenConfirm.this, "Failed to modify. HTTP " + response.code(), Toast.LENGTH_LONG).show();
+                        String errMsg = "Failed to modify.";
+                        try {
+                            if (response.errorBody() != null) {
+                                errMsg = response.errorBody().string();
+                            }
+                        } catch (Exception ignored) {}
+                        Toast.makeText(ScreenConfirm.this, errMsg, Toast.LENGTH_LONG).show();
                     }
                 }
 

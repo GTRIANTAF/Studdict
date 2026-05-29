@@ -67,9 +67,6 @@ public class ScreenForm extends Activity {
             View joinPublicBtn = findViewById(R.id.joinPublicButton);
             if (joinPublicBtn != null) joinPublicBtn.setVisibility(View.GONE);
             if (subjectInput != null) subjectInput.setVisibility(View.GONE);
-            
-            View groupSizeSection = findViewById(R.id.groupSizeSection);
-            if (groupSizeSection != null) groupSizeSection.setVisibility(View.GONE);
         }
 
         findViewById(R.id.backButton).setOnClickListener(view -> finish());
@@ -116,6 +113,7 @@ public class ScreenForm extends Activity {
             intent.putExtra("NEW_DATE", selectedDate);
             intent.putExtra("NEW_TIME", selectedTime);
             intent.putExtra("NEW_DURATION", selectedDuration);
+            intent.putExtra("NEW_CAPACITY", groupSize);
             startActivity(intent);
             return;
         }

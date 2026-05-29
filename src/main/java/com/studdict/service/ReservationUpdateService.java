@@ -17,13 +17,18 @@ public class ReservationUpdateService {
         this.reservationRepository = reservationRepository;
     }
 
-    public Reservation modifyReservation(Long reservationId, LocalTime newTime, int newDuration) {
-        Reservation  reservation = reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("reservation"+reservationId+"not found"));
+    public Reservation modifyReservation(Long reservationId, LocalTime newTime, int newDuration, int newCapacity) {
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new RuntimeException("reservation " + reservationId + " not found"));
+
+        if (reservation.getTable() != null && newCapacity > reservation.getTable().getCapacity()) {
+            throw new IllegalArgumentException("Requested capacity exceeds table capacity");
+        }
 
         reservation.setStartTime(newTime);
         reservation.setDurationMinutes(newDuration);
+        reservation.setNumberOfPeople(newCapacity);
 
-        return  reservationRepository.save(reservation);
+        return reservationRepository.save(reservation);
     }
 }
