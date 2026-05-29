@@ -19,6 +19,7 @@ import com.studdict.service.StudentService;
 import com.studdict.dto.OrderItemRequest;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -121,7 +122,7 @@ public class TestRunner implements CommandLineRunner {
                 ebook.setIsbn("978-0133943030");
                 ebook.setCategory("Computer Science");
                 ebook = eBookRepository.save(ebook);
-                
+
                 EBookLicense license = new EBookLicense();
                 license.setEbook(ebook);
                 license.setAvailable(true);
@@ -155,7 +156,7 @@ public class TestRunner implements CommandLineRunner {
             try {
                 Student newStudent = studentService.registerStudent("Γιώργος", "Τ.", "giorgos@upatras.gr", "pass123", "Πανεπιστήμιο Πατρών", "CEID");
                 System.out.println("   ✅ Επιτυχής εγγραφή φοιτητή: " + newStudent.getEmail());
-                
+
                 System.out.println("   --- Εναλλακτική (UC11 Alt 1): Το Email υπάρχει ήδη ---");
                 studentService.registerStudent("Γιώργος", "Τ.", "giorgos@upatras.gr", "pass123", "Πανεπιστήμιο Πατρών", "CEID");
             } catch (Exception e) {
@@ -237,12 +238,18 @@ public class TestRunner implements CommandLineRunner {
             // =====================================================================
             System.out.println(" TEST 3: Η Ελένη (S4) ανοίγει Public Τραπέζι για 'Μαθηματικά' στο Τραπέζι 3");
             // ΔΙΟΡΘΩΣΗ ΟΝΟΜΑΤΟΣ: savePublicReservation
+            LocalTime activeCheckInStartTime = LocalTime.now().plusMinutes(1);
+
             Long publicResId = reservationService.savePublicReservation(
-                    "S4", table3.getId(), today, LocalTime.of(16, 0), 180, 2, "Μαθηματικά");
+                    "S4", table3.getId(), today, activeCheckInStartTime, 180, 2, "Μαθηματικά");
             System.out.println("    Επιτυχία! Το Public τραπέζι άνοιξε (Κωδικός: " + publicResId + ")");
 
             System.out.println(" TEST 4: Ο Γιάννης (S1) κάνει Join στο τραπέζι της Ελένης");
             reservationService.joinPublicReservation(publicResId, "S1");
+            participantRepository.findByReservationId(publicResId).forEach(participant -> {
+                participant.setCheckedIn(false);
+                participantRepository.save(participant);
+            });
             System.out.println("    Επιτυχία! Ο Γιάννης προστέθηκε στην Public κράτηση.\n");
 
             System.out.println("   --- Εναλλακτική (UC2 Alt 3): Μη διαθεσιμότητα κατάλληλου τραπεζιού ---");
@@ -412,27 +419,27 @@ public class TestRunner implements CommandLineRunner {
             // TEST 12: Παραγγελία F&B (UC8)
             // =====================================================================
             System.out.println("▶️ TEST 12: Παραγγελία F&B (UC8)");
-            
+
             // 1. LoadCatalogCtrl
             List<MenuItem> catalog = orderService.readCatalog();
             MenuItem coffee = catalog.get(0);
-            
+
             // 2. AddProductCtrl
             List<OrderItemRequest> orderItems = new java.util.ArrayList<>();
             orderService.addProduct(orderItems, coffee.getItemId(), 2);
-            
+
             // 3. ProcessSummaryCtrl
             orderService.processSummary(orderItems);
-            
+
             // 4. ValidateOrderCtrl
             orderService.verifyAvailability(orderItems);
-            
+
             // 5. CreateOrderCtrl
             Order order = orderService.createOrder(table2.getId(), orderItems);
-            
+
             // 6. UpdateBillCtrl
             orderService.calculateCost(order);
-            
+
             System.out.println("   ✅ Η παραγγελία δημιουργήθηκε με συνολικό κόστος: " + order.getTotalAmount() + "€\n");
 
             System.out.println("   --- Εναλλακτική (UC8 Alt 1): Προϊόν μη διαθέσιμο ---");
@@ -466,14 +473,14 @@ public class TestRunner implements CommandLineRunner {
             // =====================================================================
             System.out.println("▶️ TEST 13: Ψηφιακός Δανεισμός E-book (UC7)");
             EBook ebook = eBookRepository.findAll().get(0);
-            
+
             System.out.println("    Εκτέλεση requestAccess()...");
             boolean accessGranted = eBookService.requestAccess(successfulCheckIn.getCheckInId());
-            
+
             System.out.println("    Εκτέλεση requestLoan()...");
             EBookLoan loan = eBookService.requestLoan(successfulCheckIn.getCheckInId(), ebook.geteBookId());
             System.out.println("   ✅ Ο δανεισμός E-book ξεκίνησε στις: " + loan.getStartTime());
-            
+
             // Alt 3: Early Return
             System.out.println("   --- Εναλλακτική 3: Πρόωρη επιστροφή του E-book ---");
             EBookLoan checkedLoan = eBookService.checkRequest(loan.getLoanId());
@@ -496,7 +503,7 @@ public class TestRunner implements CommandLineRunner {
             } catch (Exception e) {
                 System.out.println("    Αναμενόμενο σφάλμα διαθεσιμότητας E-book: " + e.getMessage());
             }
-            
+
             System.out.println("   --- Εναλλακτική (UC7 Alt 4): Revocation via Expiry ---");
             eBookService.revokeLoan(successfulCheckIn.getCheckInId());
             System.out.println("    Η revokeLoan κλήθηκε επιτυχώς (προσομοίωση από TimerSystem).\n");
@@ -529,6 +536,23 @@ public class TestRunner implements CommandLineRunner {
             Bill paidBill = paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount());
             System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε επιτυχώς (Κατάσταση Settled: " + paidBill.isSettled() + ")!");
             System.out.println("      Το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
+
+            System.out.println("\n▶️ EXTRA: Δημιουργία επιπλέον δοκιμαστικών κρατήσεων για ελέγχους (Άλλες μέρες/ώρες)...");
+            // Αυριο
+            reservationService.savePrivateReservation("S3", table1.getId(), today.plusDays(1), LocalTime.of(10, 0), 120, 2);
+            reservationService.savePrivateReservation("S4", table2.getId(), today.plusDays(1), LocalTime.of(14, 0), 120, 3);
+            reservationService.savePublicReservation("S1", tables.get(3).getId(), today.plusDays(1), LocalTime.of(18, 0), 180, 2, "Φυσική");
+            
+            // Μεθαύριο
+            reservationService.savePrivateReservation("S2", table1.getId(), today.plusDays(2), LocalTime.of(9, 0), 120, 1);
+            reservationService.savePrivateReservation("S3", tables.get(4).getId(), today.plusDays(2), LocalTime.of(16, 0), 240, 4);
+
+            // ΔΥΝΑΜΙΚΗ ΚΡΑΤΗΣΗ ΓΙΑ ΤΕΣΤ Check-In: Ξεκινάει "πριν από μισή ώρα" και διαρκεί 2 ώρες!
+            // Χρησιμοποιούμε LocalDateTime.now() για να χειρίζεται σωστά την αλλαγή ημέρας (τα μεσάνυχτα)!
+            LocalDateTime testStart = LocalDateTime.now().minusMinutes(30);
+            reservationService.savePrivateReservation("S1", table3.getId(), testStart.toLocalDate(), testStart.toLocalTime(), 120, 2);
+
+            System.out.println("   ✅ Επιπλέον κρατήσεις προστέθηκαν επιτυχώς!\n");
 
             System.out.println("=======================================================");
             System.out.println(" ΟΛΑ ΤΑ ΣΕΝΑΡΙΑ (14/14) ΕΚΤΕΛΕΣΤΗΚΑΝ ΜΕ ΑΠΟΛΥΤΗ ΕΠΙΤΥΧΙΑ! 🎉");

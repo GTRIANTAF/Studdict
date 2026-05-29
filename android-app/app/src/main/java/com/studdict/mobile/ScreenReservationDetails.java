@@ -1,7 +1,6 @@
 package com.studdict.mobile;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -92,25 +91,17 @@ public class ScreenReservationDetails extends Activity {
         Button generateInviteButton = new Button(this);
         generateInviteButton.setText("Generate Invite Code");
         generateInviteButton.setAllCaps(false);
+        generateInviteButton.setTextSize(18);
+        generateInviteButton.setTextColor(Color.parseColor("#6E55DC"));
+        generateInviteButton.setBackgroundResource(R.drawable.button_invite_soft);
+        LinearLayout.LayoutParams inviteButtonParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        inviteButtonParams.setMargins(0, 8, 0, 0);
+        generateInviteButton.setLayoutParams(inviteButtonParams);
         generateInviteButton.setOnClickListener(v -> generateInviteCode());
         root.addView(generateInviteButton);
-
-        Button joinWithCodeButton = new Button(this);
-        joinWithCodeButton.setText("Join with Invite Code");
-        joinWithCodeButton.setAllCaps(false);
-        joinWithCodeButton.setOnClickListener(v -> {
-            Intent intent = new Intent(ScreenReservationDetails.this, ScreenInviteCodeInput.class);
-            startActivity(intent);
-        });
-        root.addView(joinWithCodeButton);
-
-        Button checkInButton = new Button(this);
-        checkInButton.setText("Check-in");
-        checkInButton.setAllCaps(false);
-        checkInButton.setOnClickListener(v ->
-                Toast.makeText(this, "Next: UC5 Check-in", Toast.LENGTH_LONG).show()
-        );
-        root.addView(checkInButton);
 
         setContentView(root);
     }

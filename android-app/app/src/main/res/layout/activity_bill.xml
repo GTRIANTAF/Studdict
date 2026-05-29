@@ -1,78 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center_horizontal">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Your Bill"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:layout_marginBottom="32dp"/>
-
-    <TextView
-        android:id="@+id/txtBillId"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Bill #—"
-        android:textSize="18sp"
-        android:layout_marginBottom="8dp"/>
-
-    <TextView
-        android:id="@+id/txtBillTable"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Table: —"
-        android:textSize="16sp"
-        android:layout_marginBottom="8dp"/>
-
-    <TextView
-        android:id="@+id/txtBillTotal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Total: €0.00"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:textColor="#1B5E20"
-        android:layout_marginBottom="8dp"/>
-
-    <TextView
-        android:id="@+id/txtBillStatus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Status: Pending payment"
-        android:textSize="14sp"
-        android:textColor="#757575"
-        android:layout_marginBottom="16dp"/>
-
-    <TextView
-        android:id="@+id/tv_available_points"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Available Points: -"
-        android:textSize="16sp"
-        android:textColor="#FF8F00"
-        android:textStyle="bold"
-        android:layout_marginBottom="12dp"/>
-
-    <Button
-        android:id="@+id/btn_redeem_points"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Redeem 100 Points (-3.00€)"
-        android:backgroundTint="#FF8F00"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="16dp"
-        android:enabled="false"/>
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:gravity="center_horizontal">
 
-    <Button
-        android:id="@+id/btnCloseBill"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Back to Menu" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Your Bill"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="32dp"/>
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/txtBillId"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bill #—"
+            android:textSize="18sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/txtBillTable"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Table: —"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/txtBillTotal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Total: €0.00"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#1B5E20"
+            android:layout_marginBottom="8dp"/>
+
+        <TextView
+            android:id="@+id/txtBillStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status: Pending payment"
+            android:textSize="14sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/tv_available_points"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Available Points: -"
+            android:textSize="16sp"
+            android:textColor="#FF8F00"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/btn_redeem_points"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Redeem 100 Points (-3.00€)"
+            android:backgroundTint="#FF8F00"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp"
+            android:enabled="false"/>
+
+        <!-- E-Books Borrowed This Session -->
+        <TextView
+            android:id="@+id/txtEbookLoansHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="E-Books Borrowed This Session"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#4A148C"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp"/>
+
+        <LinearLayout
+            android:id="@+id/ebookLoansContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"/>
+
+        <Button
+            android:id="@+id/btnCloseBill"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Back to Menu" />
+
+    </LinearLayout>
+
+</ScrollView>

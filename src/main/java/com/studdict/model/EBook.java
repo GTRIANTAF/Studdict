@@ -19,6 +19,9 @@ public class EBook {
     private String isbn;
     private String category;
 
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
     @JsonIgnore
     @OneToMany(mappedBy = "ebook", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EBookLicense> licenses = new ArrayList<>();
@@ -73,5 +76,12 @@ public class EBook {
         this.isbn = isbn;
     }
 
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
 
 }

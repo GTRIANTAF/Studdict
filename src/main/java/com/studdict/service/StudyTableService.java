@@ -24,11 +24,51 @@ public class StudyTableService {
 
     // UML: Table.findAvailable(venueId, date, time, duration, minCapacity) -> ΓΙΑ UC1
     public List<StudyTable> getAvailableTables(Long venueId, LocalDate date, LocalTime time, int duration, int minCapacity) {
-        // Επιστρέφει τα ελεύθερα τραπέζια που χωράνε την παρέα (Βασική Ροή UC1)
-        List<StudyTable> tables = studyTableRepository.findByVenue_VenueIdAndIsAvailableTrue(venueId);
-        return tables.stream()
+        // Αν ο χρήστης ψάχνει για ημερομηνία/ώρα που έχει ήδη περάσει, δεν του δείχνουμε κανένα τραπέζι!
+        if (java.time.LocalDateTime.of(date, time).isBefore(java.time.LocalDateTime.now())) {
+            return new ArrayList<>();
+        }
+
+        List<StudyTable> allTables = studyTableRepository.findByVenue_VenueId(venueId);
+        
+        // Καθαρισμός expired soft locks on-the-fly ΚΑΙ corrupted tables
+        List<StudyTable> tables = allTables.stream().filter(t -> {
+            if (t.getIsAvailable()) return true;
+            
+            // Το τραπέζι είναι locked (isAvailable=false). 
+            // Αν έληξε το lock Ή αν έχει μείνει corrupted χωρίς expiration, το ξεκλειδώνουμε!
+            if (t.getSoftLockExpiration() == null || LocalTime.now().isAfter(t.getSoftLockExpiration())) {
+                t.setIsAvailable(true);
+                t.setSoftLockedBy(null);
+                t.setSoftLockExpiration(null);
+                studyTableRepository.save(t);
+                return true;
+            }
+            return false;
+        }).toList();
+        
+        LocalTime requestedEnd = time.plusMinutes(duration);
+
+        List<StudyTable> filtered = tables.stream()
                 .filter(t -> t.getCapacity() >= minCapacity)
+                .filter(t -> {
+                    List<Reservation> existingReservations = reservationRepository.findByTable_TableIdAndStatus(t.getId(), "CONFIRMED");
+                    for (Reservation r : existingReservations) {
+                        if (r.getReservationDate() != null && r.getReservationDate().equals(date)) {
+                            LocalTime rStart = r.getStartTime();
+                            LocalTime rEnd = rStart.plusMinutes(r.getDurationMinutes());
+                            
+                            // Overlap condition: requestedStart < rEnd AND requestedEnd > rStart
+                            if (time.isBefore(rEnd) && requestedEnd.isAfter(rStart)) {
+                                return false; // Not available
+                            }
+                        }
+                    }
+                    return true;
+                })
                 .toList();
+                
+        return filtered;
     }
 
     // UML: Table.findAvailableBySubjectPriority(...) & findOpenPublicTables(...) -> ΓΙΑ UC2 (Matchmaking)
@@ -62,11 +102,12 @@ public class StudyTableService {
                 .orElseThrow(() -> new RuntimeException("Το τραπέζι δεν βρέθηκε"));
 
         if (!table.getIsAvailable()) {
-            return false; // Το τραπέζι δεσμεύτηκε από άλλον (Race Condition protected)
+            return false; // Το τραπέζι δεσμεύτηκε από άλλον
         }
 
         table.setIsAvailable(false);
         table.setSoftLockedBy(studentId); // Προσωρινό κλείδωμα
+        table.setSoftLockExpiration(LocalTime.now().plusMinutes(2)); // ΛΕΙΠΕ ΑΥΤΟ! Το 2-λεπτο κλείδωμα!
         studyTableRepository.save(table);
         return true;
     }
@@ -77,6 +118,7 @@ public class StudyTableService {
         if (table != null) {
             table.setIsAvailable(true);
             table.setSoftLockedBy(null);
+            table.setSoftLockExpiration(null);
             studyTableRepository.save(table);
         }
     }

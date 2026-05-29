@@ -18,6 +18,7 @@ import com.studdict.mobile.api.ApiClient;
 import com.studdict.mobile.model.Order;
 import com.studdict.mobile.model.OrderItemRequest;
 import com.studdict.mobile.model.OrderRequest;
+import com.studdict.mobile.SessionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +31,7 @@ public class ScreenOrderSummary extends Activity {
 
     private List<CartItemDisplay> displayItems = new ArrayList<>();
     private List<OrderItemRequest> orderItems = new ArrayList<>();
-    private int tableId = 1; // Replaced by QR-scanned table ID when scanner UC is integrated
+    private int tableId;
 
     private static class CartItemDisplay {
         long menuItemId;
@@ -49,6 +50,15 @@ public class ScreenOrderSummary extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SessionManager session = new SessionManager(this);
+        tableId = session.getTableId();
+        if (tableId == -1) {
+            Toast.makeText(this, "Session expired. Please check in again.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_order_summary);
 
         ArrayList<String> cartData = getIntent().getStringArrayListExtra("CART_ITEMS");

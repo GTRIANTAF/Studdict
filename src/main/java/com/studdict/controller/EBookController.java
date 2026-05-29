@@ -1,7 +1,9 @@
 package com.studdict.controller;
 
 import com.studdict.model.EBook;
+import com.studdict.model.EBookCatalogDTO;
 import com.studdict.model.EBookLoan;
+import com.studdict.model.EBookLoanDTO;
 import com.studdict.service.EBookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,23 @@ public class EBookController {
     @GetMapping("/search")
     public ResponseEntity<List<EBook>> executeSearch(@RequestParam String keyword) {
         return ResponseEntity.ok(eBookService.executeSearch(keyword));
+    }
+
+    // UC7 step 4: returns all books (or filtered) with availability indicator
+    @GetMapping("/catalog")
+    public ResponseEntity<List<EBookCatalogDTO>> getCatalog(
+            @RequestParam(required = false, defaultValue = "") String keyword) {
+        return ResponseEntity.ok(eBookService.getCatalog(keyword));
+    }
+
+    // Returns active loans for a check-in with book info — used by the Bill screen at checkout
+    @GetMapping("/loans/active/{checkInId}")
+    public ResponseEntity<List<EBookLoanDTO>> getActiveLoans(@PathVariable Long checkInId) {
+        try {
+            return ResponseEntity.ok(eBookService.getActiveLoansWithInfo(checkInId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/loan")
