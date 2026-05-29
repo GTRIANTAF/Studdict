@@ -33,6 +33,7 @@ public class ScreenForm extends Activity {
     private String selectedDate;
     private String selectedTime = "10:00";
     private int selectedDuration = 120;
+    private String studentId;
 
     private Button timeButton, durationButton;
     private Button todayButton, tomorrowButton, thirdDateButton;
@@ -48,6 +49,7 @@ public class ScreenForm extends Activity {
         selectedVenueId = getIntent().getLongExtra("VENUE_ID", 1L);
         venueName = getIntent().getStringExtra("VENUE_NAME");
         if (venueName == null) venueName = "CEID LIBRARY";
+        studentId = getIntent().getStringExtra("STUDENT_ID");
 
         TextView headerTitle = findViewById(R.id.headerTitle);
         if (headerTitle != null) {
@@ -102,6 +104,7 @@ public class ScreenForm extends Activity {
         intent.putExtra("DURATION", selectedDuration);
         intent.putExtra("CAPACITY", groupSize);
         intent.putExtra("IS_PUBLIC", publicMode);
+        intent.putExtra("STUDENT_ID", studentId);
         if (publicMode) {
             intent.putExtra("SUBJECT", subjectInput.getText().toString());
         }
