@@ -119,6 +119,78 @@ public class CheckInService {
         return participants != null && !participants.isEmpty();
     }
 
+    public CheckInResponseDTO confirmCheckInParticipants(Long reservationId, String qrData, List<Long> participantIds) {
+        ReservationValidationResult validationResult = validateReservation(reservationId, qrData);
+
+        if (validationResult != ReservationValidationResult.VALID_CHECK_IN) {
+            return new CheckInResponseDTO(false, validationResult.name(), "CHECK_IN_VALIDATION_FAILED", null);
+        }
+
+        if (participantIds == null || participantIds.isEmpty()) {
+            return new CheckInResponseDTO(false, "NO_PARTICIPANTS_SELECTED", "NO_PARTICIPANTS_SELECTED", null);
+        }
+
+        Optional<Reservation> reservationOptional = reservationRepository.findById(reservationId);
+        StudyTable table = identifyTable(qrData);
+
+        if (reservationOptional.isEmpty()) {
+            return new CheckInResponseDTO(false, "RESERVATION_NOT_FOUND", "RESERVATION_NOT_FOUND", null);
+        }
+
+        if (table == null) {
+            return new CheckInResponseDTO(false, "WRONG_TABLE", "WRONG_TABLE", null);
+        }
+
+        Reservation reservation = reservationOptional.get();
+        List<ReservationParticipant> selectedParticipants =
+                participantRepository.findByIdIn(participantIds);
+
+        List<ReservationParticipant> participantsToCheckIn = new ArrayList<>();
+
+        for (ReservationParticipant participant : selectedParticipants) {
+            if (participant.getReservationId() != null
+                    && participant.getReservationId().equals(reservationId)
+                    && !participant.isCheckedIn()) {
+                participant.setCheckedIn(true);
+                participantsToCheckIn.add(participant);
+            }
+        }
+
+        if (participantsToCheckIn.isEmpty()) {
+            return new CheckInResponseDTO(false, "NO_ELIGIBLE_PARTICIPANTS", "NO_ELIGIBLE_PARTICIPANTS", null);
+        }
+
+        List<ReservationParticipant> savedParticipants =
+                participantRepository.saveAll(participantsToCheckIn);
+
+        Long firstCheckInId = null;
+
+        for (ReservationParticipant participant : savedParticipants) {
+            Optional<Student> studentOptional =
+                    studentRepository.findById(participant.getStudentId());
+
+            if (studentOptional.isPresent()) {
+                CheckIn checkIn = new CheckIn();
+                checkIn.setReservation(reservation);
+                checkIn.setStudent(studentOptional.get());
+                checkIn.setTable(table);
+                checkIn.setScannedQrCode(qrData);
+                checkIn.setCheckInTime(LocalDateTime.now());
+                checkIn.setSuccessful(true);
+
+                CheckIn savedCheckIn = checkInRepository.save(checkIn);
+
+                if (firstCheckInId == null) {
+                    firstCheckInId = savedCheckIn.getCheckInId();
+                }
+            }
+        }
+
+        activateServices(savedParticipants);
+
+        return new CheckInResponseDTO(true, "SUCCESS", "SUCCESS", firstCheckInId);
+    }
+
     public List<CheckIn> checkInParticipants(Long reservationId, String qrData, List<Long> participantIds) {
         ReservationValidationResult validationResult = validateReservation(reservationId, qrData);
 
@@ -135,10 +207,23 @@ public class CheckInService {
 
         Reservation reservation = reservationOptional.get();
 
-        List<ReservationParticipant> checkedInParticipants =
-                updateCheckedInStatus(participantIds);
+        List<ReservationParticipant> checkedInParticipants = new ArrayList<>();
 
-        associateParticipants(participantIds);
+        if (participantIds != null && !participantIds.isEmpty()) {
+            List<ReservationParticipant> selectedParticipants =
+                    participantRepository.findByIdIn(participantIds);
+
+            for (ReservationParticipant participant : selectedParticipants) {
+                if (participant.getReservationId() != null
+                        && participant.getReservationId().equals(reservationId)
+                        && !participant.isCheckedIn()) {
+                    participant.setCheckedIn(true);
+                    checkedInParticipants.add(participant);
+                }
+            }
+        }
+
+        checkedInParticipants = participantRepository.saveAll(checkedInParticipants);
 
         List<CheckIn> checkIns = new ArrayList<>();
 
@@ -281,15 +366,11 @@ public class CheckInService {
             return false;
         }
 
-        LocalDate today = LocalDate.now();
-        LocalTime now = LocalTime.now();
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startDateTime = LocalDateTime.of(reservation.getReservationDate(), reservation.getStartTime());
+        LocalDateTime endDateTime = startDateTime.plusMinutes(reservation.getDurationMinutes());
 
-        LocalTime startTime = reservation.getStartTime();
-        LocalTime endTime = startTime.plusMinutes(reservation.getDurationMinutes());
-
-        return reservation.getReservationDate().equals(today)
-                && !now.isBefore(startTime)
-                && !now.isAfter(endTime);
+        return !now.isBefore(startDateTime) && now.isBefore(endDateTime);
     }
 
     public enum ReservationValidationResult {

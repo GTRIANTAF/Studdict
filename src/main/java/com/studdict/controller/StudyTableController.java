@@ -23,7 +23,7 @@ public class StudyTableController {
     public List<StudyTable> getAvailableTables(
             @RequestParam Long venueId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime time,
+            @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime time,
             @RequestParam int duration,
             @RequestParam int minCapacity) {
 

@@ -34,8 +34,8 @@ public class CheckInController {
     }
 
     @PostMapping("/confirm")
-    public List<CheckIn> checkInParticipants(@RequestBody ConfirmCheckInRequest request) {
-        return checkInService.checkInParticipants(
+    public CheckInResponseDTO checkInParticipants(@RequestBody ConfirmCheckInRequest request) {
+        return checkInService.confirmCheckInParticipants(
                 request.getReservationId(),
                 request.getQrData(),
                 request.getParticipantIds()

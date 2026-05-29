@@ -159,6 +159,17 @@ public class ReservationService {
     }
 
     public List<Reservation> getReservationsByStudent(String studentId) {
-        return reservationRepository.findActiveReservationsByStudent(studentId);
+        List<Reservation> allReservations = reservationRepository.findActiveReservationsByStudent(studentId);
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+
+        // Επιστρέφουμε ΜΟΝΟ όσες δεν έχουν λήξει (ώστε να μην φαίνονται στο 'My Bookings' οι παλιές)
+        return allReservations.stream()
+            .filter(res -> {
+                if (res.getReservationDate() == null || res.getStartTime() == null) return false;
+                java.time.LocalDateTime endDateTime = java.time.LocalDateTime.of(res.getReservationDate(), res.getStartTime())
+                                                         .plusMinutes(res.getDurationMinutes());
+                return !endDateTime.isBefore(now);
+            })
+            .toList();
     }
 }

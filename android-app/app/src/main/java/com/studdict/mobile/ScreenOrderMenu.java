@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.studdict.mobile.api.ApiClient;
 import com.studdict.mobile.model.MenuItem;
 import com.studdict.mobile.model.OrderItemRequest;
+import com.studdict.mobile.SessionManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,6 +44,14 @@ public class ScreenOrderMenu extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        SessionManager session = new SessionManager(this);
+        if (session.getCheckInId() == -1L) {
+            Toast.makeText(this, "You must be checked in to place an order.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_order_menu);
 
         recyclerMenu = findViewById(R.id.recyclerMenu);
