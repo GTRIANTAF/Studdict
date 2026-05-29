@@ -174,7 +174,7 @@ public class ScreenBill extends Activity {
 
     private void executeCheckoutPointsEarning() {
         if (reservationId == -1L) {
-            int pointsEarned = 25;
+            int pointsEarned = 50;
             showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
             return;
         }
@@ -183,7 +183,7 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
-                    int pointsEarned = 25; // default fallback
+                    int pointsEarned = 50; // default fallback
                     if (response.isSuccessful() && response.body() != null) {
                         String msg = response.body().string();
                         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d+").matcher(msg);
@@ -211,13 +211,13 @@ public class ScreenBill extends Activity {
                         showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
                     }
                 } catch (Exception e) {
-                    showCongratulationsDialog(25, currentBalance + 25);
+                    showCongratulationsDialog(50, currentBalance + 50);
                 }
             }
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                showCongratulationsDialog(25, currentBalance + 25);
+                showCongratulationsDialog(50, currentBalance + 50);
             }
         });
     }
