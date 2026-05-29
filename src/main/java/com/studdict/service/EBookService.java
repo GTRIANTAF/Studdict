@@ -66,6 +66,19 @@ public class EBookService {
                 .toList();
     }
 
+    // Returns ALL loans of a check-in (active + already returned), so the bill screen can show
+    // every e-book borrowed during the session even if some were returned early by the student.
+    public List<EBookLoanDTO> getSessionLoansWithInfo(Long checkInId) {
+        return loanRepository.findAllByCheckIn(checkInId).stream()
+                .filter(loan -> loan.getLicense() != null && loan.getLicense().getEbook() != null)
+                .map(loan -> {
+                    EBook book = loan.getLicense().getEbook();
+                    return new EBookLoanDTO(loan.getLoanId(), book.geteBookId(),
+                            book.getTitle(), book.getAuthor(), !loan.isActive());
+                })
+                .toList();
+    }
+
     /**
      * Υλοποιεί το requestLoan() του Sequence Diagram
      */

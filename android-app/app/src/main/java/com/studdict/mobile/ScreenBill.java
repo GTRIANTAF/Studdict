@@ -89,7 +89,7 @@ public class ScreenBill extends Activity {
         long checkInId = new SessionManager(this).getCheckInId();
         if (checkInId == -1L) return;
 
-        ApiClient.getApi().getActiveLoans(checkInId).enqueue(new Callback<List<EBookLoanInfo>>() {
+        ApiClient.getApi().getSessionLoans(checkInId).enqueue(new Callback<List<EBookLoanInfo>>() {
             @Override
             public void onResponse(Call<List<EBookLoanInfo>> call, Response<List<EBookLoanInfo>> response) {
                 if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
@@ -109,9 +109,13 @@ public class ScreenBill extends Activity {
         ebookLoansContainer.removeAllViews();
         for (EBookLoanInfo loan : loans) {
             TextView tv = new TextView(this);
-            tv.setText("• " + loan.getTitle() + " — " + loan.getAuthor());
+            String label = "• " + loan.getTitle() + " — " + loan.getAuthor();
+            if (loan.isReturned()) {
+                label += "  (returned)";
+            }
+            tv.setText(label);
             tv.setTextSize(14);
-            tv.setTextColor(Color.parseColor("#4A148C"));
+            tv.setTextColor(Color.parseColor(loan.isReturned() ? "#9E9E9E" : "#4A148C"));
             tv.setPadding(0, 4, 0, 4);
             ebookLoansContainer.addView(tv);
         }

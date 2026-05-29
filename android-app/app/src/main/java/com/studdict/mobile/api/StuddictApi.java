@@ -155,6 +155,10 @@ public interface StuddictApi {
     @GET("api/ebooks/loans/active/{checkInId}")
     Call<List<EBookLoanInfo>> getActiveLoans(@Path("checkInId") long checkInId);
 
+    // All loans of the session (active + returned) — shown on the bill screen at checkout
+    @GET("api/ebooks/loans/session/{checkInId}")
+    Call<List<EBookLoanInfo>> getSessionLoans(@Path("checkInId") long checkInId);
+
     @POST("api/ebooks/notify-checkout/{checkInId}")
     Call<String> notifyCheckout(@Path("checkInId") long checkInId);
 
