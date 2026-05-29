@@ -200,4 +200,7 @@ public interface StuddictApi {
 
     @GET("api/reservations/student/{studentId}")
     Call<List<Reservation>> getStudentReservations(@Path("studentId") String studentId);
+
+    @POST("payments/process")
+    Call<com.studdict.mobile.model.PaymentResponse> processPayment(@Body com.studdict.mobile.model.PaymentRequest request);
 }

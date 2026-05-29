@@ -23,6 +23,7 @@ public class PaymentService {
     @Autowired private StudyTableRepository studyTableRepository;
     @Autowired private CheckInRepository checkInRepository;
     @Autowired private EBookService eBookService;
+    @Autowired private GamificationService gamificationService;
 
     /**
      * UC6 - Πληρωμή (κάρτα ή μετρητά).
@@ -31,7 +32,7 @@ public class PaymentService {
      *  - απελευθερώνει το τραπέζι (UC6 βήμα 10),
      *  - ανακαλεί τις ενεργές άδειες e-book (UC7 βήμα 9).
      */
-    public Bill processPayment(Long billId, String method, double amountGiven) {
+    public Bill processPayment(Long billId, String method, double amountGiven, String studentId) {
         Bill bill = billRepository.findById(billId)
                 .orElseThrow(() -> new RuntimeException("Ο λογαριασμός δεν βρέθηκε"));
 
@@ -48,7 +49,7 @@ public class PaymentService {
         recordPayment(bill, method);
         freeTable(bill);
         releaseEbookLoans(bill);
-        applyRewardPoints(bill);
+        applyRewardPoints(bill, studentId);
 
         return bill;
     }
@@ -96,9 +97,12 @@ public class PaymentService {
         }
     }
 
-    private void applyRewardPoints(Bill bill) {
-        // Οι πόντοι επιβράβευσης αποδίδονται μέσω του UC9 (GamificationService),
-        // εδώ απλώς καταγράφουμε ότι ο λογαριασμός εξοφλήθηκε.
-        System.out.println("✅ [PAYMENT] Ο λογαριασμός της κράτησης " + bill.getReservationId() + " εξοφλήθηκε.");
+    private void applyRewardPoints(Bill bill, String studentId) {
+        if (studentId != null && !studentId.isEmpty() && bill.getReservationId() != null) {
+            gamificationService.creditPointsForStudy(studentId, bill.getReservationId());
+            System.out.println("-> [PAYMENT] Reward points applied for reservation " + bill.getReservationId());
+        } else {
+            System.out.println("-> [PAYMENT] Bill settled, but no points awarded (missing studentId or reservationId).");
+        }
     }
 }

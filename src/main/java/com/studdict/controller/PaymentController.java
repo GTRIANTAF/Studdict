@@ -20,7 +20,8 @@ public class PaymentController {
             Bill paidBill = paymentService.processPayment(
                     request.getBillId(),
                     request.getPaymentMethod(),
-                    request.getAmountGiven()
+                    request.getAmountGiven(),
+                    request.getStudentId()
             );
             return new PaymentResponse(true, "Η πληρωμή ολοκληρώθηκε", paidBill.getTotalAmount());
         } catch (RuntimeException e) {
@@ -39,10 +40,12 @@ public class PaymentController {
         private Long billId;
         private String paymentMethod;
         private Double amountGiven;
+        private String studentId;
 
         public Long getBillId() { return billId; }
         public String getPaymentMethod() { return paymentMethod; }
         public Double getAmountGiven() { return amountGiven; }
+        public String getStudentId() { return studentId; }
     }
 
     public static class PaymentResponse {

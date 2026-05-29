@@ -43,6 +43,8 @@ public class ScreenBill extends Activity {
     private String studentId;
     private long reservationId;
     private int currentBalance = 0;
+    private Long currentBillId = -1L;
+    private double currentBillTotal = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,10 +129,14 @@ public class ScreenBill extends Activity {
             public void onResponse(Call<Bill> call, Response<Bill> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Bill bill = response.body();
+                    currentBillId = bill.getBillId();
+                    currentBillTotal = bill.getTotalAmount();
                     txtBillId.setText("Bill #" + bill.getBillId());
                     txtBillTotal.setText(String.format("Total: €%.2f", bill.getTotalAmount()));
                     txtBillStatus.setText(bill.isSettled() ? "Status: Paid" : "Status: Pending payment");
                 } else {
+                    currentBillId = -1L;
+                    currentBillTotal = 0.0;
                     txtBillId.setText("Bill");
                     txtBillTotal.setText("Total: —");
                     txtBillStatus.setText("Bill not found.");
@@ -212,62 +218,99 @@ public class ScreenBill extends Activity {
     }
 
     private void promptCheckout() {
-        new AlertDialog.Builder(this)
-                .setTitle("Checkout")
-                .setMessage("Do you want to checkout?")
-                .setPositiveButton("Yes, Checkout", (dialog, which) -> executeCheckoutPointsEarning())
-                .setNegativeButton("No", (dialog, which) -> finish())
-                .show();
-    }
-
-    private void executeCheckoutPointsEarning() {
-        if (reservationId == -1L) {
-            int pointsEarned = 50;
-            showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
+        if (currentBillId == -1L) {
+            Toast.makeText(this, "No active bill found or offline mode.", Toast.LENGTH_SHORT).show();
+            executeCheckoutPointsEarning(); // fallback for offline testing
             return;
         }
 
-        ApiClient.getApi().earnPoints(studentId, reservationId).enqueue(new Callback<okhttp3.ResponseBody>() {
-            @Override
-            public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
-                try {
-                    int pointsEarned = 50; // default fallback
-                    if (response.isSuccessful() && response.body() != null) {
-                        String msg = response.body().string();
-                        java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d+").matcher(msg);
-                        if (matcher.find()) {
-                            pointsEarned = Integer.parseInt(matcher.group());
-                        }
-
-                        final int finalPoints = pointsEarned;
-                        ApiClient.getApi().getWallet(studentId).enqueue(new Callback<LoyaltyWallet>() {
-                            @Override
-                            public void onResponse(Call<LoyaltyWallet> call, Response<LoyaltyWallet> r2) {
-                                int newBalance = currentBalance + finalPoints;
-                                if (r2.isSuccessful() && r2.body() != null) {
-                                    newBalance = r2.body().getTotalBalance();
-                                }
-                                showCongratulationsDialog(finalPoints, newBalance);
-                            }
-
-                            @Override
-                            public void onFailure(Call<LoyaltyWallet> call, Throwable t) {
-                                showCongratulationsDialog(finalPoints, currentBalance + finalPoints);
-                            }
-                        });
+        String[] options = {"Online (Card)", "Cash"};
+        new AlertDialog.Builder(this)
+                .setTitle("Select Payment Method")
+                .setItems(options, (dialog, which) -> {
+                    if (which == 0) {
+                        processPayment("CARD", currentBillTotal);
                     } else {
-                        showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
+                        promptCashAmount();
                     }
-                } catch (Exception e) {
-                    showCongratulationsDialog(50, currentBalance + 50);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void promptCashAmount() {
+        android.widget.EditText input = new android.widget.EditText(this);
+        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        input.setHint("Enter amount given");
+
+        new AlertDialog.Builder(this)
+                .setTitle("Cash Payment")
+                .setMessage("Total: €" + currentBillTotal)
+                .setView(input)
+                .setPositiveButton("Pay", (dialog, which) -> {
+                    String val = input.getText().toString();
+                    if (!val.isEmpty()) {
+                        try {
+                            double amount = Double.parseDouble(val);
+                            if (amount >= currentBillTotal) {
+                                processPayment("CASH", amount);
+                            } else {
+                                Toast.makeText(this, "Amount less than total!", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (NumberFormatException e) {
+                            Toast.makeText(this, "Invalid amount", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void processPayment(String method, double amountGiven) {
+        com.studdict.mobile.model.PaymentRequest req = new com.studdict.mobile.model.PaymentRequest(currentBillId, method, amountGiven, studentId);
+        ApiClient.getApi().processPayment(req).enqueue(new Callback<com.studdict.mobile.model.PaymentResponse>() {
+            @Override
+            public void onResponse(Call<com.studdict.mobile.model.PaymentResponse> call, Response<com.studdict.mobile.model.PaymentResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    Toast.makeText(ScreenBill.this, "Payment successful!", Toast.LENGTH_SHORT).show();
+                    checkEarnedPointsAfterPayment();
+                } else {
+                    String msg = response.body() != null ? response.body().getMessage() : "Payment failed";
+                    Toast.makeText(ScreenBill.this, msg, Toast.LENGTH_LONG).show();
                 }
             }
 
             @Override
-            public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
+            public void onFailure(Call<com.studdict.mobile.model.PaymentResponse> call, Throwable t) {
+                Toast.makeText(ScreenBill.this, "Network Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void checkEarnedPointsAfterPayment() {
+        ApiClient.getApi().getWallet(studentId).enqueue(new Callback<LoyaltyWallet>() {
+            @Override
+            public void onResponse(Call<LoyaltyWallet> call, Response<LoyaltyWallet> response) {
+                int newBalance = currentBalance;
+                int earned = 0;
+                if (response.isSuccessful() && response.body() != null) {
+                    newBalance = response.body().getTotalBalance();
+                    earned = newBalance - currentBalance;
+                }
+                if (earned <= 0 && reservationId != -1L) earned = 50; 
+                showCongratulationsDialog(earned, newBalance);
+            }
+
+            @Override
+            public void onFailure(Call<LoyaltyWallet> call, Throwable t) {
                 showCongratulationsDialog(50, currentBalance + 50);
             }
         });
+    }
+
+    // fallback for offline or no-bill cases
+    private void executeCheckoutPointsEarning() {
+        showCongratulationsDialog(50, currentBalance + 50);
     }
 
     private void showCongratulationsDialog(int pointsEarned, int newBalance) {
