@@ -17,7 +17,7 @@ public class TransactionProcessingController {
     @PostMapping("/process")
     public PaymentResponse processTransaction(@RequestBody GenericPaymentRequest paymentRequest) {
         try {
-            Bill bill = paymentService.processPayment(paymentRequest.getBillId(), "CARD", paymentRequest.getAmount());
+            Bill bill = paymentService.processPayment(paymentRequest.getBillId(), "CARD", paymentRequest.getAmount(), paymentRequest.getStudentId());
             return new PaymentResponse(true, "Η επεξεργασία της κάρτας ολοκληρώθηκε", bill.getTotalAmount());
         } catch (Exception e) {
             return new PaymentResponse(false, e.getMessage(), 0.0);
@@ -27,8 +27,10 @@ public class TransactionProcessingController {
     public static class GenericPaymentRequest {
         private Long billId;
         private double amount;
+        private String studentId;
         public Long getBillId() { return billId; }
         public double getAmount() { return amount; }
+        public String getStudentId() { return studentId; }
     }
 
     public static class PaymentResponse {
