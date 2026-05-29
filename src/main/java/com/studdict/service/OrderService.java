@@ -145,7 +145,7 @@ public class OrderService {
         //    ενημερώνουμε ώστε η νέα παραγγελία να ΠΡΟΣΤΕΘΕΙ στις προηγούμενες, αντί
         //    να δημιουργηθεί νέος λογαριασμός που "ξεχνάει" τις προηγούμενες παραγγελίες.
         //    Το σύνολο υπολογίζεται πάντα ως το άθροισμα ΟΛΩΝ των παραγγελιών του τραπεζιού.
-        double tableTotal = orderRepository.findByTableId(tableId).stream()
+        double grossTotal = orderRepository.findByTableId(tableId).stream()
                 .mapToDouble(Order::getTotalAmount)
                 .sum();
 
@@ -153,7 +153,11 @@ public class OrderService {
                 .filter(existing -> !existing.isSettled())
                 .orElseGet(Bill::new);
         bill.setTableId(tableId);
-        bill.setTotalAmount(tableTotal);
+        //    Διατηρούμε τυχόν έκπτωση που έχει ήδη εφαρμοστεί (π.χ. εξαργύρωση πόντων πριν
+        //    από νέα παραγγελία): το νέο σύνολο είναι το μεικτό άθροισμα ΜΕΙΟΝ την έκπτωση,
+        //    ώστε η νέα παραγγελία να προστίθεται στο ήδη εκπτωμένο ποσό αντί να μηδενίζει
+        //    την έκπτωση. Για νέο λογαριασμό η έκπτωση είναι 0, οπότε σύνολο = μεικτό.
+        bill.setTotalAmount(Math.max(0.0, grossTotal - bill.getDiscountAmount()));
         bill.setIssueTime(LocalDateTime.now());
         billRepository.save(bill);
 

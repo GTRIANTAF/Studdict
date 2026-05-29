@@ -25,6 +25,12 @@ public class Bill {
     @Column(name = "total_amount")
     private double totalAmount;
 
+    // Συνολική έκπτωση (π.χ. από εξαργύρωση πόντων) που έχει εφαρμοστεί στον λογαριασμό.
+    // Την κρατάμε ξεχωριστά ώστε, όταν προστεθεί νέα παραγγελία πριν το check-out, να
+    // αφαιρείται από το μεικτό σύνολο αντί να "χάνεται". Το totalAmount = μεικτό - discountAmount.
+    @Column(name = "discount_amount")
+    private double discountAmount = 0.0;
+
     @Column(name = "issue_time")
     private LocalDateTime issueTime;
 
@@ -45,6 +51,9 @@ public class Bill {
 
     public double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
+
+    public double getDiscountAmount() { return discountAmount; }
+    public void setDiscountAmount(double discountAmount) { this.discountAmount = discountAmount; }
 
     public LocalDateTime getIssueTime() { return issueTime; }
     public void setIssueTime(LocalDateTime issueTime) { this.issueTime = issueTime; }
