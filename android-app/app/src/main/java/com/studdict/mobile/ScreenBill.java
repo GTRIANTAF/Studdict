@@ -123,16 +123,16 @@ public class ScreenBill extends Activity {
 
     private void updatePointsUI(int points, boolean isOffline) {
         String offlineText = isOffline ? " (offline)" : "";
-        tvAvailablePoints.setText("Διαθέσιμοι Πόντοι: " + points + offlineText);
+        tvAvailablePoints.setText("Available Points: " + points + offlineText);
 
         if (points >= 100) {
             btnRedeemPoints.setEnabled(true);
             btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF8F00"))); // Active Orange
-            btnRedeemPoints.setText("Εξαργύρωση 100 Πόντων (-3.00€)");
+            btnRedeemPoints.setText("Redeem 100 Points (-3.00€)");
         } else {
             btnRedeemPoints.setEnabled(false);
             btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#BDBDBD"))); // Disabled Grey
-            btnRedeemPoints.setText("Εξαργύρωση 100 Πόντων (Χρειάζεστε 100)");
+            btnRedeemPoints.setText("Redeem 100 Points (Need 100)");
         }
     }
 
@@ -141,7 +141,7 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
-                    String msg = "Επιτυχής εξαργύρωση! Εφαρμόστηκε έκπτωση 3.00€.";
+                    String msg = "Redemption successful! A 3.00€ discount was applied.";
                     if (response.isSuccessful() && response.body() != null) {
                         msg = response.body().string();
                     }
@@ -155,7 +155,7 @@ public class ScreenBill extends Activity {
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                Toast.makeText(ScreenBill.this, "Συνδέθηκε offline: Εξαργυρώθηκαν 100 πόντοι (Mock).", Toast.LENGTH_LONG).show();
+                Toast.makeText(ScreenBill.this, "Connected offline: Redeemed 100 points (Mock).", Toast.LENGTH_LONG).show();
                 currentBalance = Math.max(0, currentBalance - 100);
                 updatePointsUI(currentBalance, true);
                 txtBillTotal.setText("Total: €0.00 (Mock Discount)");
@@ -166,9 +166,9 @@ public class ScreenBill extends Activity {
     private void promptCheckout() {
         new AlertDialog.Builder(this)
                 .setTitle("Checkout")
-                .setMessage("Θέλετε να πραγματοποιήσετε Checkout;")
-                .setPositiveButton("Ναι, Checkout", (dialog, which) -> executeCheckoutPointsEarning())
-                .setNegativeButton("Όχι", (dialog, which) -> finish())
+                .setMessage("Do you want to checkout?")
+                .setPositiveButton("Yes, Checkout", (dialog, which) -> executeCheckoutPointsEarning())
+                .setNegativeButton("No", (dialog, which) -> finish())
                 .show();
     }
 
@@ -224,9 +224,9 @@ public class ScreenBill extends Activity {
 
     private void showCongratulationsDialog(int pointsEarned, int newBalance) {
         new AlertDialog.Builder(this)
-                .setTitle("⭐ Συγχαρητήρια! ⭐")
-                .setMessage("Κερδίσατε " + pointsEarned + " πόντους για τη μελέτη σας!\n\nΝέο υπόλοιπο: " + newBalance + " πόντοι.")
-                .setPositiveButton("Τέλεια!", (dialog, which) -> finish())
+                .setTitle("⭐ Congratulations! ⭐")
+                .setMessage("You earned " + pointsEarned + " points for your study session!\n\nNew balance: " + newBalance + " points.")
+                .setPositiveButton("Awesome!", (dialog, which) -> finish())
                 .setCancelable(false)
                 .show();
     }

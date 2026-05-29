@@ -25,9 +25,9 @@ public class GamificationController {
     public String earnPoints(@RequestParam String studentId, @RequestParam Long reservationId) {
         int points = gamificationService.creditPointsForStudy(studentId, reservationId);
         if (points > 0) {
-            return "Επιτυχία! Κερδίσατε " + points + " πόντους.";
+            return "Success! You earned " + points + " points.";
         }
-        return "Η διάρκεια μελέτης δεν ήταν αρκετή για πόντους.";
+        return "Study duration was not enough to earn points.";
     }
 
     @PostMapping("/redeem")
@@ -41,8 +41,8 @@ public class GamificationController {
             if (tableId != null) {
                 gamificationService.applyDiscountToBill(tableId, discount);
             }
-            return "Επιτυχής εξαργύρωση! Κερδίσατε έκπτωση " + discount + " ευρώ.";
+            return "Redemption successful! You got a " + discount + " euro discount.";
         }
-        return "Αποτυχία εξαργύρωσης. Ελέγξτε το υπόλοιπό σας.";
+        return "Redemption failed. Check your balance.";
     }
 }

@@ -44,11 +44,45 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private EBookRepository eBookRepository;
     @Autowired private EBookLicenseRepository licenseRepository;
     @Autowired private MenuItemRepository menuItemRepository;
+    @Autowired private EBookLoanRepository eBookLoanRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private OrderItemRepository orderItemRepository;
+    @Autowired private BillRepository billRepository;
+    @Autowired private PaymentRepository paymentRepository;
+    @Autowired private InviteCodeRepository inviteCodeRepository;
+    @Autowired private CheckInRepository checkInRepository;
+    @Autowired private PointsTransactionRepository pointsTransactionRepository;
+
     @Override
     public void run(String... args) throws Exception {
         System.out.println("\n=======================================================");
         System.out.println("===  ΕΝΑΡΞΗ ΠΡΟΣΟΜΟΙΩΣΗΣ ΚΡΑΤΗΣΕΩΝ (UC1 & UC2) ===");
         System.out.println("=======================================================\n");
+
+        // --- CLEAN UP TRANSIENT DATA TO ENSURE FLUSH RUN FOR SIMULATIONS ---
+        try {
+            eBookLoanRepository.deleteAll();
+            paymentRepository.deleteAll();
+            orderItemRepository.deleteAll();
+            orderRepository.deleteAll();
+            billRepository.deleteAll();
+            inviteCodeRepository.deleteAll();
+            checkInRepository.deleteAll();
+            participantRepository.deleteAll();
+            reservationRepository.deleteAll();
+            pointsTransactionRepository.deleteAll();
+
+            // Reset all study tables to available and unlocked
+            for (StudyTable table : studyTableRepository.findAll()) {
+                table.setIsAvailable(true);
+                table.setSoftLockedBy(null);
+                table.setSoftLockExpiration(null);
+                studyTableRepository.save(table);
+            }
+            System.out.println("🧹 [TestRunner] Cleaned transient records and reset study table availability successfully.");
+        } catch (Exception e) {
+            System.err.println("⚠️ [TestRunner] Warning: Transient cleanup failed or was partially executed: " + e.getMessage());
+        }
 
         // --- ΒΗΜΑ 1: SETUP ΔΕΔΟΜΕΝΩΝ ---
         if (studentRepository.count() == 0) {
