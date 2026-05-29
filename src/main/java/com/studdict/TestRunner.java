@@ -367,7 +367,7 @@ public class TestRunner implements CommandLineRunner {
 
             if (!availableForUpdate.isEmpty()) {
                 System.out.println(" [UI Step 2] Βρέθηκε διαθεσιμότητα. Εκτέλεση modifyReservation...");
-                Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, proposedTime, proposedDuration);
+                Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, proposedTime, proposedDuration, 2);
                 System.out.println("✅ Η κράτηση τροποποιήθηκε: Νέα ώρα " + updatedRes.getStartTime() + " με διάρκεια " + updatedRes.getDurationMinutes() + " λεπτά.\n");
             } else {
                 System.out.println("   ❌ Σφάλμα UI: Δεν υπάρχει διαθεσιμότητα. Η τροποποίηση δεν προχωράει.\n");
@@ -375,7 +375,7 @@ public class TestRunner implements CommandLineRunner {
 
             System.out.println(" --- Εναλλακτική (UC4 alt 1): Μη διαθεσιμότητα θέσεων ---");
             try {
-                reservationUpdateService.modifyReservation(privateRes2Id, LocalTime.of(16, 0), 1000);
+                reservationUpdateService.modifyReservation(privateRes2Id, LocalTime.of(16, 0), 1000, 2);
             } catch (Exception e) {
                 System.out.println(" Αναμενόμενο σφάλμα: "+ e.getMessage()+ "\n");
             }
