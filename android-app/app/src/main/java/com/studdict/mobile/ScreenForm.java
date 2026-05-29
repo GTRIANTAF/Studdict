@@ -65,10 +65,10 @@ public class ScreenForm extends Activity {
             if (btnSearch != null) btnSearch.setText("Continue to Confirmation");
             if (privateChoiceCard != null) privateChoiceCard.setVisibility(View.GONE);
             if (publicChoiceCard != null) publicChoiceCard.setVisibility(View.GONE);
-            if (joinReservationInput != null) joinReservationInput.setVisibility(View.GONE);
-            View joinPublicBtn = findViewById(R.id.joinPublicButton);
-            if (joinPublicBtn != null) joinPublicBtn.setVisibility(View.GONE);
             if (subjectInput != null) subjectInput.setVisibility(View.GONE);
+            
+            View joinPanel = findViewById(R.id.joinPanel);
+            if (joinPanel != null) joinPanel.setVisibility(View.GONE);
 
             if (todayButton != null) {
                 todayButton.setEnabled(false);
