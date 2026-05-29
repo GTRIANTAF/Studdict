@@ -21,7 +21,7 @@ import retrofit2.Response;
 public class ScreenTables extends Activity {
 
     private long venueId;
-    private String venueName, date, time, subject;
+    private String venueName, date, time, subject, studentId;
     private int duration, capacity;
     private boolean isPublic;
 
@@ -42,6 +42,7 @@ public class ScreenTables extends Activity {
         capacity = i.getIntExtra("CAPACITY", 1);
         isPublic = i.getBooleanExtra("IS_PUBLIC", false);
         subject = i.getStringExtra("SUBJECT");
+        studentId = i.getStringExtra("STUDENT_ID");
 
         TextView headerTitle = findViewById(R.id.headerTitle);
         headerTitle.setText(venueName);
@@ -161,6 +162,7 @@ public class ScreenTables extends Activity {
         intent.putExtra("SUBJECT", subject);
         intent.putExtra("TABLE_ID", table.getId());
         intent.putExtra("TABLE_NUMBER", table.getTableNumber());
+        intent.putExtra("STUDENT_ID", studentId);
         startActivity(intent);
     }
 }
