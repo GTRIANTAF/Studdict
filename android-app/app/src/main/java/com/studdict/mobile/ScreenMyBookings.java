@@ -109,6 +109,10 @@ public class ScreenMyBookings extends Activity {
                 intent.putExtra("RESERVATION_ID", res.getReservationId());
                 intent.putExtra("VENUE_ID", 1L); // Hardcoding to 1L because Venue is not mapped in Android StudyTable
                 intent.putExtra("STUDENT_ID", studentId);
+                intent.putExtra("EXISTING_DATE", res.getReservationDate());
+                intent.putExtra("EXISTING_CAPACITY", res.getNumberOfPeople());
+                intent.putExtra("EXISTING_TIME", res.getStartTime());
+                intent.putExtra("EXISTING_DURATION", res.getDurationMinutes());
                 startActivity(intent);
             });
             buttonLayout.addView(btnModify);
