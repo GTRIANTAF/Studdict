@@ -67,6 +67,9 @@ public class ScreenForm extends Activity {
             View joinPublicBtn = findViewById(R.id.joinPublicButton);
             if (joinPublicBtn != null) joinPublicBtn.setVisibility(View.GONE);
             if (subjectInput != null) subjectInput.setVisibility(View.GONE);
+            
+            View groupSizeSection = findViewById(R.id.groupSizeSection);
+            if (groupSizeSection != null) groupSizeSection.setVisibility(View.GONE);
         }
 
         findViewById(R.id.backButton).setOnClickListener(view -> finish());
