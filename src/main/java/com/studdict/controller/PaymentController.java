@@ -23,7 +23,8 @@ public class PaymentController {
                     request.getAmountGiven(),
                     request.getStudentId()
             );
-            return new PaymentResponse(true, "Η πληρωμή ολοκληρώθηκε", paidBill.getTotalAmount());
+            String successMsg = paidBill.isSettled() ? "Ο λογαριασμός εξοφλήθηκε πλήρως!" : "Η πληρωμή του μεριδίου σας ολοκληρώθηκε!";
+            return new PaymentResponse(true, successMsg, request.getAmountGiven());
         } catch (RuntimeException e) {
             return new PaymentResponse(false, e.getMessage(), 0.0);
         }
@@ -31,8 +32,8 @@ public class PaymentController {
 
     @PostMapping("/split")
     public SplitResponse splitBill(@RequestBody SplitRequest request) {
-        double amountPerPerson = paymentService.calculateSplitAmount(request.getBillId(), request.getNumberOfPeople());
-        return new SplitResponse(amountPerPerson);
+        double splitAmount = paymentService.calculateSplitAmount(request.getBillId());
+        return new SplitResponse(splitAmount);
     }
 
 
@@ -66,10 +67,8 @@ public class PaymentController {
 
     public static class SplitRequest {
         private Long billId;
-        private int numberOfPeople;
 
         public Long getBillId() { return billId; }
-        public int getNumberOfPeople() { return numberOfPeople; }
     }
 
     public static class SplitResponse {

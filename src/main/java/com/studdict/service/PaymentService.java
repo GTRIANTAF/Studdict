@@ -34,43 +34,49 @@ public class PaymentService {
      */
     public Bill processPayment(Long billId, String method, double amountGiven, String studentId) {
         Bill bill = billRepository.findById(billId)
-                .orElseThrow(() -> new RuntimeException("Ο λογαριασμός δεν βρέθηκε"));
+                .orElseThrow(() -> new RuntimeException("Το παραστατικό δεν βρέθηκε"));
 
         if (bill.isSettled()) {
-            throw new RuntimeException("Ο λογαριασμός έχει ήδη εξοφληθεί");
-        }
-        if (amountGiven < bill.getTotalAmount()) {
-            throw new RuntimeException("Το ποσό δεν επαρκεί, υπολείπονται " + (bill.getTotalAmount() - amountGiven) + "€");
+            throw new RuntimeException("Ο λογαριασμός είναι ήδη εξοφλημένος");
         }
 
-        bill.setSettled(true);
+        bill.setPaidAmount(bill.getPaidAmount() + amountGiven);
+        
+        recordPayment(bill, method, amountGiven);
+
+        if (bill.getPaidAmount() >= bill.getTotalAmount() - 0.01) {
+            bill.setSettled(true);
+            freeTable(bill);
+            releaseEbookLoans(bill);
+        }
+
         billRepository.save(bill);
-
-        recordPayment(bill, method);
-        freeTable(bill);
-        releaseEbookLoans(bill);
         applyRewardPoints(bill, studentId);
 
         return bill;
     }
 
-    public double calculateSplitAmount(Long billId, int numOfPeople) {
-        if (numOfPeople <= 0) {
-            throw new RuntimeException("Ο αριθμός των ατόμων πρέπει να είναι τουλάχιστον 1");
-        }
-
+    public double calculateSplitAmount(Long billId) {
         Bill bill = billRepository.findById(billId)
-                .orElseThrow(() -> new RuntimeException("Ο λογαριασμός δεν βρέθηκε"));
+                .orElseThrow(() -> new RuntimeException("Το παραστατικό δεν βρέθηκε"));
 
+        int numOfPeople = 1;
+        if (bill.getReservationId() != null) {
+            com.studdict.model.Reservation res = reservationRepository.findById(bill.getReservationId()).orElse(null);
+            if (res != null && res.getNumberOfPeople() > 0) {
+                numOfPeople = res.getNumberOfPeople();
+            }
+        }
+        
         return bill.getTotalAmount() / numOfPeople;
     }
 
     // --- Βοηθητικές μέθοδοι ---
 
-    private void recordPayment(Bill bill, String method) {
+    private void recordPayment(Bill bill, String method, double amountGiven) {
         Payment payment = new Payment();
         payment.setReservationId(bill.getReservationId() != null ? String.valueOf(bill.getReservationId()) : null);
-        payment.setAmountPaid(bill.getTotalAmount());
+        payment.setAmountPaid(amountGiven);
         payment.setPaymentMethod(method);
         payment.setTimestamp(LocalDateTime.now());
         payment.setStatus("COMPLETED");

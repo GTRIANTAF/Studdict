@@ -203,4 +203,7 @@ public interface StuddictApi {
 
     @POST("payments/process")
     Call<com.studdict.mobile.model.PaymentResponse> processPayment(@Body com.studdict.mobile.model.PaymentRequest request);
+
+    @POST("payments/split")
+    Call<com.studdict.mobile.model.SplitResponse> splitBill(@Body com.studdict.mobile.model.SplitRequest request);
 }

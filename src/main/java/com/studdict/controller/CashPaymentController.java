@@ -18,7 +18,8 @@ public class CashPaymentController {
     public CashPaymentResponse acceptPayment(@RequestBody CashRequest request) {
         try {
             Bill bill = paymentService.processPayment(request.getBillId(), "CASH", request.getAmountGiven(), request.getStudentId());
-            return new CashPaymentResponse(true, "Η πληρωμή με μετρητά έγινε επιτυχώς", bill.getTotalAmount());
+            String msg = bill.isSettled() ? "Ο λογαριασμός εξοφλήθηκε πλήρως (Μετρητά)!" : "Η μερική πληρωμή μετρητών ολοκληρώθηκε!";
+            return new CashPaymentResponse(true, msg, request.getAmountGiven());
         } catch (Exception e) {
             return new CashPaymentResponse(false, e.getMessage(), 0.0);
         }

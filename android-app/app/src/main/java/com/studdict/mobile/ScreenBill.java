@@ -38,6 +38,10 @@ public class ScreenBill extends Activity {
     private LinearLayout ebookLoansContainer;
     private Button btnRedeemPoints;
     private Button btnCloseBill;
+    private android.widget.Button btnSplitBill;
+    private android.widget.TextView tvSplitResult;
+    private android.widget.Button btnPayOnline;
+    private android.widget.Button btnPayCash;
 
     private int tableId;
     private String studentId;
@@ -52,12 +56,6 @@ public class ScreenBill extends Activity {
         setContentView(R.layout.activity_bill);
 
         tableId = getIntent().getIntExtra("TABLE_ID", 1);
-        studentId = getIntent().getStringExtra("STUDENT_ID");
-        reservationId = getIntent().getLongExtra("RESERVATION_ID", -1L);
-
-        if (studentId == null || studentId.isEmpty()) {
-            studentId = "S1"; // Default for isolated testability
-        }
 
         txtBillId = findViewById(R.id.txtBillId);
         txtBillTable = findViewById(R.id.txtBillTable);
@@ -68,8 +66,20 @@ public class ScreenBill extends Activity {
         tvAvailablePoints = findViewById(R.id.tv_available_points);
         btnRedeemPoints = findViewById(R.id.btn_redeem_points);
         btnCloseBill = findViewById(R.id.btnCloseBill);
+        
+        btnSplitBill = findViewById(R.id.btn_split_bill);
+        tvSplitResult = findViewById(R.id.tv_split_result);
+        btnPayOnline = findViewById(R.id.btn_pay_online);
+        btnPayCash = findViewById(R.id.btn_pay_cash);
 
         txtBillTable.setText("Table: " + tableId);
+
+        studentId = getIntent().getStringExtra("STUDENT_ID");
+        reservationId = getIntent().getLongExtra("RESERVATION_ID", -1L);
+
+        if (studentId == null || studentId.isEmpty()) {
+            studentId = "S1"; // Default for isolated testability
+        }
 
         // Fetch Bill Details
         refreshBill();
@@ -82,9 +92,13 @@ public class ScreenBill extends Activity {
 
         // Redeem button handler
         btnRedeemPoints.setOnClickListener(v -> redeem100Points());
-
-        // Exit / Checkout handler
-        btnCloseBill.setOnClickListener(v -> promptCheckout());
+        
+        btnSplitBill.setOnClickListener(v -> handleSplitBill());
+        btnPayOnline.setOnClickListener(v -> handlePayOnline());
+        btnPayCash.setOnClickListener(v -> handlePayCash());
+        
+        // Exit without payment
+        btnCloseBill.setOnClickListener(v -> finish());
     }
 
     private void loadEbookLoans() {
@@ -217,31 +231,61 @@ public class ScreenBill extends Activity {
         });
     }
 
-    private void promptCheckout() {
+    private void handleSplitBill() {
+        if (currentBillId == -1L) {
+            Toast.makeText(this, "No active bill found.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        com.studdict.mobile.model.SplitRequest req = new com.studdict.mobile.model.SplitRequest(currentBillId);
+        ApiClient.getApi().splitBill(req).enqueue(new Callback<com.studdict.mobile.model.SplitResponse>() {
+            @Override
+            public void onResponse(Call<com.studdict.mobile.model.SplitResponse> call, Response<com.studdict.mobile.model.SplitResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    double perPerson = response.body().getAmountPerPerson();
+                    
+                    // UPDATE current bill total so payment uses this
+                    currentBillTotal = perPerson;
+
+                    tvSplitResult.setVisibility(View.VISIBLE);
+                    tvSplitResult.setText(String.format("Split Amount: €%.2f per person", perPerson));
+                    txtBillTotal.setText(String.format("Total: €%.2f (Split)", perPerson));
+                    
+                } else {
+                    Toast.makeText(ScreenBill.this, "Failed to split bill", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<com.studdict.mobile.model.SplitResponse> call, Throwable t) {
+                Toast.makeText(ScreenBill.this, "Network error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void handlePayOnline() {
         if (currentBillId == -1L) {
             Toast.makeText(this, "No active bill found or offline mode.", Toast.LENGTH_SHORT).show();
             executeCheckoutPointsEarning(); // fallback for offline testing
             return;
         }
+        processPayment("CARD", currentBillTotal);
+    }
 
-        String[] options = {"Online (Card)", "Cash"};
-        new AlertDialog.Builder(this)
-                .setTitle("Select Payment Method")
-                .setItems(options, (dialog, which) -> {
-                    if (which == 0) {
-                        processPayment("CARD", currentBillTotal);
-                    } else {
-                        promptCashAmount();
-                    }
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+    private void handlePayCash() {
+        if (currentBillId == -1L) {
+            Toast.makeText(this, "No active bill found or offline mode.", Toast.LENGTH_SHORT).show();
+            executeCheckoutPointsEarning(); // fallback for offline testing
+            return;
+        }
+        promptCashAmount();
     }
 
     private void promptCashAmount() {
         android.widget.EditText input = new android.widget.EditText(this);
         input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER | android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL);
         input.setHint("Enter amount given");
+        input.setText(String.valueOf(currentBillTotal)); // Pre-fill with the exact amount required
 
         new AlertDialog.Builder(this)
                 .setTitle("Cash Payment")
@@ -252,10 +296,10 @@ public class ScreenBill extends Activity {
                     if (!val.isEmpty()) {
                         try {
                             double amount = Double.parseDouble(val);
-                            if (amount >= currentBillTotal) {
+                            if (amount > 0) {
                                 processPayment("CASH", amount);
                             } else {
-                                Toast.makeText(this, "Amount less than total!", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(this, "Amount must be > 0!", Toast.LENGTH_SHORT).show();
                             }
                         } catch (NumberFormatException e) {
                             Toast.makeText(this, "Invalid amount", Toast.LENGTH_SHORT).show();
@@ -272,7 +316,7 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<com.studdict.mobile.model.PaymentResponse> call, Response<com.studdict.mobile.model.PaymentResponse> response) {
                 if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
-                    Toast.makeText(ScreenBill.this, "Payment successful!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(ScreenBill.this, response.body().getMessage(), Toast.LENGTH_LONG).show();
                     checkEarnedPointsAfterPayment();
                 } else {
                     String msg = response.body() != null ? response.body().getMessage() : "Payment failed";
