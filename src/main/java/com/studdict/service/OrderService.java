@@ -139,10 +139,21 @@ public class OrderService {
         // 6. Υπολογισμός κόστους (self-call όπως στο UC8)
         calculateCost(order);
 
-        // 7. Προσθήκη κόστους στον λογαριασμό (Bill)
-        Bill bill = new Bill();
+        // 7. Ενημέρωση του (ενιαίου) λογαριασμού του τραπεζιού.
+        //    Αν υπάρχει ήδη ανεξόφλητος λογαριασμός για το τραπέζι (π.χ. προηγούμενη
+        //    παραγγελία στην ίδια κράτηση, χωρίς να έχει γίνει check-out), τον
+        //    ενημερώνουμε ώστε η νέα παραγγελία να ΠΡΟΣΤΕΘΕΙ στις προηγούμενες, αντί
+        //    να δημιουργηθεί νέος λογαριασμός που "ξεχνάει" τις προηγούμενες παραγγελίες.
+        //    Το σύνολο υπολογίζεται πάντα ως το άθροισμα ΟΛΩΝ των παραγγελιών του τραπεζιού.
+        double tableTotal = orderRepository.findByTableId(tableId).stream()
+                .mapToDouble(Order::getTotalAmount)
+                .sum();
+
+        Bill bill = billRepository.findTopByTableIdOrderByIssueTimeDesc(tableId)
+                .filter(existing -> !existing.isSettled())
+                .orElseGet(Bill::new);
         bill.setTableId(tableId);
-        bill.setTotalAmount(order.getTotalAmount());
+        bill.setTotalAmount(tableTotal);
         bill.setIssueTime(LocalDateTime.now());
         billRepository.save(bill);
 

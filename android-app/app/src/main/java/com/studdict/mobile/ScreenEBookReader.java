@@ -7,11 +7,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.studdict.mobile.api.ApiClient;
+import com.studdict.mobile.model.EBookContent;
 import com.studdict.mobile.model.EBookLoan;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -19,7 +24,21 @@ import retrofit2.Response;
 
 public class ScreenEBookReader extends Activity {
 
+    // Pages are separated by the form-feed character in the stored/transferred content.
+    private static final String PAGE_BREAK = "\f";
+
     private long loanId;
+    private long bookId;
+
+    private final List<String> pages = new ArrayList<>();
+    private int currentPage = 0;
+
+    private ScrollView scrollReader;
+    private TextView txtContent;
+    private TextView txtPageIndicator;
+    private Button btnPrev;
+    private Button btnNext;
+
     private Handler pollHandler;
     private static final long POLL_INTERVAL_MS = 10_000L;
 
@@ -56,20 +75,88 @@ public class ScreenEBookReader extends Activity {
         setContentView(R.layout.activity_ebook_reader);
 
         loanId = getIntent().getLongExtra("LOAN_ID", -1L);
+        bookId = getIntent().getLongExtra("BOOK_ID", -1L);
         String title = getIntent().getStringExtra("BOOK_TITLE");
-        String content = getIntent().getStringExtra("BOOK_CONTENT");
+        String fallbackContent = getIntent().getStringExtra("BOOK_CONTENT");
 
         TextView txtTitle = findViewById(R.id.txtReaderTitle);
-        TextView txtContent = findViewById(R.id.txtReaderContent);
+        scrollReader = findViewById(R.id.scrollReader);
+        txtContent = findViewById(R.id.txtReaderContent);
+        txtPageIndicator = findViewById(R.id.txtPageIndicator);
+        btnPrev = findViewById(R.id.btnPrevPage);
+        btnNext = findViewById(R.id.btnNextPage);
         Button btnReturn = findViewById(R.id.btnReturnBook);
 
         txtTitle.setText(title);
-        txtContent.setText(content);
+
+        btnPrev.setOnClickListener(v -> showPage(currentPage - 1));
+        btnNext.setOnClickListener(v -> showPage(currentPage + 1));
 
         // UC7 Early Return: ReturnConfirmScreen shown before releaseLoan is called
         btnReturn.setOnClickListener(v -> showReturnConfirmation());
 
+        // Show whatever we were handed first (offline/demo), then upgrade to the real
+        // paginated content fetched from the backend by book id.
+        setPages(splitIntoPages(fallbackContent));
+        if (bookId > 0) {
+            loadBookContent(bookId);
+        }
+
         pollHandler = new Handler(Looper.getMainLooper());
+    }
+
+    private void loadBookContent(long id) {
+        ApiClient.getApi().getBookContent(id).enqueue(new Callback<EBookContent>() {
+            @Override
+            public void onResponse(Call<EBookContent> call, Response<EBookContent> response) {
+                if (response.isSuccessful() && response.body() != null
+                        && response.body().getPages() != null
+                        && !response.body().getPages().isEmpty()) {
+                    setPages(response.body().getPages());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<EBookContent> call, Throwable t) {
+                // Keep the fallback content already shown.
+            }
+        });
+    }
+
+    private List<String> splitIntoPages(String content) {
+        List<String> result = new ArrayList<>();
+        if (content != null && !content.isEmpty()) {
+            for (String page : content.split(PAGE_BREAK)) {
+                String trimmed = page.trim();
+                if (!trimmed.isEmpty()) {
+                    result.add(trimmed);
+                }
+            }
+        }
+        if (result.isEmpty()) {
+            result.add("No content available for this book.");
+        }
+        return result;
+    }
+
+    private void setPages(List<String> newPages) {
+        pages.clear();
+        pages.addAll(newPages);
+        showPage(0);
+    }
+
+    private void showPage(int index) {
+        if (index < 0 || index >= pages.size()) {
+            return;
+        }
+        currentPage = index;
+        txtContent.setText(pages.get(index));
+        if (scrollReader != null) {
+            scrollReader.post(() -> scrollReader.scrollTo(0, 0));
+        }
+        txtPageIndicator.setText("Page " + (index + 1) + " / " + pages.size());
+        btnPrev.setEnabled(index > 0);
+        btnNext.setEnabled(index < pages.size() - 1);
     }
 
     @Override

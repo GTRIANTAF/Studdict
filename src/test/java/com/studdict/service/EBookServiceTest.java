@@ -3,7 +3,9 @@ package com.studdict.service;
 import com.studdict.model.CheckIn;
 import com.studdict.model.EBook;
 import com.studdict.model.EBookLicense;
+import com.studdict.model.EBookContentDTO;
 import com.studdict.model.EBookLoan;
+import com.studdict.model.EBookLoanDTO;
 import com.studdict.model.Reservation;
 import com.studdict.repository.CheckInRepository;
 import com.studdict.repository.EBookLicenseRepository;
@@ -17,7 +19,9 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -122,5 +126,86 @@ public class EBookServiceTest {
         assertFalse(license.isAvailable());
         verify(licenseRepository, times(1)).save(license);
         verify(loanRepository, times(1)).save(any(EBookLoan.class));
+    }
+
+    @Test
+    public void testGetSessionLoans_IncludesReturnedBooks() {
+        // Arrange: one still-active loan and one the student already returned, same check-in.
+        EBook activeBook = new EBook();
+        activeBook.seteBookId(10L);
+        activeBook.setTitle("Active Book");
+        activeBook.setAuthor("Author A");
+        EBookLicense activeLicense = new EBookLicense();
+        activeLicense.setEbook(activeBook);
+        EBookLoan activeLoan = new EBookLoan();
+        activeLoan.setLoanId(1L);
+        activeLoan.setLicense(activeLicense);
+        activeLoan.setActive(true);
+
+        EBook returnedBook = new EBook();
+        returnedBook.seteBookId(20L);
+        returnedBook.setTitle("Returned Book");
+        returnedBook.setAuthor("Author B");
+        EBookLicense returnedLicense = new EBookLicense();
+        returnedLicense.setEbook(returnedBook);
+        EBookLoan returnedLoan = new EBookLoan();
+        returnedLoan.setLoanId(2L);
+        returnedLoan.setLicense(returnedLicense);
+        returnedLoan.setActive(false); // returned early, before checkout
+
+        when(loanRepository.findAllByCheckIn(1L))
+                .thenReturn(Arrays.asList(activeLoan, returnedLoan));
+
+        // Act
+        List<EBookLoanDTO> result = eBookService.getSessionLoansWithInfo(1L);
+
+        // Assert: BOTH books appear, and the returned one is flagged as returned.
+        assertEquals(2, result.size());
+        EBookLoanDTO active = result.stream()
+                .filter(d -> d.getLoanId() == 1L).findFirst().orElseThrow();
+        EBookLoanDTO returned = result.stream()
+                .filter(d -> d.getLoanId() == 2L).findFirst().orElseThrow();
+        assertEquals("Active Book", active.getTitle());
+        assertFalse(active.isReturned());
+        assertEquals("Returned Book", returned.getTitle());
+        assertTrue(returned.isReturned());
+    }
+
+    @Test
+    public void testGetBookContent_SplitsPagesOnFormFeed() {
+        // Arrange: content stored as three pages separated by form-feed.
+        EBook book = new EBook();
+        book.seteBookId(7L);
+        book.setTitle("Clean Code");
+        book.setAuthor("Robert C. Martin");
+        book.setContent("Page one text.\fPage two text.\fPage three text.");
+        when(eBookRepository.findById(7L)).thenReturn(Optional.of(book));
+
+        // Act
+        EBookContentDTO dto = eBookService.getBookContent(7L);
+
+        // Assert: split into 3 trimmed pages, metadata preserved.
+        assertEquals(7L, dto.getEbookId());
+        assertEquals("Clean Code", dto.getTitle());
+        assertEquals(3, dto.getPages().size());
+        assertEquals("Page one text.", dto.getPages().get(0));
+        assertEquals("Page two text.", dto.getPages().get(1));
+        assertEquals("Page three text.", dto.getPages().get(2));
+    }
+
+    @Test
+    public void testGetBookContent_EmptyContent_ReturnsPlaceholderPage() {
+        EBook book = new EBook();
+        book.seteBookId(8L);
+        book.setTitle("Empty Book");
+        book.setAuthor("Nobody");
+        book.setContent(null);
+        when(eBookRepository.findById(8L)).thenReturn(Optional.of(book));
+
+        EBookContentDTO dto = eBookService.getBookContent(8L);
+
+        // Always at least one page so the reader has something to show.
+        assertEquals(1, dto.getPages().size());
+        assertFalse(dto.getPages().get(0).isEmpty());
     }
 }
