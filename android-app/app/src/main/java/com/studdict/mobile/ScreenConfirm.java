@@ -22,6 +22,8 @@ public class ScreenConfirm extends Activity {
     private int duration, capacity, tableNumber;
     private boolean isPublic;
     private String studentId = "S1"; // Hardcoded for mockup
+    private long reservationIdToModify = -1L;
+    private boolean isModifyMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,16 +31,29 @@ public class ScreenConfirm extends Activity {
         setContentView(R.layout.activity_screen_confirm);
 
         Intent i = getIntent();
-        venueId = i.getLongExtra("VENUE_ID", 1L);
-        tableId = i.getIntExtra("TABLE_ID", -1);
-        tableNumber = i.getIntExtra("TABLE_NUMBER", 1);
-        venueName = i.getStringExtra("VENUE_NAME");
-        date = i.getStringExtra("DATE");
-        time = i.getStringExtra("TIME");
-        duration = i.getIntExtra("DURATION", 120);
-        capacity = i.getIntExtra("CAPACITY", 1);
-        isPublic = i.getBooleanExtra("IS_PUBLIC", false);
-        subject = i.getStringExtra("SUBJECT");
+        reservationIdToModify = i.getLongExtra("RESERVATION_ID", -1L);
+        
+        if (reservationIdToModify != -1L) {
+            isModifyMode = true;
+            date = i.getStringExtra("NEW_DATE");
+            time = i.getStringExtra("NEW_TIME");
+            duration = i.getIntExtra("NEW_DURATION", 120);
+            capacity = i.getIntExtra("NEW_CAPACITY", 1);
+            venueName = "Current Venue"; 
+            tableNumber = 5; // Placeholder since we skipped ScreenTables
+            isPublic = false;
+        } else {
+            venueId = i.getLongExtra("VENUE_ID", 1L);
+            tableId = i.getIntExtra("TABLE_ID", -1);
+            tableNumber = i.getIntExtra("TABLE_NUMBER", 1);
+            venueName = i.getStringExtra("VENUE_NAME");
+            date = i.getStringExtra("DATE");
+            time = i.getStringExtra("TIME");
+            duration = i.getIntExtra("DURATION", 120);
+            capacity = i.getIntExtra("CAPACITY", 1);
+            isPublic = i.getBooleanExtra("IS_PUBLIC", false);
+            subject = i.getStringExtra("SUBJECT");
+        }
         
         String incomingStudentId = i.getStringExtra("STUDENT_ID");
         if (incomingStudentId != null && !incomingStudentId.isEmpty()) {
@@ -75,6 +90,37 @@ public class ScreenConfirm extends Activity {
     }
 
     private void submitReservation() {
+        if (isModifyMode) {
+            com.studdict.mobile.model.ReservationUpdateRequest req = new com.studdict.mobile.model.ReservationUpdateRequest(time, duration);
+            req.setNewCapacity(capacity);
+            ApiClient.getApi().modifyReservation(reservationIdToModify, req).enqueue(new Callback<com.studdict.mobile.model.Reservation>() {
+                @Override
+                public void onResponse(Call<com.studdict.mobile.model.Reservation> call, Response<com.studdict.mobile.model.Reservation> response) {
+                    if (response.isSuccessful() && response.body() != null) {
+                        Toast.makeText(ScreenConfirm.this, "Successfully modified reservation!", Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(ScreenConfirm.this, ScreenVenues.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        String errMsg = "Failed to modify.";
+                        try {
+                            if (response.errorBody() != null) {
+                                errMsg = response.errorBody().string();
+                            }
+                        } catch (Exception ignored) {}
+                        Toast.makeText(ScreenConfirm.this, errMsg, Toast.LENGTH_LONG).show();
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<com.studdict.mobile.model.Reservation> call, Throwable t) {
+                    Toast.makeText(ScreenConfirm.this, "Network Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+            return;
+        }
+
         ReservationRequest request = new ReservationRequest(
                 studentId,
                 (int) tableId,

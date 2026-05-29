@@ -35,6 +35,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -95,6 +96,12 @@ public interface StuddictApi {
     Call<String> joinPublicReservation(
             @Path("reservationId") long reservationId,
             @Query("studentId") String studentId
+    );
+
+    @PUT("api/reservations/{id}/modify")
+    Call<com.studdict.mobile.model.Reservation> modifyReservation(
+            @Path("id") long id,
+            @Body com.studdict.mobile.model.ReservationUpdateRequest request
     );
 
     // --- UC3: Invite Code Reservation Join ---

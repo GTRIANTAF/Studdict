@@ -45,11 +45,45 @@ public class TestRunner implements CommandLineRunner {
     @Autowired private EBookRepository eBookRepository;
     @Autowired private EBookLicenseRepository licenseRepository;
     @Autowired private MenuItemRepository menuItemRepository;
+    @Autowired private EBookLoanRepository eBookLoanRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private OrderItemRepository orderItemRepository;
+    @Autowired private BillRepository billRepository;
+    @Autowired private PaymentRepository paymentRepository;
+    @Autowired private InviteCodeRepository inviteCodeRepository;
+    @Autowired private CheckInRepository checkInRepository;
+    @Autowired private PointsTransactionRepository pointsTransactionRepository;
+
     @Override
     public void run(String... args) throws Exception {
         System.out.println("\n=======================================================");
         System.out.println("===  ΕΝΑΡΞΗ ΠΡΟΣΟΜΟΙΩΣΗΣ ΚΡΑΤΗΣΕΩΝ (UC1 & UC2) ===");
         System.out.println("=======================================================\n");
+
+        // --- CLEAN UP TRANSIENT DATA TO ENSURE FLUSH RUN FOR SIMULATIONS ---
+        try {
+            eBookLoanRepository.deleteAll();
+            paymentRepository.deleteAll();
+            orderItemRepository.deleteAll();
+            orderRepository.deleteAll();
+            billRepository.deleteAll();
+            inviteCodeRepository.deleteAll();
+            checkInRepository.deleteAll();
+            participantRepository.deleteAll();
+            reservationRepository.deleteAll();
+            pointsTransactionRepository.deleteAll();
+
+            // Reset all study tables to available and unlocked
+            for (StudyTable table : studyTableRepository.findAll()) {
+                table.setIsAvailable(true);
+                table.setSoftLockedBy(null);
+                table.setSoftLockExpiration(null);
+                studyTableRepository.save(table);
+            }
+            System.out.println("🧹 [TestRunner] Cleaned transient records and reset study table availability successfully.");
+        } catch (Exception e) {
+            System.err.println("⚠️ [TestRunner] Warning: Transient cleanup failed or was partially executed: " + e.getMessage());
+        }
 
         // --- ΒΗΜΑ 1: SETUP ΔΕΔΟΜΕΝΩΝ ---
         if (studentRepository.count() == 0) {
@@ -367,7 +401,7 @@ public class TestRunner implements CommandLineRunner {
 
             if (!availableForUpdate.isEmpty()) {
                 System.out.println(" [UI Step 2] Βρέθηκε διαθεσιμότητα. Εκτέλεση modifyReservation...");
-                Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, proposedTime, proposedDuration);
+                Reservation updatedRes = reservationUpdateService.modifyReservation(privateRes2Id, proposedTime, proposedDuration, 2);
                 System.out.println("✅ Η κράτηση τροποποιήθηκε: Νέα ώρα " + updatedRes.getStartTime() + " με διάρκεια " + updatedRes.getDurationMinutes() + " λεπτά.\n");
             } else {
                 System.out.println("   ❌ Σφάλμα UI: Δεν υπάρχει διαθεσιμότητα. Η τροποποίηση δεν προχωράει.\n");
@@ -375,7 +409,7 @@ public class TestRunner implements CommandLineRunner {
 
             System.out.println(" --- Εναλλακτική (UC4 alt 1): Μη διαθεσιμότητα θέσεων ---");
             try {
-                reservationUpdateService.modifyReservation(privateRes2Id, LocalTime.of(16, 0), 1000);
+                reservationUpdateService.modifyReservation(privateRes2Id, LocalTime.of(16, 0), 1000, 2);
             } catch (Exception e) {
                 System.out.println(" Αναμενόμενο σφάλμα: "+ e.getMessage()+ "\n");
             }

@@ -59,6 +59,46 @@ public class ScreenForm extends Activity {
         bindViews();
         setupDateChips();
 
+        long resId = getIntent().getLongExtra("RESERVATION_ID", -1L);
+        if (resId != -1L) {
+            Button btnSearch = findViewById(R.id.searchButton);
+            if (btnSearch != null) btnSearch.setText("Continue to Confirmation");
+            if (privateChoiceCard != null) privateChoiceCard.setVisibility(View.GONE);
+            if (publicChoiceCard != null) publicChoiceCard.setVisibility(View.GONE);
+            if (joinReservationInput != null) joinReservationInput.setVisibility(View.GONE);
+            View joinPublicBtn = findViewById(R.id.joinPublicButton);
+            if (joinPublicBtn != null) joinPublicBtn.setVisibility(View.GONE);
+            if (subjectInput != null) subjectInput.setVisibility(View.GONE);
+
+            if (todayButton != null) {
+                todayButton.setEnabled(false);
+                String existingDate = getIntent().getStringExtra("EXISTING_DATE");
+                if (existingDate != null) {
+                    selectedDate = existingDate;
+                    todayButton.setText(existingDate);
+                    todayButton.setBackgroundResource(R.drawable.pill_active);
+                    todayButton.setTextColor(getColor(R.color.studdict_surface));
+                }
+            }
+            if (tomorrowButton != null) tomorrowButton.setVisibility(View.GONE);
+            if (thirdDateButton != null) thirdDateButton.setVisibility(View.GONE);
+
+            int existingCapacity = getIntent().getIntExtra("EXISTING_CAPACITY", 1);
+            setGroupSize(existingCapacity);
+
+            String existingTime = getIntent().getStringExtra("EXISTING_TIME");
+            if (existingTime != null) {
+                // If it contains seconds, like "10:00:00", substring it to "10:00"
+                if (existingTime.length() > 5) existingTime = existingTime.substring(0, 5);
+                selectedTime = existingTime;
+                if (timeButton != null) timeButton.setText(existingTime + "  ▼");
+            }
+
+            int existingDuration = getIntent().getIntExtra("EXISTING_DURATION", 120);
+            selectedDuration = existingDuration;
+            if (durationButton != null) durationButton.setText((existingDuration / 60) + " Hours  ▼");
+        }
+
         findViewById(R.id.backButton).setOnClickListener(view -> finish());
         findViewById(R.id.searchButton).setOnClickListener(view -> proceedToTables());
         findViewById(R.id.joinPublicButton).setOnClickListener(view -> joinPublicReservation());
@@ -96,6 +136,18 @@ public class ScreenForm extends Activity {
     }
 
     private void proceedToTables() {
+        long resId = getIntent().getLongExtra("RESERVATION_ID", -1L);
+        if (resId != -1L) {
+            Intent intent = new Intent(this, ScreenConfirm.class);
+            intent.putExtra("RESERVATION_ID", resId);
+            intent.putExtra("NEW_DATE", selectedDate);
+            intent.putExtra("NEW_TIME", selectedTime);
+            intent.putExtra("NEW_DURATION", selectedDuration);
+            intent.putExtra("NEW_CAPACITY", groupSize);
+            startActivity(intent);
+            return;
+        }
+
         Intent intent = new Intent(this, ScreenTables.class);
         intent.putExtra("VENUE_ID", selectedVenueId);
         intent.putExtra("VENUE_NAME", venueName);
