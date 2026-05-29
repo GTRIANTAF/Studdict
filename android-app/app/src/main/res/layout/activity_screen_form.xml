@@ -39,58 +39,6 @@
                     android:focusable="true"/>
 
                 <TextView
-                    android:id="@+id/groupSizeText"
-                    android:layout_width="48dp"
-                    android:layout_height="wrap_content"
-                    android:gravity="center"
-                    android:text="1"
-                    android:textColor="@color/studdict_text"
-                    android:textSize="20sp"
-                    android:textStyle="bold" />
-
-                <Button
-                    android:id="@+id/increaseGroupButton"
-                    android:layout_width="48dp"
-                    android:layout_height="48dp"
-                    android:text="+" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/reservationTypeTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Reservation Type"
-                android:textColor="@color/studdict_text"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:id="@+id/privateChoiceCard"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:background="@drawable/choice_selected"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Private"
-                        android:textColor="@color/studdict_text"
-                        android:textStyle="bold" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/publicChoiceCard"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
@@ -412,11 +360,6 @@
                 android:text="Mathematics"
                 android:visibility="gone" />
 
-            <TextView
-                android:id="@+id/joinReservationTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
             <Button
                 android:id="@+id/searchButton"
                 android:layout_width="match_parent"
@@ -431,11 +374,10 @@
 
             <!-- Join Existing Reservation -->
             <LinearLayout
-                android:id="@+id/joinReservationContainer"
+                android:id="@+id/joinPanel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40dp"
-                android:gravity="center_vertical"
                 android:orientation="vertical"
                 android:background="@drawable/choice_unselected"
                 android:padding="20dp">

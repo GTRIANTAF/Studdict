@@ -113,43 +113,6 @@
                 </LinearLayout>
             </HorizontalScrollView>
 
-            <!-- Active Reservation Card -->
-            <LinearLayout
-                android:id="@+id/activeReservationCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:background="@drawable/choice_selected"
-                android:elevation="6dp"
-                android:orientation="vertical"
-                android:padding="20dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Your Active Reservation"
-                    android:textColor="@color/studdict_text"
-                    android:textSize="18sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Table 5 - 10:00 to 12:00"
-                    android:textColor="@color/studdict_text"
-                    android:textSize="14sp" />
-
-                <Button
-                    android:id="@+id/modifyReservationBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Modify"
-                    android:backgroundTint="@color/studdict_primary"
-                    android:textColor="#FFFFFF" />
-            </LinearLayout>
-
             <!-- Location Cards Grid -->
             <!-- CEID Library Card -->
             <LinearLayout

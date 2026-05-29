@@ -29,28 +29,16 @@ public class ScreenConfirm extends Activity {
         setContentView(R.layout.activity_screen_confirm);
 
         Intent i = getIntent();
-        reservationIdToModify = i.getLongExtra("RESERVATION_ID", -1L);
-        
-        if (reservationIdToModify != -1L) {
-            isModifyMode = true;
-            date = i.getStringExtra("NEW_DATE");
-            time = i.getStringExtra("NEW_TIME");
-            duration = i.getIntExtra("NEW_DURATION", 120);
-            venueName = "Current Venue"; 
-            tableNumber = 5; 
-            isPublic = false;
-        } else {
-            venueId = i.getLongExtra("VENUE_ID", 1L);
-            tableId = i.getIntExtra("TABLE_ID", -1);
-            tableNumber = i.getIntExtra("TABLE_NUMBER", 1);
-            venueName = i.getStringExtra("VENUE_NAME");
-            date = i.getStringExtra("DATE");
-            time = i.getStringExtra("TIME");
-            duration = i.getIntExtra("DURATION", 120);
-            capacity = i.getIntExtra("CAPACITY", 1);
-            isPublic = i.getBooleanExtra("IS_PUBLIC", false);
-            subject = i.getStringExtra("SUBJECT");
-        }
+        venueId = i.getLongExtra("VENUE_ID", 1L);
+        tableId = i.getIntExtra("TABLE_ID", -1);
+        tableNumber = i.getIntExtra("TABLE_NUMBER", 1);
+        venueName = i.getStringExtra("VENUE_NAME");
+        date = i.getStringExtra("DATE");
+        time = i.getStringExtra("TIME");
+        duration = i.getIntExtra("DURATION", 120);
+        capacity = i.getIntExtra("CAPACITY", 1);
+        isPublic = i.getBooleanExtra("IS_PUBLIC", false);
+        subject = i.getStringExtra("SUBJECT");
 
         TextView summaryVenue = findViewById(R.id.summaryVenue);
         TextView summaryTable = findViewById(R.id.summaryTable);
@@ -82,29 +70,6 @@ public class ScreenConfirm extends Activity {
     }
 
     private void submitReservation() {
-        if (isModifyMode) {
-            ApiClient.getApi().modifyReservation(reservationIdToModify, time, duration).enqueue(new Callback<Boolean>() {
-                @Override
-                public void onResponse(Call<Boolean> call, Response<Boolean> response) {
-                    if (response.isSuccessful() && Boolean.TRUE.equals(response.body())) {
-                        Toast.makeText(ScreenConfirm.this, "Successfully modified reservation!", Toast.LENGTH_LONG).show();
-                        Intent intent = new Intent(ScreenConfirm.this, ScreenVenues.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
-                        finish();
-                    } else {
-                        Toast.makeText(ScreenConfirm.this, "Failed to modify. HTTP " + response.code(), Toast.LENGTH_LONG).show();
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<Boolean> call, Throwable t) {
-                    Toast.makeText(ScreenConfirm.this, "Network Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
-            return;
-        }
-
         ReservationRequest request = new ReservationRequest(
                 studentId,
                 (int) tableId,
