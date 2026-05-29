@@ -527,13 +527,13 @@ public class TestRunner implements CommandLineRunner {
 
             System.out.println("   --- Εναλλακτική (UC6 Alt 1): Αποτυχία πληρωμής (ανεπαρκές ποσό) ---");
             try {
-                paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount() - 1.0);
+                paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount() - 1.0, "S1");
             } catch (Exception e) {
                 System.out.println("    Αναμενόμενο σφάλμα κατά την πληρωμή: " + e.getMessage());
             }
 
             System.out.println("   [UI Step 2] Ο χρήστης επιβεβαιώνει την ψηφιακή πληρωμή...");
-            Bill paidBill = paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount());
+            Bill paidBill = paymentService.processPayment(bill.getBillId(), "CARD", bill.getTotalAmount(), "S1");
             System.out.println("   ✅ Η πληρωμή ολοκληρώθηκε επιτυχώς (Κατάσταση Settled: " + paidBill.isSettled() + ")!");
             System.out.println("      Το τραπέζι ελευθερώθηκε και ο δανεισμός επιστράφηκε.\n");
 
