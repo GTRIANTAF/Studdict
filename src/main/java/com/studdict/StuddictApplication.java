@@ -10,6 +10,6 @@ public class
 
 StuddictApplication {
 public static void main(String[] args) {
-        SpringApplication.run(StuddictApplication.class, args);
+    SpringApplication.run(StuddictApplication.class, args);
     }
 }

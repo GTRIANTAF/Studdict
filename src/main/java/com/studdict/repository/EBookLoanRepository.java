@@ -16,5 +16,10 @@ public interface EBookLoanRepository extends JpaRepository<EBookLoan, Long> {
     @Query("SELECT l FROM EBookLoan l WHERE l.checkIn.checkInId = :checkInId AND l.isActive = true")
     List<EBookLoan> findActiveLoansByCheckIn(@Param("checkInId") Long checkInId);
 
+    // Όλοι οι δανεισμοί ενός Check-in (ενεργοί + ήδη επιστραμμένοι), ώστε το Bill screen
+    // να εμφανίζει όλα τα e-books της συνεδρίας, ακόμη κι αυτά που επιστράφηκαν νωρίτερα.
+    @Query("SELECT l FROM EBookLoan l WHERE l.checkIn.checkInId = :checkInId ORDER BY l.startTime")
+    List<EBookLoan> findAllByCheckIn(@Param("checkInId") Long checkInId);
+
     List<EBookLoan> findByIsActiveTrue();
 }

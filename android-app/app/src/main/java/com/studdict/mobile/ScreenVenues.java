@@ -51,6 +51,21 @@ public class ScreenVenues extends Activity {
             Intent intent = new Intent(this, ScreenEBookVault.class);
             startActivity(intent);
         });
+
+        View btnLogout = findViewById(R.id.btnLogout);
+        btnLogout.setOnClickListener(v -> logout());
+    }
+
+    private void logout() {
+        // Clear any persisted check-in session so the next login starts fresh
+        new SessionManager(this).clearCheckIn();
+
+        // Return to the login screen and wipe the back stack so the user
+        // can't navigate back into the logged-in flow.
+        Intent intent = new Intent(this, ScreenLogin.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     private void selectVenue(long venueId, String venueName) {

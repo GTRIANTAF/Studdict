@@ -45,11 +45,23 @@ public class EBookController {
         return ResponseEntity.ok(eBookService.getCatalog(keyword));
     }
 
-    // Returns active loans for a check-in with book info — used by the Bill screen at checkout
+    // Returns active loans for a check-in with book info — used by the e-book vault to know
+    // which books are currently borrowed (so returned books become borrowable again).
     @GetMapping("/loans/active/{checkInId}")
     public ResponseEntity<List<EBookLoanDTO>> getActiveLoans(@PathVariable Long checkInId) {
         try {
             return ResponseEntity.ok(eBookService.getActiveLoansWithInfo(checkInId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    // Returns ALL loans of a session (active + returned) — used by the Bill screen at checkout
+    // so the student sees every e-book they borrowed, even ones they returned earlier.
+    @GetMapping("/loans/session/{checkInId}")
+    public ResponseEntity<List<EBookLoanDTO>> getSessionLoans(@PathVariable Long checkInId) {
+        try {
+            return ResponseEntity.ok(eBookService.getSessionLoansWithInfo(checkInId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
@@ -79,6 +91,16 @@ public class EBookController {
         try {
             EBookLoan loan = eBookService.getLoanStatus(loanId);
             return ResponseEntity.ok(loan);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // UC7 step 7: the E-book Reader requests the book's content (split into pages).
+    @GetMapping("/{ebookId}/content")
+    public ResponseEntity<?> getBookContent(@PathVariable Long ebookId) {
+        try {
+            return ResponseEntity.ok(eBookService.getBookContent(ebookId));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
