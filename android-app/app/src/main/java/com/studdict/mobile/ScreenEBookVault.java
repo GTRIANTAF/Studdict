@@ -212,6 +212,7 @@ public class ScreenEBookVault extends Activity {
                 + ".\n\n[Connect to backend for full text.]";
         Intent intent = new Intent(this, ScreenEBookReader.class);
         intent.putExtra("LOAN_ID", loanId);
+        intent.putExtra("BOOK_ID", book.getId() != null ? book.getId() : -1L);
         intent.putExtra("BOOK_TITLE", book.getTitle());
         intent.putExtra("BOOK_CONTENT", content);
         startActivity(intent);
@@ -252,7 +253,13 @@ public class ScreenEBookVault extends Activity {
             book.setId(Long.parseLong(d[0]));
             book.setTitle(d[1]);
             book.setAuthor(d[2]);
-            book.setContent(d[3] + "\n\n[Demo content — connect to backend for full text.]");
+            // Pages separated by form-feed ('\f') so the reader can paginate offline too.
+            book.setContent(d[3]
+                    + "\fPage 2\n\nThis is a second demo page so the reader's page navigation "
+                    + "can be tried offline. Lorem ipsum dolor sit amet, consectetur adipiscing elit, "
+                    + "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+                    + "\fPage 3\n\nConnect to the backend for the full digital text of this title.\n\n"
+                    + "(End of demo sample)");
             book.setAvailable(true);
             all.add(book);
         }

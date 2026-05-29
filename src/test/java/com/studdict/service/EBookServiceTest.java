@@ -3,6 +3,7 @@ package com.studdict.service;
 import com.studdict.model.CheckIn;
 import com.studdict.model.EBook;
 import com.studdict.model.EBookLicense;
+import com.studdict.model.EBookContentDTO;
 import com.studdict.model.EBookLoan;
 import com.studdict.model.EBookLoanDTO;
 import com.studdict.model.Reservation;
@@ -168,5 +169,43 @@ public class EBookServiceTest {
         assertFalse(active.isReturned());
         assertEquals("Returned Book", returned.getTitle());
         assertTrue(returned.isReturned());
+    }
+
+    @Test
+    public void testGetBookContent_SplitsPagesOnFormFeed() {
+        // Arrange: content stored as three pages separated by form-feed.
+        EBook book = new EBook();
+        book.seteBookId(7L);
+        book.setTitle("Clean Code");
+        book.setAuthor("Robert C. Martin");
+        book.setContent("Page one text.\fPage two text.\fPage three text.");
+        when(eBookRepository.findById(7L)).thenReturn(Optional.of(book));
+
+        // Act
+        EBookContentDTO dto = eBookService.getBookContent(7L);
+
+        // Assert: split into 3 trimmed pages, metadata preserved.
+        assertEquals(7L, dto.getEbookId());
+        assertEquals("Clean Code", dto.getTitle());
+        assertEquals(3, dto.getPages().size());
+        assertEquals("Page one text.", dto.getPages().get(0));
+        assertEquals("Page two text.", dto.getPages().get(1));
+        assertEquals("Page three text.", dto.getPages().get(2));
+    }
+
+    @Test
+    public void testGetBookContent_EmptyContent_ReturnsPlaceholderPage() {
+        EBook book = new EBook();
+        book.seteBookId(8L);
+        book.setTitle("Empty Book");
+        book.setAuthor("Nobody");
+        book.setContent(null);
+        when(eBookRepository.findById(8L)).thenReturn(Optional.of(book));
+
+        EBookContentDTO dto = eBookService.getBookContent(8L);
+
+        // Always at least one page so the reader has something to show.
+        assertEquals(1, dto.getPages().size());
+        assertFalse(dto.getPages().get(0).isEmpty());
     }
 }

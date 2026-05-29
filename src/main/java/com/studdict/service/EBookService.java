@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -77,6 +78,30 @@ public class EBookService {
                             book.getTitle(), book.getAuthor(), !loan.isActive());
                 })
                 .toList();
+    }
+
+    /**
+     * UC7 βήμα 7 - Άνοιγμα E-book Reader: επιστρέφει το περιεχόμενο του βιβλίου χωρισμένο
+     * σε σελίδες. Οι σελίδες χωρίζονται στο αποθηκευμένο κείμενο με τον χαρακτήρα form-feed ('\f').
+     */
+    public EBookContentDTO getBookContent(Long ebookId) {
+        EBook book = eBookRepository.findById(ebookId)
+                .orElseThrow(() -> new RuntimeException("Το βιβλίο δεν βρέθηκε."));
+
+        List<String> pages = new ArrayList<>();
+        String content = book.getContent();
+        if (content != null && !content.isBlank()) {
+            for (String page : content.split("\f")) {
+                String trimmed = page.strip();
+                if (!trimmed.isEmpty()) {
+                    pages.add(trimmed);
+                }
+            }
+        }
+        if (pages.isEmpty()) {
+            pages.add("Δεν υπάρχει διαθέσιμο περιεχόμενο για αυτό το βιβλίο.");
+        }
+        return new EBookContentDTO(book.geteBookId(), book.getTitle(), book.getAuthor(), pages);
     }
 
     /**

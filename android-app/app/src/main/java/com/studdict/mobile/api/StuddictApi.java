@@ -150,6 +150,10 @@ public interface StuddictApi {
     @GET("api/ebooks/availability/{ebookId}")
     Call<Boolean> checkEBookAvailability(@Path("ebookId") long ebookId);
 
+    // UC7 step 7: full book content (paginated) for the e-book reader
+    @GET("api/ebooks/{ebookId}/content")
+    Call<com.studdict.mobile.model.EBookContent> getBookContent(@Path("ebookId") long ebookId);
+
     @POST("api/ebooks/loan")
     Call<EBookLoan> requestLoan(@Query("checkInId") long checkInId, @Query("ebookId") long ebookId);
 

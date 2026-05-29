@@ -96,6 +96,16 @@ public class EBookController {
         }
     }
 
+    // UC7 step 7: the E-book Reader requests the book's content (split into pages).
+    @GetMapping("/{ebookId}/content")
+    public ResponseEntity<?> getBookContent(@PathVariable Long ebookId) {
+        try {
+            return ResponseEntity.ok(eBookService.getBookContent(ebookId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // UC7 Gap 1: separate availability check before requestLoan (per sequence diagram)
     @GetMapping("/availability/{ebookId}")
     public ResponseEntity<?> checkAvailability(@PathVariable Long ebookId) {
