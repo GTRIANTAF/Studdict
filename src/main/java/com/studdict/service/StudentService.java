@@ -49,7 +49,6 @@ public class StudentService {
 
         String studentId = UUID.randomUUID().toString();
 
-        // ΣΗΜΕΙΩΣΗ: Σε παραγωγικό σύστημα ο κωδικός θα αποθηκευόταν ως hash (π.χ. BCrypt).
         Student student = new Student(studentId, firstName.trim(), lastName.trim(),
                 normalizedEmail, password, university.trim(), department.trim());
         return studentRepository.save(student);

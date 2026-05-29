@@ -54,6 +54,11 @@ public class ScreenConfirm extends Activity {
             isPublic = i.getBooleanExtra("IS_PUBLIC", false);
             subject = i.getStringExtra("SUBJECT");
         }
+        
+        String incomingStudentId = i.getStringExtra("STUDENT_ID");
+        if (incomingStudentId != null && !incomingStudentId.isEmpty()) {
+            studentId = incomingStudentId;
+        }
 
         TextView summaryVenue = findViewById(R.id.summaryVenue);
         TextView summaryTable = findViewById(R.id.summaryTable);

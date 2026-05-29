@@ -45,6 +45,7 @@ public class ScreenLogin extends Activity {
                         // Proceed to home/venues
                         Intent intent = new Intent(ScreenLogin.this, ScreenVenues.class);
                         intent.putExtra("STUDENT_NAME", response.body().getFirstName());
+                        intent.putExtra("STUDENT_ID", response.body().getStudentId());
                         startActivity(intent);
                         finish();
                     } else {
