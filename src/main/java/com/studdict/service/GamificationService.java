@@ -28,6 +28,18 @@ public class GamificationService {
     }
 
     public int creditPointsForStudy(String studentId, Long reservationId) {
+        // Prevent double earning points for the same reservation
+        boolean alreadyCredited = transactionRepository.findAll().stream().anyMatch(tx ->
+                "EARN".equals(tx.getTransactionType()) &&
+                tx.getStudentId().equals(studentId) &&
+                tx.getDescription() != null &&
+                tx.getDescription().contains("#" + reservationId)
+        );
+        if (alreadyCredited) {
+            System.out.println("[GamificationService] Points already credited for reservation #" + reservationId);
+            return 0; // Return 0 to prevent awarding duplicate points
+        }
+
         java.util.List<com.studdict.model.CheckIn> checkIns = checkInRepository.findByReservation_ReservationId(reservationId);
         boolean hasValidCheckIn = false;
         for (com.studdict.model.CheckIn c : checkIns) {
@@ -74,17 +86,47 @@ public class GamificationService {
     }
 
     public boolean redeemPoints(String studentId, int pointsToRedeem) {
+        return redeemPoints(studentId, pointsToRedeem, null);
+    }
+
+    public boolean redeemPoints(String studentId, int pointsToRedeem, Integer tableId) {
         LoyaltyWallet wallet = walletRepository.findById(studentId)
                 .orElseGet(() -> walletRepository.save(new LoyaltyWallet(studentId)));
 
-        if (wallet.getTotalBalance() >= pointsToRedeem && pointsToRedeem >= wallet.getMinimumRedeemLimit()) {
-            wallet.setTotalBalance(wallet.getTotalBalance() - pointsToRedeem);
-            walletRepository.save(wallet);
-
-            recordTransaction(studentId, pointsToRedeem, "REDEEM", "Εξαργύρωση πόντων σε έκπτωση");
-            return true;
+        if (wallet.getTotalBalance() < pointsToRedeem || pointsToRedeem < wallet.getMinimumRedeemLimit()) {
+            return false;
         }
-        return false;
+
+        // If tableId is present, check if the active unsettled bill already has a discount applied
+        if (tableId != null) {
+            com.studdict.model.Bill activeBill = billRepository.findTopByTableIdOrderByIssueTimeDesc(tableId).orElse(null);
+            if (activeBill != null && !activeBill.isSettled()) {
+                final Long billId = activeBill.getBillId();
+                boolean alreadyDiscounted = transactionRepository.findAll().stream().anyMatch(tx ->
+                        "REDEEM".equals(tx.getTransactionType()) &&
+                        tx.getStudentId().equals(studentId) &&
+                        tx.getDescription() != null &&
+                        tx.getDescription().contains("bill #" + billId)
+                );
+                if (alreadyDiscounted) {
+                    System.out.println("[GamificationService] Active bill #" + billId + " is already discounted.");
+                    return false; // Already redeemed for this bill
+                }
+            }
+        }
+
+        wallet.setTotalBalance(wallet.getTotalBalance() - pointsToRedeem);
+        walletRepository.save(wallet);
+
+        String desc = "Εξαργύρωση πόντων σε έκπτωση";
+        if (tableId != null) {
+            com.studdict.model.Bill activeBill = billRepository.findTopByTableIdOrderByIssueTimeDesc(tableId).orElse(null);
+            if (activeBill != null) {
+                desc = "Discount applied to bill #" + activeBill.getBillId();
+            }
+        }
+        recordTransaction(studentId, pointsToRedeem, "REDEEM", desc);
+        return true;
     }
 
     public double calculateDiscount(int pointsToRedeem) {
