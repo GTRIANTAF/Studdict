@@ -199,7 +199,7 @@ The complete client‑side contract is the Retrofit interface `android-app/.../a
 
 ---
 
-## Domain model (`domain_model`)
+## Domain model (`domain_model.png`)
 
 Core entities and their relationships:
 
