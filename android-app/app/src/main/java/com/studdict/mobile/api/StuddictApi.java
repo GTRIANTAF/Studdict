@@ -52,7 +52,11 @@ public interface StuddictApi {
     @GET("api/tables/matchmaking")
     Call<List<StudyTable>> getMatchmakingTables(
             @Query("venueId") long venueId,
-            @Query("subjectName") String subjectName
+            @Query("subjectName") String subjectName,
+            @Query("date") String date,
+            @Query("time") String time,
+            @Query("duration") int duration,
+            @Query("minCapacity") int minCapacity
     );
 
     @GET("api/gamification/wallet/{studentId}")
@@ -167,7 +171,7 @@ public interface StuddictApi {
     Call<EBookLoan> getLoanStatus(@Path("loanId") long loanId);
 
     @POST("api/ebooks/return/{loanId}")
-    Call<String> requestReturn(@Path("loanId") long loanId);
+    Call<okhttp3.ResponseBody> requestReturn(@Path("loanId") long loanId);
 
     @GET("api/ebooks/loans/active/{checkInId}")
     Call<List<EBookLoanInfo>> getActiveLoans(@Path("checkInId") long checkInId);
@@ -184,7 +188,10 @@ public interface StuddictApi {
     Call<List<MenuItem>> readCatalog();
 
     @POST("api/orders/cart/add")
-    Call<Boolean> addCartItem(@Query("menuItemId") long menuItemId, @Query("quantity") int quantity);
+    Call<Boolean> addCartItem(@Query("menuItemId") Long menuItemId, @Query("quantity") int quantity);
+
+    @GET("api/orders/table/{tableId}/items")
+    Call<List<String>> getOrderItemsByTable(@Path("tableId") int tableId);
 
     @POST("api/orders/summary")
     Call<Boolean> processSummary(@Body List<OrderItemRequest> items);

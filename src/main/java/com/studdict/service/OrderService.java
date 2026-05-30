@@ -75,6 +75,13 @@ public class OrderService {
         return orderRepository.findByStatus("PREPARING");
     }
 
+    public List<String> getOrderItemsAsStrings(int tableId) {
+        return orderRepository.findByTableId(tableId).stream()
+                .flatMap(order -> order.getItems().stream())
+                .map(item -> "• " + item.getMenuItem().getName() + " x" + item.getQuantity() + " (€" + String.format(java.util.Locale.US, "%.2f", item.getSubTotal()) + ")")
+                .collect(java.util.stream.Collectors.toList());
+    }
+
     public void verifyAvailability(List<OrderItemRequest> requestedItems) {
         for (OrderItemRequest req : requestedItems) {
             if (req.getMenuItemId() == null) {

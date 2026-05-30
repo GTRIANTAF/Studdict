@@ -74,25 +74,27 @@ public class StudyTableService {
     }
 
     // UML: Table.findAvailableBySubjectPriority(...) & findOpenPublicTables(...) -> ΓΙΑ UC2 (Matchmaking)
-    public List<StudyTable> findMatchmakingTables(Long venueId, String subjectName) {
+    public List<StudyTable> findMatchmakingTables(Long venueId, String subjectName, LocalDate date, LocalTime time, int duration, int minCapacity) {
         List<StudyTable> recommendedTables = new ArrayList<>();
 
         // 1. ΑΝΑΖΗΤΗΣΗ ΓΙΑ MATCH (Υπάρχουσες Δημόσιες Κρατήσεις για το ίδιο μάθημα)
         List<Reservation> matchingReservations = reservationRepository.findMatchmakingReservations(venueId, subjectName);
 
         for (Reservation res : matchingReservations) {
-            long currentParticipants = participantRepository.countByReservationId(res.getReservationId());
+            if (res.getReservationDate() != null && res.getReservationDate().equals(date) && res.getStartTime().equals(time)) {
+                long currentParticipants = participantRepository.countByReservationId(res.getReservationId());
 
-            // Αν το τραπέζι έχει ακόμα κενές θέσεις, το προτείνουμε!
-            if (currentParticipants < res.getTable().getCapacity()) {
-                recommendedTables.add(res.getTable());
+                // Αν το τραπέζι έχει ακόμα κενές θέσεις για την ομάδα μας, το προτείνουμε!
+                if (currentParticipants + minCapacity <= res.getTable().getCapacity()) {
+                    recommendedTables.add(res.getTable());
+                }
             }
         }
 
         // 2. FALLBACK (Εναλλακτική)
-        // Αν δεν βρέθηκε κανένα τραπέζι με το ίδιο μάθημα, επιστρέφουμε όλα τα εντελώς ελεύθερα τραπέζια
+        // Αν δεν βρέθηκε κανένα τραπέζι με το ίδιο μάθημα, επιστρέφουμε όλα τα διαθέσιμα τραπέζια
         if (recommendedTables.isEmpty()) {
-            return studyTableRepository.findByVenue_VenueIdAndIsAvailableTrue(venueId);
+            return getAvailableTables(venueId, date, time, duration, minCapacity);
         }
 
         return recommendedTables;

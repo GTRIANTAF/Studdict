@@ -60,6 +60,11 @@ public class OrderController {
         return ResponseEntity.ok("Order cancelled successfully");
     }
 
+    @GetMapping("/table/{tableId}/items")
+    public ResponseEntity<List<String>> getOrderItemsByTable(@PathVariable Integer tableId) {
+        return ResponseEntity.ok(orderService.getOrderItemsAsStrings(tableId));
+    }
+
     // UC8 Gap 5: addProduct per-item validation (MenuView -> OrderService: addProduct)
     @PostMapping("/cart/add")
     public ResponseEntity<?> addCartItem(@RequestParam Long menuItemId, @RequestParam int quantity) {

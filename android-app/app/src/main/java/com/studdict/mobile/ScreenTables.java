@@ -66,7 +66,7 @@ public class ScreenTables extends Activity {
 
     private void fetchAvailableTables() {
         if (isPublic && subject != null && !subject.trim().isEmpty()) {
-            ApiClient.getApi().getMatchmakingTables(venueId, subject).enqueue(new Callback<List<StudyTable>>() {
+            ApiClient.getApi().getMatchmakingTables(venueId, subject, date, time, duration, capacity).enqueue(new Callback<List<StudyTable>>() {
                 @Override
                 public void onResponse(Call<List<StudyTable>> call, Response<List<StudyTable>> response) {
                     handleResponse(response);
