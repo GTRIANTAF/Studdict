@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="28dp"
+    android:background="@drawable/stepper"
+    android:layout_margin="16dp">
+
+    <!-- Celebration Icon -->
+    <TextView
+        android:id="@+id/dialogIcon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⭐"
+        android:textSize="54sp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Sleek Title -->
+    <TextView
+        android:id="@+id/dialogTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Checkout Successful!"
+        android:textColor="@color/studdict_text"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Sleek Description -->
+    <TextView
+        android:id="@+id/dialogMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="You've earned study reward points!\nYour table is now released."
+        android:textColor="@color/studdict_muted"
+        android:textSize="15sp"
+        android:gravity="center"
+        android:lineSpacingExtra="4dp"
+        android:layout_marginBottom="24dp" />
+
+    <!-- Premium Action Button -->
+    <Button
+        android:id="@+id/dialogButton"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="Awesome!"
+        android:background="@drawable/button_primary"
+        android:textColor="#FFFFFF"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

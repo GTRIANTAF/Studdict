@@ -49,14 +49,15 @@ public class GamificationService {
             }
         }
         if (!hasValidCheckIn) {
-            System.out.println("[GamificationService] Warning: No successful check-in found for reservation #" + reservationId + ". Proceeding anyway for smooth testability.");
+            System.out.println("[GamificationService] No-show: No successful check-in found for reservation #" + reservationId + ". Earning 0 points.");
+            return 0; // Gains no points if student did not show up
         }
 
         com.studdict.model.Reservation res = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found."));
 
         int durationMinutes = res.getDurationMinutes();
-        int pointsEarned = 50;
+        int pointsEarned = Math.min(50, durationMinutes); // 1 point per minute, max 50
 
         if (pointsEarned > 0) {
             LoyaltyWallet wallet = walletRepository.findById(studentId)
@@ -71,7 +72,7 @@ public class GamificationService {
     }
 
     public int creditPointsForStudy(String studentId, int durationMinutes) {
-        int pointsEarned = 50;
+        int pointsEarned = Math.min(50, durationMinutes); // 1 point per minute, max 50
 
         if (pointsEarned > 0) {
             LoyaltyWallet wallet = walletRepository.findById(studentId)

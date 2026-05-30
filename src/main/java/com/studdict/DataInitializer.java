@@ -44,13 +44,17 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeLoyaltyWallets() {
         String[] students = {"S1", "S2", "S3", "S4"};
         for (String studentId : students) {
+            boolean exists = walletRepository.existsById(studentId);
             com.studdict.model.LoyaltyWallet wallet = walletRepository.findById(studentId)
                     .orElseGet(() -> new com.studdict.model.LoyaltyWallet(studentId));
-            wallet.setTotalBalance(100);
+            if (!exists) {
+                wallet.setTotalBalance(100);
+            }
+            wallet.setMinimumRedeemLimit(25);
             wallet.setExchangeRate(0.03);
             walletRepository.save(wallet);
         }
-        System.out.println("[DataInitializer] Initialized loyalty wallets with 100 points baseline and 0.03 exchange rate.");
+        System.out.println("[DataInitializer] Initialized loyalty wallets with 25 points minimum limit and 0.03 exchange rate.");
     }
 
     private void fixUnavailableItems(List<MenuItem> items) {

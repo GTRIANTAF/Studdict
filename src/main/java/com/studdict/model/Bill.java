@@ -29,7 +29,7 @@ public class Bill {
     // Την κρατάμε ξεχωριστά ώστε, όταν προστεθεί νέα παραγγελία πριν το check-out, να
     // αφαιρείται από το μεικτό σύνολο αντί να "χάνεται". Το totalAmount = μεικτό - discountAmount.
     @Column(name = "discount_amount")
-    private double discountAmount = 0.0;
+    private Double discountAmount = 0.0;
 
     @Column(name = "issue_time")
     private LocalDateTime issueTime;
@@ -52,8 +52,8 @@ public class Bill {
     public double getTotalAmount() { return totalAmount; }
     public void setTotalAmount(double totalAmount) { this.totalAmount = totalAmount; }
 
-    public double getDiscountAmount() { return discountAmount; }
-    public void setDiscountAmount(double discountAmount) { this.discountAmount = discountAmount; }
+    public Double getDiscountAmount() { return discountAmount != null ? discountAmount : 0.0; }
+    public void setDiscountAmount(Double discountAmount) { this.discountAmount = discountAmount != null ? discountAmount : 0.0; }
 
     public LocalDateTime getIssueTime() { return issueTime; }
     public void setIssueTime(LocalDateTime issueTime) { this.issueTime = issueTime; }

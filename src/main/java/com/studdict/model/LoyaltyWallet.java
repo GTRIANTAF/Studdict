@@ -10,7 +10,7 @@ public class LoyaltyWallet {
     @Id
     private String studentId;
     private int totalBalance = 100;
-    private int minimumRedeemLimit = 100;
+    private int minimumRedeemLimit = 25;
     private double exchangeRate = 0.03; // 1 πόντος = 0.03 ευρώ
 
     public LoyaltyWallet() {}
