@@ -220,9 +220,4 @@ See `class_diagram.puml` for the full design class diagram (controllers, service
 This repo ships with UML artifacts (PlantUML `.puml`, renderable with the [PlantUML](https://plantuml.com) toolchain or an IDE plugin):
 
 - `class_diagram.puml` — design class diagram for the whole app
-
-Run them with:
-
-```bash
-mvn test
 ```
