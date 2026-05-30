@@ -211,4 +211,3 @@ Core entities and their relationships:
 - **Order** *contains* **OrderItem**s referencing **MenuItem**s; orders for a table roll up into a **Bill**, which is settled by one or more **Payment**s.
 
 See `class_diagram.png` for the full design class diagram (controllers, services, repositories, entities and the Android client).
-```
