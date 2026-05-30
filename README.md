@@ -22,7 +22,6 @@ The system has two parts:
   - [Run the Android app](#run-the-android-app)
 - [REST API overview](#rest-api-overview)
 - [Domain model](#domain-model)
-- [Design documentation](#design-documentation)
 
 ---
 
@@ -126,7 +125,7 @@ Studdict/
 │       ├── res/                           # layouts, drawables, values
 │       └── AndroidManifest.xml
 │
-├── class_diagram.puml            # design class diagram (backend + client)
+├── class_diagram.png            # design class diagram (backend + client)
 ```
 
 ---
@@ -211,13 +210,5 @@ Core entities and their relationships:
 - **EBook** has multiple **EBookLicense**s; an **EBookLoan** consumes a license for the duration of a check‑in.
 - **Order** *contains* **OrderItem**s referencing **MenuItem**s; orders for a table roll up into a **Bill**, which is settled by one or more **Payment**s.
 
-See `class_diagram.puml` for the full design class diagram (controllers, services, repositories, entities and the Android client).
-
----
-
-## Design documentation
-
-This repo ships with UML artifacts (PlantUML `.puml`, renderable with the [PlantUML](https://plantuml.com) toolchain or an IDE plugin):
-
-- `class_diagram.puml` — design class diagram for the whole app
+See `class_diagram.png` for the full design class diagram (controllers, services, repositories, entities and the Android client).
 ```
