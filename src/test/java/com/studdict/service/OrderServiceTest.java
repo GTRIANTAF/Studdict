@@ -9,6 +9,7 @@ import com.studdict.repository.BillRepository;
 import com.studdict.repository.MenuItemRepository;
 import com.studdict.repository.OrderRepository;
 import com.studdict.repository.StudyTableRepository;
+import com.studdict.repository.ReservationRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -37,6 +38,9 @@ public class OrderServiceTest {
 
     @Mock
     private BillRepository billRepository;
+
+    @Mock
+    private ReservationRepository reservationRepository;
 
     @InjectMocks
     private OrderService orderService;

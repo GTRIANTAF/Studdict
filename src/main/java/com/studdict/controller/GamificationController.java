@@ -24,10 +24,7 @@ public class GamificationController {
     @PostMapping("/earn")
     public String earnPoints(@RequestParam String studentId, @RequestParam Long reservationId) {
         int points = gamificationService.creditPointsForStudy(studentId, reservationId);
-        if (points > 0) {
-            return "Success! You earned " + points + " points.";
-        }
-        return "Study duration was not enough to earn points.";
+        return "Success! You earned " + points + " points.";
     }
 
     @PostMapping("/redeem")
@@ -44,5 +41,10 @@ public class GamificationController {
             return "Redemption successful! You got a " + discount + " euro discount.";
         }
         return "Redemption failed. Points already redeemed for this bill, or insufficient balance.";
+    }
+
+    @GetMapping("/history/{studentId}")
+    public java.util.List<com.studdict.model.PointsTransaction> getHistory(@PathVariable String studentId) {
+        return gamificationService.getPointsHistory(studentId);
     }
 }

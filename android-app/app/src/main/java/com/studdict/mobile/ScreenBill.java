@@ -47,12 +47,26 @@ public class ScreenBill extends Activity {
     private Button btnPayCash;
     private Button btnCloseBill;
 
+    // Premium points stepper views
+    private android.widget.ImageButton btnPointsDecrement;
+    private android.widget.ImageButton btnPointsIncrement;
+    private TextView tvSelectedPoints;
+    private TextView tvPointsDiscount;
+
+    // Price breakdown views
+    private TextView txtOriginalPrice;
+    private View layoutDiscountLine;
+    private TextView txtDiscountAppliedText;
+    private TextView tvDiscountBadge;
+
     private int tableId;
     private String studentId;
     private long reservationId;
     private int currentBalance = 0;
+    private int selectedPointsToRedeem = 25;
     private Long currentBillId = null;
     private double currentTotalAmount = 0.0;
+    private double grossTotalAmount = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +77,10 @@ public class ScreenBill extends Activity {
         studentId = getIntent().getStringExtra("STUDENT_ID");
         reservationId = getIntent().getLongExtra("RESERVATION_ID", -1L);
 
+        if (studentId == null || studentId.isEmpty()) {
+            SessionManager session = new SessionManager(this);
+            studentId = session.getStudentId();
+        }
         if (studentId == null || studentId.isEmpty()) {
             studentId = "S1"; // Default for isolated testability
         }
@@ -80,6 +98,18 @@ public class ScreenBill extends Activity {
         btnPayCash = findViewById(R.id.btnPayCash);
         btnCloseBill = findViewById(R.id.btnCloseBill);
 
+        // Bind premium points stepper views
+        btnPointsDecrement = findViewById(R.id.btn_points_decrement);
+        btnPointsIncrement = findViewById(R.id.btn_points_increment);
+        tvSelectedPoints = findViewById(R.id.tv_selected_points);
+        tvPointsDiscount = findViewById(R.id.tv_points_discount);
+
+        // Bind price breakdown views
+        txtOriginalPrice = findViewById(R.id.txtOriginalPrice);
+        layoutDiscountLine = findViewById(R.id.layout_discount_line);
+        txtDiscountAppliedText = findViewById(R.id.txtDiscountAppliedText);
+        tvDiscountBadge = findViewById(R.id.tv_discount_badge);
+
         txtBillTable.setText("Table: " + tableId);
 
         // Fetch Bill Details
@@ -91,8 +121,25 @@ public class ScreenBill extends Activity {
         // Show e-books borrowed this session
         loadEbookLoans();
 
+        // Stepper button click listeners
+        btnPointsDecrement.setOnClickListener(v -> {
+            if (selectedPointsToRedeem > 25) {
+                selectedPointsToRedeem -= 25;
+                updatePointsUI(currentBalance, false);
+            }
+        });
+
+        btnPointsIncrement.setOnClickListener(v -> {
+            boolean hasEnoughPoints = (selectedPointsToRedeem + 25) <= currentBalance;
+            boolean isUnderCost = (selectedPointsToRedeem * 0.03) < grossTotalAmount;
+            if (hasEnoughPoints && isUnderCost) {
+                selectedPointsToRedeem += 25;
+                updatePointsUI(currentBalance, false);
+            }
+        });
+
         // Redeem button handler
-        btnRedeemPoints.setOnClickListener(v -> redeem100Points());
+        btnRedeemPoints.setOnClickListener(v -> redeemSelectedPoints());
 
         // Checkout handlers
         btnPayFull.setOnClickListener(v -> payFullAmount());
@@ -146,25 +193,53 @@ public class ScreenBill extends Activity {
                     currentBillId = bill.getBillId();
                     currentTotalAmount = bill.getTotalAmount();
                     txtBillId.setText("Bill #" + bill.getBillId());
-                    txtBillTotal.setText(String.format("Total: €%.2f", bill.getTotalAmount()));
+                    
+                    // Sleek price breakdown calculations
+                    double discount = bill.getDiscountAmount();
+                    double originalPrice = bill.getTotalAmount() + discount;
+                    grossTotalAmount = originalPrice;
+                    
+                    txtOriginalPrice.setText(String.format("€%.2f", originalPrice));
+                    if (discount > 0.0) {
+                        layoutDiscountLine.setVisibility(View.VISIBLE);
+                        txtDiscountAppliedText.setText(String.format("-€%.2f", discount));
+                        tvDiscountBadge.setVisibility(View.VISIBLE);
+                        tvDiscountBadge.setText(String.format("(-%.2f€)", discount));
+                    } else {
+                        layoutDiscountLine.setVisibility(View.GONE);
+                        tvDiscountBadge.setVisibility(View.GONE);
+                    }
+                    
+                    txtBillTotal.setText(String.format("€%.2f", bill.getTotalAmount()));
                     txtBillStatus.setText(bill.isSettled() ? "Status: Paid" : "Status: Pending payment");
                     if (bill.isSettled()) {
                         btnPayFull.setEnabled(false);
                         btnSplitBill.setEnabled(false);
                         btnPayCash.setEnabled(false);
                     }
+                    updatePointsUI(currentBalance, false);
                 } else {
                     txtBillId.setText("Bill");
-                    txtBillTotal.setText("Total: —");
+                    txtOriginalPrice.setText("€—");
+                    layoutDiscountLine.setVisibility(View.GONE);
+                    tvDiscountBadge.setVisibility(View.GONE);
+                    txtBillTotal.setText("€—");
                     txtBillStatus.setText("Bill not found.");
+                    grossTotalAmount = 0.0;
+                    updatePointsUI(currentBalance, false);
                 }
             }
 
             @Override
             public void onFailure(Call<Bill> call, Throwable t) {
                 txtBillId.setText("Demo Bill");
-                txtBillTotal.setText("Total: see receipt");
+                txtOriginalPrice.setText("€0.00");
+                layoutDiscountLine.setVisibility(View.GONE);
+                tvDiscountBadge.setVisibility(View.GONE);
+                txtBillTotal.setText("€0.00");
                 txtBillStatus.setText("Status: Pending payment");
+                grossTotalAmount = 0.0;
+                updatePointsUI(currentBalance, true);
                 Toast.makeText(ScreenBill.this, "Offline: bill details unavailable.", Toast.LENGTH_SHORT).show();
             }
         });
@@ -196,25 +271,54 @@ public class ScreenBill extends Activity {
         String offlineText = isOffline ? " (offline)" : "";
         tvAvailablePoints.setText("Available Points: " + points + offlineText);
 
-        if (points >= 100) {
+        // Constrain selected points to be at least 25 and at most current balance
+        if (points < 25) {
+            selectedPointsToRedeem = 25;
+        } else if (selectedPointsToRedeem > points) {
+            // Find highest multiple of 25 that is <= points
+            selectedPointsToRedeem = (points / 25) * 25;
+            if (selectedPointsToRedeem < 25) selectedPointsToRedeem = 25;
+        }
+
+        tvSelectedPoints.setText(selectedPointsToRedeem + " Points");
+        double discountVal = selectedPointsToRedeem * 0.03;
+        tvPointsDiscount.setText(String.format("-%.2f€ Discount", discountVal));
+
+        // Enable/Disable step buttons with proper visual alpha states
+        boolean canDecrement = selectedPointsToRedeem > 25 && grossTotalAmount > 0.0;
+        btnPointsDecrement.setEnabled(canDecrement);
+        btnPointsDecrement.setImageAlpha(canDecrement ? 255 : 70);
+
+        boolean canIncrement = (selectedPointsToRedeem + 25) <= points && (selectedPointsToRedeem * 0.03) < grossTotalAmount && grossTotalAmount > 0.0;
+        btnPointsIncrement.setEnabled(canIncrement);
+        btnPointsIncrement.setImageAlpha(canIncrement ? 255 : 70);
+
+        if (grossTotalAmount <= 0.0) {
+            btnRedeemPoints.setEnabled(false);
+            btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#BDBDBD"))); // Disabled Grey
+            btnRedeemPoints.setText("Redeem Points (Cart is Empty)");
+        } else if (points >= 25 && points >= selectedPointsToRedeem) {
             btnRedeemPoints.setEnabled(true);
             btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF8F00"))); // Active Orange
-            btnRedeemPoints.setText("Redeem 100 Points (-3.00€)");
+            btnRedeemPoints.setText(String.format("Redeem %d Points (-%.2f€)", selectedPointsToRedeem, discountVal));
         } else {
             btnRedeemPoints.setEnabled(false);
             btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#BDBDBD"))); // Disabled Grey
-            btnRedeemPoints.setText("Redeem 100 Points (Need 100)");
+            btnRedeemPoints.setText("Redeem Points (Need at least 25)");
         }
     }
 
-    private void redeem100Points() {
-        ApiClient.getApi().redeemPoints(studentId, 100, tableId).enqueue(new Callback<okhttp3.ResponseBody>() {
+    private void redeemSelectedPoints() {
+        final int pointsToRedeem = selectedPointsToRedeem;
+        ApiClient.getApi().redeemPoints(studentId, pointsToRedeem, tableId).enqueue(new Callback<okhttp3.ResponseBody>() {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
-                    String msg = "Redemption successful! A 3.00€ discount was applied.";
+                    String msg = "Redemption successful! A discount was applied.";
                     if (response.isSuccessful() && response.body() != null) {
                         msg = response.body().string();
+                    } else if (response.errorBody() != null) {
+                        msg = response.errorBody().string();
                     }
                     Toast.makeText(ScreenBill.this, msg, Toast.LENGTH_LONG).show();
                     refreshWallet();
@@ -226,10 +330,11 @@ public class ScreenBill extends Activity {
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                Toast.makeText(ScreenBill.this, "Connected offline: Redeemed 100 points (Mock).", Toast.LENGTH_LONG).show();
-                currentBalance = Math.max(0, currentBalance - 100);
+                Toast.makeText(ScreenBill.this, "Connected offline: Redeemed " + pointsToRedeem + " points (Mock).", Toast.LENGTH_LONG).show();
+                currentBalance = Math.max(0, currentBalance - pointsToRedeem);
                 updatePointsUI(currentBalance, true);
-                txtBillTotal.setText("Total: €0.00 (Mock Discount)");
+                double discount = pointsToRedeem * 0.03;
+                txtBillTotal.setText(String.format("Total: €0.00 (Mock -%.2f€ Discount)", discount));
             }
         });
     }
@@ -378,7 +483,7 @@ public class ScreenBill extends Activity {
 
     private void executeCheckoutPointsEarning() {
         if (reservationId == -1L) {
-            int pointsEarned = 50;
+            int pointsEarned = 0;
             showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
             return;
         }
@@ -387,7 +492,7 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
-                    int pointsEarned = 50; // default fallback
+                    int pointsEarned = 0; // default fallback is 0 on error
                     if (response.isSuccessful() && response.body() != null) {
                         String msg = response.body().string();
                         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d+").matcher(msg);
@@ -412,27 +517,46 @@ public class ScreenBill extends Activity {
                             }
                         });
                     } else {
-                        showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
+                        showCongratulationsDialog(0, currentBalance);
                     }
                 } catch (Exception e) {
-                    showCongratulationsDialog(50, currentBalance + 50);
+                    showCongratulationsDialog(0, currentBalance);
                 }
             }
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                showCongratulationsDialog(50, currentBalance + 50);
+                showCongratulationsDialog(0, currentBalance);
             }
         });
     }
 
     private void showCongratulationsDialog(int pointsEarned, int newBalance) {
-        new AlertDialog.Builder(this)
-                .setTitle("⭐ Congratulations! ⭐")
-                .setMessage("You earned " + pointsEarned + " points for your study session!\n\nNew balance: " + newBalance + " points.")
-                .setPositiveButton("Awesome!", (dialog, which) -> completeCheckout())
-                .setCancelable(false)
-                .show();
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        android.view.LayoutInflater inflater = getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_congratulations, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        TextView title = dialogView.findViewById(R.id.dialogTitle);
+        TextView message = dialogView.findViewById(R.id.dialogMessage);
+        Button button = dialogView.findViewById(R.id.dialogButton);
+
+        title.setText("⭐ Congratulations! ⭐");
+        message.setText("You earned " + pointsEarned + " points for your study session!\n\nNew wallet balance: " + newBalance + " points.");
+        button.setText("Awesome!");
+
+        button.setOnClickListener(v -> {
+            dialog.dismiss();
+            completeCheckout();
+        });
+
+        dialog.setCancelable(false);
+        dialog.show();
     }
 
     private void completeCheckout() {

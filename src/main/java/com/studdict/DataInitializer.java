@@ -24,12 +24,16 @@ public class DataInitializer implements ApplicationRunner {
     @org.springframework.beans.factory.annotation.Autowired
     private com.studdict.repository.LoyaltyWalletRepository walletRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     public DataInitializer(MenuItemRepository menuItemRepository) {
         this.menuItemRepository = menuItemRepository;
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        sanitizeDatabase();
         initializeLoyaltyWallets();
 
         List<MenuItem> existing = menuItemRepository.findAll();
@@ -44,13 +48,17 @@ public class DataInitializer implements ApplicationRunner {
     private void initializeLoyaltyWallets() {
         String[] students = {"S1", "S2", "S3", "S4"};
         for (String studentId : students) {
+            boolean exists = walletRepository.existsById(studentId);
             com.studdict.model.LoyaltyWallet wallet = walletRepository.findById(studentId)
                     .orElseGet(() -> new com.studdict.model.LoyaltyWallet(studentId));
-            wallet.setTotalBalance(100);
+            if (!exists) {
+                wallet.setTotalBalance(100);
+            }
+            wallet.setMinimumRedeemLimit(25);
             wallet.setExchangeRate(0.03);
             walletRepository.save(wallet);
         }
-        System.out.println("[DataInitializer] Initialized loyalty wallets with 100 points baseline and 0.03 exchange rate.");
+        System.out.println("[DataInitializer] Initialized loyalty wallets with 25 points minimum limit and 0.03 exchange rate.");
     }
 
     private void fixUnavailableItems(List<MenuItem> items) {
@@ -85,5 +93,14 @@ public class DataInitializer implements ApplicationRunner {
             menuItemRepository.save(item);
         }
         System.out.println("[DataInitializer] Seeded 6 demo menu items.");
+    }
+
+    private void sanitizeDatabase() {
+        try {
+            jdbcTemplate.execute("UPDATE bills SET discount_amount = 0.0 WHERE discount_amount IS NULL");
+            System.out.println("[DataInitializer] Database sanitized: all null discount_amount values updated to 0.0.");
+        } catch (Exception e) {
+            System.err.println("⚠️ [DataInitializer] Database sanitization failed/skipped: " + e.getMessage());
+        }
     }
 }

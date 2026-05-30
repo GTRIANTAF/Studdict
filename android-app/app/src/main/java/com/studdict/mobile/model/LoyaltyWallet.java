@@ -3,8 +3,8 @@ package com.studdict.mobile.model;
 public class LoyaltyWallet {
     private String studentId;
     private int totalBalance = 0;
-    private int minimumRedeemLimit = 100;
-    private double exchangeRate = 0.05;
+    private int minimumRedeemLimit = 25;
+    private double exchangeRate = 0.03;
 
     public LoyaltyWallet() {}
 

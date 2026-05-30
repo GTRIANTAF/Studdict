@@ -53,23 +53,108 @@
                 android:layout_marginBottom="16dp"
                 android:background="#EEEEEE" />
 
-            <TextView
-                android:id="@+id/txtBillTotal"
-                android:layout_width="wrap_content"
+            <!-- Sleek Price Breakdown Container -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Total: €0.00"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="#6E55DC"
-                android:layout_marginBottom="8dp"/>
+                android:orientation="vertical"
+                android:layout_marginBottom="16dp">
+
+                <!-- Original Price (Gross Subtotal) -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Original Price"
+                        android:textColor="@color/studdict_muted"
+                        android:textSize="14sp" />
+                    <TextView
+                        android:id="@+id/txtOriginalPrice"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="€0.00"
+                        android:textColor="@color/studdict_muted"
+                        android:textSize="14sp"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+                <!-- Applied Points Discount (Hidden unless applied/greater than 0) -->
+                <RelativeLayout
+                    android:id="@+id/layout_discount_line"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:visibility="gone">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Points Discount"
+                        android:textColor="#FF8F00"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/txtDiscountAppliedText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-€0.00"
+                        android:textColor="#FF8F00"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="#E2E8F0"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginBottom="8dp" />
+
+                <!-- Final Net Total -->
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Total to Pay"
+                        android:textColor="@color/studdict_text"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/txtBillTotal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="€0.00"
+                        android:textColor="@color/studdict_primary_dark"
+                        android:textSize="22sp"
+                        android:textStyle="bold"
+                        android:layout_alignParentEnd="true" />
+                </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/tv_discount_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text="(-3.00€)"
+                    android:textColor="#FF8F00"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/txtBillStatus"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Status: Pending payment"
-                android:textSize="14sp"
-                android:textColor="#757575"
+                android:textSize="13sp"
+                android:textColor="@color/studdict_muted"
                 android:layout_marginBottom="16dp"/>
 
             <TextView
@@ -82,11 +167,67 @@
                 android:textStyle="bold"
                 android:layout_marginBottom="12dp"/>
 
+            <!-- Premium Interactive Points Selector -->
+            <LinearLayout
+                android:id="@+id/layout_points_selector"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/stepper"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <ImageButton
+                    android:id="@+id/btn_points_decrement"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_minus"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Decrease points"
+                    android:padding="8dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/tv_selected_points"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="25 Points"
+                        android:textSize="17sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/studdict_text" />
+
+                    <TextView
+                        android:id="@+id/tv_points_discount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="-0.75€ Discount"
+                        android:textSize="13sp"
+                        android:textColor="@color/studdict_muted" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/btn_points_increment"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_plus"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Increase points"
+                    android:padding="8dp" />
+            </LinearLayout>
+
             <Button
                 android:id="@+id/btn_redeem_points"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:text="Redeem 100 Points (-3.00€)"
+                android:text="Redeem 25 Points (-0.75€)"
                 android:backgroundTint="#FF8F00"
                 android:textColor="#FFFFFF"
                 android:textAllCaps="false"
