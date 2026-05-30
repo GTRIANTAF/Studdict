@@ -1,0 +1,285 @@
+﻿@startuml Studdict_Domain_Model
+
+title Studdict — Domain Model
+
+skinparam shadowing false
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+hide circle
+
+class Student {
+  - studentId
+  - firstName
+  - lastName
+  - email
+  - password
+  - university
+  - department
+  --
+  + register()
+  + login()
+  + requestReservation()
+  + joinReservation()
+  + checkIn()
+  + checkOut()
+  + placeOrder()
+  + requestEBookLoan()
+  + earnPoints()
+  + redeemPoints()
+}
+
+class Venue {
+  - venueId
+  - name
+  - address
+  - type
+  - isActive
+  --
+  + displayVenues()
+  + fetchVenues()
+}
+
+class StudyTable {
+  - tableId
+  - tableNumber
+  - capacity
+  - qrCodeString
+  - isAvailable
+  - softLockedBy
+  - softLockExpiration
+  --
+  + findAvailable()
+  + softLock()
+  + releaseSoftLock()
+  + identifyTable()
+}
+
+class StudySubject {
+  - subjectId
+  - name
+  --
+  + findOrCreate()
+}
+
+abstract class Reservation {
+  - reservationId
+  - reservationDate
+  - startTime
+  - durationMinutes
+  - numberOfPeople
+  - status
+  - visibility
+  --
+  + validateReservation()
+  + checkAvailability()
+  + addParticipant()
+  + modifyReservation()
+  + discardReservation()
+}
+
+class PrivateReservation {
+  - linkedQrCode
+  --
+  + createPrivateReservation()
+}
+
+class PublicReservation {
+  --
+  + createPublicReservation()
+  + joinPublicReservation()
+  + publishReservation()
+}
+
+class ReservationParticipant {
+  - participantId
+  - role
+  - checkedIn
+  --
+  + createParticipant()
+  + updateCheckedInStatus()
+}
+
+class InviteCode {
+  - inviteCodeId
+  - code
+  - createdAt
+  - expiresAt
+  - active
+  --
+  + generateInviteCode()
+  + findCode()
+  + validateCode()
+  + isExpired()
+  + isValid()
+}
+
+class CheckIn {
+  - checkInId
+  - checkInTime
+  - scannedQrCode
+  - successful
+  --
+  + createCheckIn()
+  + associateParticipants()
+  + activateServices()
+}
+
+class EBook {
+  - eBookId
+  - title
+  - author
+  - isbn
+  - category
+  - content
+  --
+  + search()
+  + displayContent()
+}
+
+class EBookLicense {
+  - licenseId
+  - isAvailable
+  --
+  + checkAvailability()
+  + reserveLicense()
+  + releaseLicense()
+}
+
+class EBookLoan {
+  - loanId
+  - startTime
+  - endTime
+  - isActive
+  --
+  + requestLoan()
+  + getLoanStatus()
+  + returnLoan()
+  + revokeLoan()
+}
+
+class MenuItem {
+  - itemId
+  - name
+  - price
+  - isAvailable
+  - category
+  --
+  + readCatalog()
+  + verifyAvailability()
+}
+
+class Order {
+  - orderId
+  - status
+  - totalAmount
+  - placedAt
+  --
+  + addProduct()
+  + processSummary()
+  + createOrder()
+  + cancelOrder()
+  + calculateCost()
+  + sendToKitchen()
+}
+
+class OrderItem {
+  - orderItemId
+  - quantity
+  - subTotal
+  --
+  + calculateSubTotal()
+}
+
+class Bill {
+  - billId
+  - totalAmount
+  - discountAmount
+  - issueTime
+  - isSettled
+  --
+  + generateBill()
+  + refreshBill()
+  + splitBill()
+  + applyDiscount()
+  + settleBill()
+}
+
+class Payment {
+  - paymentId
+  - amountPaid
+  - paymentMethod
+  - timestamp
+  - status
+  --
+  + processPayment()
+  + acceptCashPayment()
+  + recordPayment()
+  + handleFailure()
+}
+
+class LoyaltyWallet {
+  - totalBalance
+  - minimumRedeemLimit
+  - exchangeRate
+  --
+  + getWallet()
+  + creditPoints()
+  + redeemPoints()
+  + calculateDiscount()
+}
+
+class PointsTransaction {
+  - transactionId
+  - pointsAmount
+  - transactionType
+  - timestamp
+  - description
+  --
+  + recordTransaction()
+  + getHistory()
+}
+
+' =========================
+' Generalization
+' =========================
+
+Reservation <|-- PrivateReservation
+Reservation <|-- PublicReservation
+
+' =========================
+' Associations
+' =========================
+
+Venue "1" -- "0..*" StudyTable : contains
+
+StudyTable "1" -- "0..*" Reservation : assignedTo
+
+Student "1" -- "0..*" ReservationParticipant : is
+Reservation "1" -- "1..*" ReservationParticipant : includes
+
+PublicReservation "0..*" -- "0..1" StudySubject : concerns
+
+Reservation "1" -- "0..*" InviteCode : has
+Student "1" -- "0..*" InviteCode : creates
+
+Reservation "1" -- "0..*" CheckIn : confirms
+StudyTable "1" -- "0..*" CheckIn : scannedAt
+Student "1" -- "0..*" CheckIn : performs
+
+CheckIn "1" -- "0..*" EBookLoan : enables
+EBook "1" -- "0..*" EBookLicense : has
+EBookLicense "1" -- "0..*" EBookLoan : usedFor
+
+StudyTable "1" -- "0..*" Order : receives
+Order "1" *-- "1..*" OrderItem : contains
+MenuItem "1" -- "0..*" OrderItem : selectedAs
+
+Reservation "1" -- "0..1" Bill : produces
+StudyTable "1" -- "0..*" Bill : chargedAt
+Bill "1" -- "0..*" Payment : paidBy
+
+Student "1" -- "1" LoyaltyWallet : owns
+LoyaltyWallet "1" -- "0..*" PointsTransaction : records
+
+@enduml
