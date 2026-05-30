@@ -23,7 +23,6 @@ The system has two parts:
 - [REST API overview](#rest-api-overview)
 - [Domain model](#domain-model)
 - [Design documentation](#design-documentation)
-- [Testing](#testing)
 
 ---
 
@@ -86,7 +85,6 @@ Studdict is built around a set of use cases (`UC1`–`UC12`), which map directly
 - Spring Web (REST), Spring Data JPA (Hibernate)
 - **MySQL 8** — Hibernate `ddl-auto: update` auto‑creates the schema; the DB password is injected via `spring-dotenv` (`${DB_PASSWORD}`)
 - Maven build
-- JUnit 5 + Mockito for tests
 
 **Android**
 - Java 17, Android SDK 34 (Gradle build); `minSdk 23`, `targetSdk 34`
@@ -106,18 +104,17 @@ Studdict/
 ├── pom.xml                       # Backend Maven build
 ├── src/
 │   ├── main/
-│   │   ├── java/com/studdict/
-│   │   │   ├── StuddictApplication.java   # @SpringBootApplication, @EnableScheduling
-│   │   │   ├── DataInitializer.java       # seeds venues/tables/students/menu
-│   │   │   ├── LoanExpiryScheduler.java   # @Scheduled loan revocation
-│   │   │   ├── config/                    # e.g. EBookDataInitializer
-│   │   │   ├── controller/                # @RestController endpoints
-│   │   │   ├── service/                   # business logic (@Service)
-│   │   │   ├── repository/                # Spring Data JPA repositories
-│   │   │   ├── model/                     # JPA entities
-│   │   │   └── dto/                       # request/response payloads
-│   │   └── resources/application.yml      # DB + app configuration
-│   └── test/java/com/studdict/service/    # JUnit/Mockito service tests
+│      ├── java/com/studdict/
+│      │   ├── StuddictApplication.java   # @SpringBootApplication, @EnableScheduling
+│      │   ├── DataInitializer.java       # seeds venues/tables/students/menu
+│      │   ├── LoanExpiryScheduler.java   # @Scheduled loan revocation
+│      │   ├── config/                    # e.g. EBookDataInitializer
+│      │   ├── controller/                # @RestController endpoints
+│      │   ├── service/                   # business logic (@Service)
+│      │   ├── repository/                # Spring Data JPA repositories
+│      │   ├── model/                     # JPA entities
+│      │   └── dto/                       # request/response payloads
+│      └── resources/application.yml      # DB + app configuration
 │
 ├── android-app/                  # Android client (Gradle)
 │   └── app/src/main/
@@ -130,8 +127,6 @@ Studdict/
 │       └── AndroidManifest.xml
 │
 ├── class_diagram.puml            # design class diagram (backend + client)
-├── uc/                           # use‑case diagrams & test cases (UC7, UC8, …)
-└── robustness/                   # robustness diagrams (UC7, UC8)
 ```
 
 ---
@@ -225,12 +220,6 @@ See `class_diagram.puml` for the full design class diagram (controllers, service
 This repo ships with UML artifacts (PlantUML `.puml`, renderable with the [PlantUML](https://plantuml.com) toolchain or an IDE plugin):
 
 - `class_diagram.puml` — design class diagram for the whole app
-
----
-
-## Testing
-
-Backend service logic is covered by JUnit 5 / Mockito tests under `src/test/java/com/studdict/service/` (e.g. `EBookServiceTest`, `GamificationServiceTest`, `OrderServiceTest`, `PaymentServiceTest`, `StudentServiceTest`).
 
 Run them with:
 
