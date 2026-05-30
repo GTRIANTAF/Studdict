@@ -18,6 +18,7 @@
         <activity android:name=".ScreenCheckInSuccess" />
 
         <activity android:name=".ScreenBill" />
+        <activity android:name=".ScreenPayment" />
         <activity android:name=".ScreenEBookReader" />
         <activity android:name=".ScreenEBookVault" />
         <activity android:name=".ScreenKitchenOrders" />

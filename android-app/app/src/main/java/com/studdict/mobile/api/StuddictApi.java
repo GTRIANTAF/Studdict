@@ -93,10 +93,13 @@ public interface StuddictApi {
     Call<Long> createPublicReservation(@Body ReservationRequest request);
 
     @POST("api/reservations/{reservationId}/join")
-    Call<String> joinPublicReservation(
-            @Path("reservationId") long reservationId,
+    Call<com.studdict.mobile.model.InviteJoinResponse> joinPublicReservation(
+            @Path("reservationId") Long reservationId,
             @Query("studentId") String studentId
     );
+
+    @GET("check-in/participants")
+    Call<List<com.studdict.mobile.model.ReservationParticipant>> getParticipants(@Query("reservationId") Long reservationId);
 
     @PUT("api/reservations/{id}/modify")
     Call<com.studdict.mobile.model.Reservation> modifyReservation(
@@ -200,4 +203,11 @@ public interface StuddictApi {
 
     @GET("api/reservations/student/{studentId}")
     Call<List<Reservation>> getStudentReservations(@Path("studentId") String studentId);
+
+    // --- UC6: Payment and Check-out ---
+    @POST("payments/process")
+    Call<com.studdict.mobile.model.PaymentResponse> processPayment(@Body com.studdict.mobile.model.PaymentRequest request);
+
+    @POST("payments/split")
+    Call<com.studdict.mobile.model.SplitResponse> splitBill(@Body com.studdict.mobile.model.SplitRequest request);
 }
