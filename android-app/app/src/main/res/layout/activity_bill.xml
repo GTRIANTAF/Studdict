@@ -134,6 +134,18 @@
                         android:textStyle="bold"
                         android:layout_alignParentEnd="true" />
                 </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/tv_discount_badge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:text="(-3.00€)"
+                    android:textColor="#FF8F00"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    android:layout_marginTop="2dp" />
             </LinearLayout>
 
             <TextView

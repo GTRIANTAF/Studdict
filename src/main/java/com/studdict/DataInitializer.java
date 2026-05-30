@@ -24,12 +24,16 @@ public class DataInitializer implements ApplicationRunner {
     @org.springframework.beans.factory.annotation.Autowired
     private com.studdict.repository.LoyaltyWalletRepository walletRepository;
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     public DataInitializer(MenuItemRepository menuItemRepository) {
         this.menuItemRepository = menuItemRepository;
     }
 
     @Override
     public void run(ApplicationArguments args) {
+        sanitizeDatabase();
         initializeLoyaltyWallets();
 
         List<MenuItem> existing = menuItemRepository.findAll();
@@ -89,5 +93,14 @@ public class DataInitializer implements ApplicationRunner {
             menuItemRepository.save(item);
         }
         System.out.println("[DataInitializer] Seeded 6 demo menu items.");
+    }
+
+    private void sanitizeDatabase() {
+        try {
+            jdbcTemplate.execute("UPDATE bills SET discount_amount = 0.0 WHERE discount_amount IS NULL");
+            System.out.println("[DataInitializer] Database sanitized: all null discount_amount values updated to 0.0.");
+        } catch (Exception e) {
+            System.err.println("⚠️ [DataInitializer] Database sanitization failed/skipped: " + e.getMessage());
+        }
     }
 }

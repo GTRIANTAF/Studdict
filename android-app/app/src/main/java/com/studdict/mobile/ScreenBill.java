@@ -57,6 +57,7 @@ public class ScreenBill extends Activity {
     private TextView txtOriginalPrice;
     private View layoutDiscountLine;
     private TextView txtDiscountAppliedText;
+    private TextView tvDiscountBadge;
 
     private int tableId;
     private String studentId;
@@ -103,6 +104,7 @@ public class ScreenBill extends Activity {
         txtOriginalPrice = findViewById(R.id.txtOriginalPrice);
         layoutDiscountLine = findViewById(R.id.layout_discount_line);
         txtDiscountAppliedText = findViewById(R.id.txtDiscountAppliedText);
+        tvDiscountBadge = findViewById(R.id.tv_discount_badge);
 
         txtBillTable.setText("Table: " + tableId);
 
@@ -197,8 +199,11 @@ public class ScreenBill extends Activity {
                     if (discount > 0.0) {
                         layoutDiscountLine.setVisibility(View.VISIBLE);
                         txtDiscountAppliedText.setText(String.format("-€%.2f", discount));
+                        tvDiscountBadge.setVisibility(View.VISIBLE);
+                        tvDiscountBadge.setText(String.format("(-%.2f€)", discount));
                     } else {
                         layoutDiscountLine.setVisibility(View.GONE);
+                        tvDiscountBadge.setVisibility(View.GONE);
                     }
                     
                     txtBillTotal.setText(String.format("€%.2f", bill.getTotalAmount()));
@@ -212,6 +217,7 @@ public class ScreenBill extends Activity {
                     txtBillId.setText("Bill");
                     txtOriginalPrice.setText("€—");
                     layoutDiscountLine.setVisibility(View.GONE);
+                    tvDiscountBadge.setVisibility(View.GONE);
                     txtBillTotal.setText("€—");
                     txtBillStatus.setText("Bill not found.");
                 }
@@ -222,6 +228,7 @@ public class ScreenBill extends Activity {
                 txtBillId.setText("Demo Bill");
                 txtOriginalPrice.setText("€0.00");
                 layoutDiscountLine.setVisibility(View.GONE);
+                tvDiscountBadge.setVisibility(View.GONE);
                 txtBillTotal.setText("€0.00");
                 txtBillStatus.setText("Status: Pending payment");
                 Toast.makeText(ScreenBill.this, "Offline: bill details unavailable.", Toast.LENGTH_SHORT).show();
