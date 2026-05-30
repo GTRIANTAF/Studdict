@@ -41,11 +41,31 @@ public class ScreenLogin extends Activity {
                 @Override
                 public void onResponse(Call<Student> call, Response<Student> response) {
                     if (response.isSuccessful() && response.body() != null) {
-                        Toast.makeText(ScreenLogin.this, "Welcome " + response.body().getFirstName(), Toast.LENGTH_SHORT).show();
+                        Student student = response.body();
+                        Toast.makeText(ScreenLogin.this, "Welcome " + student.getFirstName(), Toast.LENGTH_SHORT).show();
+
+                        SessionManager session = new SessionManager(ScreenLogin.this);
+
+                        // Start each login with a clean session: drop any check-in left
+                        // over from a previous run so screens like Order (which require an
+                        // active check-in) aren't unlocked by stale state.
+                        session.clearCheckIn();
+
+                        // Persist the full profile so it's available on the profile screen
+                        // regardless of how the user navigates back to the home screen.
+                        session.saveStudentProfile(
+                                student.getStudentId(),
+                                student.getFirstName(),
+                                student.getLastName(),
+                                student.getEmail(),
+                                student.getUniversity(),
+                                student.getDepartment()
+                        );
+
                         // Proceed to home/venues
                         Intent intent = new Intent(ScreenLogin.this, ScreenVenues.class);
-                        intent.putExtra("STUDENT_NAME", response.body().getFirstName());
-                        intent.putExtra("STUDENT_ID", response.body().getStudentId());
+                        intent.putExtra("STUDENT_NAME", student.getFirstName());
+                        intent.putExtra("STUDENT_ID", student.getStudentId());
                         startActivity(intent);
                         finish();
                     } else {
