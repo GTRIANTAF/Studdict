@@ -52,20 +52,11 @@ public class ScreenVenues extends Activity {
             startActivity(intent);
         });
 
-        View btnLogout = findViewById(R.id.btnLogout);
-        btnLogout.setOnClickListener(v -> logout());
-    }
-
-    private void logout() {
-        // Clear any persisted check-in session so the next login starts fresh
-        new SessionManager(this).clearCheckIn();
-
-        // Return to the login screen and wipe the back stack so the user
-        // can't navigate back into the logged-in flow.
-        Intent intent = new Intent(this, ScreenLogin.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
-        finish();
+        View btnProfile = findViewById(R.id.btnProfile);
+        btnProfile.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenProfile.class);
+            startActivity(intent);
+        });
     }
 
     private void selectVenue(long venueId, String venueName) {
