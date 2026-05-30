@@ -1,0 +1,758 @@
+@startuml Studdict_Class_Diagram
+title Studdict — Class Diagram\n(Spring Boot REST backend + Android / Retrofit client)
+
+' =====================================================================
+'  STYLE
+' =====================================================================
+skinparam shadowing false
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+hide circle
+
+skinparam class {
+    BackgroundColor<<entity>>      #FDF6E3
+    BorderColor<<entity>>          #B58900
+    BackgroundColor<<repository>>  #E8F0FE
+    BorderColor<<repository>>      #3366CC
+    BackgroundColor<<service>>     #E6F4EA
+    BorderColor<<service>>         #2E7D32
+    BackgroundColor<<controller>>  #FCE8E6
+    BorderColor<<controller>>      #C5221F
+    BackgroundColor<<config>>      #F3E8FD
+    BorderColor<<config>>          #8E24AA
+    BackgroundColor<<dto>>         #F5F5F5
+    BorderColor<<dto>>             #9E9E9E
+    BackgroundColor<<activity>>    #EDE7F6
+    BorderColor<<activity>>        #5E35B1
+    BackgroundColor<<network>>     #FFF3E0
+    BorderColor<<network>>         #EF6C00
+}
+
+legend top left
+  Studdict — collaborative study-space platform
+  Backend: Spring Boot 3.2 + Spring Data JPA (H2/MySQL), layered Controller -> Service -> Repository -> Entity
+  Client : Android (java) using Retrofit2 + Gson, one Activity ("Screen*") per UI screen
+  Note: entity "status / role / visibility / paymentMethod" fields are plain Strings (no DB enums)
+endlegend
+
+
+' #####################################################################
+'  BACKEND :: DOMAIN MODEL (JPA ENTITIES)
+' #####################################################################
+package "backend.model  (JPA Entities)" <<Rectangle>> {
+
+  class Student <<entity>> {
+    - studentId : String  <<PK>>
+    - firstName : String
+    - lastName : String
+    - email : String  <<unique>>
+    - password : String
+    - university : String
+    - department : String
+  }
+
+  class Venue <<entity>> {
+    - venueId : Long  <<PK>>
+    - name : String
+    - address : String
+    - type : String
+    - isActive : boolean
+    - tables : List<StudyTable>
+  }
+
+  class StudyTable <<entity>> {
+    - tableId : int  <<PK>>
+    - tableNumber : int
+    - capacity : int
+    - qrCodeString : String
+    - isAvailable : boolean
+    - softLockedBy : String
+    - softLockExpiration : LocalTime
+    - venue : Venue
+  }
+
+  class StudySubject <<entity>> {
+    - subjectId : Long  <<PK>>
+    - name : String  <<unique>>
+  }
+
+  abstract class Reservation <<entity>> {
+    - reservationId : Long  <<PK>>
+    - reservationDate : LocalDate
+    - startTime : LocalTime
+    - durationMinutes : int
+    - numberOfPeople : int
+    - status : String
+    # visibility : String
+    - table : StudyTable
+    .. JPA: @Inheritance(JOINED), @DiscriminatorColumn("reservation_type") ..
+  }
+
+  class PrivateReservation <<entity>> {
+    - linkedQrCode : String
+  }
+
+  class PublicReservation <<entity>> {
+    - studySubject : StudySubject
+  }
+
+  class ReservationParticipant <<entity>> {
+    - id : Long  <<PK>>
+    - studentId : String
+    - reservationId : Long
+    - role : String  ' Host | Guest
+    - checkedIn : boolean
+  }
+
+  class InviteCode <<entity>> {
+    - inviteCodeId : Long  <<PK>>
+    - code : String  <<unique>>
+    - createdAt : LocalDateTime
+    - expiresAt : LocalDateTime
+    - active : boolean
+    - reservation : Reservation
+    - host : Student
+    + isExpired() : boolean
+    + isValid() : boolean
+  }
+
+  class CheckIn <<entity>> {
+    - checkInId : Long  <<PK>>
+    - checkInTime : LocalDateTime
+    - scannedQrCode : String
+    - successful : boolean
+    - reservation : Reservation
+    - table : StudyTable
+    - student : Student
+  }
+
+  class EBook <<entity>> {
+    - eBookId : Long  <<PK>>
+    - title : String
+    - author : String
+    - isbn : String
+    - category : String
+    - content : String  <<TEXT>>
+    - licenses : List<EBookLicense>
+  }
+
+  class EBookLicense <<entity>> {
+    - licenseId : Long  <<PK>>
+    - isAvailable : boolean
+    - ebook : EBook
+  }
+
+  class EBookLoan <<entity>> {
+    - loanId : Long  <<PK>>
+    - startTime : LocalDateTime
+    - endTime : LocalDateTime
+    - isActive : boolean
+    - license : EBookLicense
+    - checkIn : CheckIn
+  }
+
+  class LoyaltyWallet <<entity>> {
+    - studentId : String  <<PK>>
+    - totalBalance : int = 100
+    - minimumRedeemLimit : int = 25
+    - exchangeRate : double = 0.03
+  }
+
+  class PointsTransaction <<entity>> {
+    - transactionId : String  <<PK,UUID>>
+    - studentId : String
+    - pointsAmount : int
+    - transactionType : String  ' EARN | REDEEM
+    - timestamp : LocalDateTime
+    - description : String
+  }
+
+  class MenuItem <<entity>> {
+    - itemId : Long  <<PK>>
+    - name : String
+    - price : double
+    - isAvailable : boolean
+    - category : String
+  }
+
+  class Order <<entity>> {
+    - orderId : Long  <<PK>>
+    - status : String  ' PREPARING ...
+    - totalAmount : double
+    - placedAt : LocalDateTime
+    - items : List<OrderItem>
+    - table : StudyTable
+    .. JPA: @Table(name = "orders") ..
+  }
+
+  class OrderItem <<entity>> {
+    - orderItemId : Long  <<PK>>
+    - quantity : int
+    - subTotal : double
+    - menuItem : MenuItem
+    - order : Order
+  }
+
+  class Bill <<entity>> {
+    - billId : Long  <<PK>>
+    - reservationId : Long
+    - tableId : Integer
+    - totalAmount : double
+    - discountAmount : Double = 0.0
+    - issueTime : LocalDateTime
+    - isSettled : boolean
+  }
+
+  class Payment <<entity>> {
+    - paymentId : String  <<PK,UUID>>
+    - reservationId : String
+    - amountPaid : double
+    - paymentMethod : String
+    - timestamp : LocalDateTime
+    - status : String
+  }
+}
+
+' ---- Entity relationships ----------------------------------------
+Reservation <|-- PrivateReservation
+Reservation <|-- PublicReservation
+
+Venue "1" *-- "0..*" StudyTable : tables
+StudyTable "0..*" --> "1" Venue : venue
+Reservation "0..*" --> "1" StudyTable : table
+PublicReservation "0..*" --> "0..1" StudySubject : subject
+
+InviteCode "0..*" --> "1" Reservation
+InviteCode "0..*" --> "1" Student : host
+
+CheckIn "0..*" --> "1" Reservation
+CheckIn "0..*" --> "1" StudyTable
+CheckIn "0..*" --> "1" Student
+
+EBook "1" *-- "0..*" EBookLicense : licenses
+EBookLoan "0..*" --> "1" EBookLicense
+EBookLoan "0..*" --> "1" CheckIn
+
+Order "1" *-- "1..*" OrderItem : items
+OrderItem "0..*" --> "1" MenuItem
+Order "0..*" --> "1" StudyTable : table
+
+' ---- "soft" references (id fields, no JPA FK) --------------------
+ReservationParticipant ..> Reservation : <<by reservationId>>
+ReservationParticipant ..> Student : <<by studentId>>
+Bill ..> Reservation : <<by reservationId>>
+Bill ..> StudyTable : <<by tableId>>
+Bill ..> Payment : <<settled by reservationId>>
+Student ..> LoyaltyWallet : <<shared id (studentId)>>
+PointsTransaction ..> LoyaltyWallet : <<by studentId>>
+
+
+' #####################################################################
+'  BACKEND :: REPOSITORY LAYER (Spring Data JPA)
+' #####################################################################
+package "backend.repository  (Spring Data JPA)" as RepoPkg <<Rectangle>> {
+
+  interface StudentRepository <<repository>> {
+    JpaRepository<Student, String>
+    + findByEmail(email) : Optional<Student>
+  }
+  interface VenueRepository <<repository>> {
+    JpaRepository<Venue, Long>
+    + findByIsActiveTrue() : List<Venue>
+  }
+  interface StudyTableRepository <<repository>> {
+    JpaRepository<StudyTable, Integer>
+    + findByVenue_VenueId(id) : List
+    + findByVenue_VenueIdAndIsAvailableTrue(id)
+    + findByQrCodeString(qr) : Optional
+  }
+  interface SubjectRepository <<repository>> {
+    JpaRepository<StudySubject, Long>
+    + findByNameIgnoreCase(name) : Optional
+  }
+  interface ReservationRepository <<repository>> {
+    JpaRepository<Reservation, Long>
+    + findByTable_TableIdAndStatus(..)
+    + findByVisibilityAndStatus(..)
+    + findActiveReservationsByStudent(id)
+    + findMatchmakingReservations(venueId, subj)
+  }
+  interface ParticipantRepository <<repository>> {
+    JpaRepository<ReservationParticipant, Long>
+    + countByReservationId(id) : long
+    + findByReservationId(id) : List
+    + findByIdIn(ids) : List
+    + findByReservationIdAndStudentId(..)
+  }
+  interface InviteCodeRepository <<repository>> {
+    JpaRepository<InviteCode, Long>
+    + findByCode(code) : InviteCode
+    + findFirstByReservation_..OrderByCreatedAtAsc(id)
+  }
+  interface CheckInRepository <<repository>> {
+    JpaRepository<CheckIn, Long>
+    + findByReservation_ReservationId(id) : List
+  }
+  interface EBookRepository <<repository>> {
+    JpaRepository<EBook, Long>
+  }
+  interface EBookLicenseRepository <<repository>> {
+    JpaRepository<EBookLicense, Long>
+  }
+  interface EBookLoanRepository <<repository>> {
+    JpaRepository<EBookLoan, Long>
+    + findActiveLoansByCheckIn(checkInId) : List
+    + findAllByCheckIn_CheckInId(checkInId) : List
+    + findByIsActiveTrue() : List
+  }
+  interface LoyaltyWalletRepository <<repository>> {
+    JpaRepository<LoyaltyWallet, String>
+  }
+  interface PointsTransactionRepository <<repository>> {
+    JpaRepository<PointsTransaction, String>
+    + findByStudentIdOrderByTimestampDesc(id)
+  }
+  interface MenuItemRepository <<repository>> {
+    JpaRepository<MenuItem, Long>
+  }
+  interface OrderRepository <<repository>> {
+    JpaRepository<Order, Long>
+    + findByStatus(status) : List
+    + findByTable_TableId(tableId) : List
+  }
+  interface OrderItemRepository <<repository>> {
+    JpaRepository<OrderItem, Long>
+  }
+  interface BillRepository <<repository>> {
+    JpaRepository<Bill, Long>
+    + findByReservationId(id) : Optional
+    + findTopByTableIdOrderByIssueTimeDesc(tableId)
+  }
+  interface PaymentRepository <<repository>> {
+    JpaRepository<Payment, String>
+  }
+}
+
+
+' #####################################################################
+'  BACKEND :: SERVICE LAYER (business logic)
+' #####################################################################
+package "backend.service  (@Service)" <<Rectangle>> {
+
+  class StudentService <<service>> {
+    + registerStudent(..) : Student
+    + loginStudent(email, pwd) : Student
+  }
+  class VenueService <<service>> {
+    + findActiveVenues() : List<Venue>
+    + fetchVenues(id) : Venue
+  }
+  class SubjectService <<service>> {
+    + findOrCreate(name) : StudySubject
+  }
+  class StudyTableService <<service>> {
+    + getAvailableTables(..) : List<StudyTable>
+    + findMatchmakingTables(venueId, subj, date, time, dur, minCap)
+    + requestSoftLock(tableId, studentId) : boolean
+    + releaseSoftLock(tableId)
+  }
+  class ReservationService <<service>> {
+    + savePrivateReservation(..) : Long
+    + savePublicReservation(..) : Long
+    + joinPublicReservation(resId, studentId)
+    + discardReservation(resId)
+    + getPublishedReservations() : List
+    + getReservationsByStudent(id) : List
+  }
+  class ReservationUpdateService <<service>> {
+    + modifyReservation(id, time, dur, cap) : Reservation
+  }
+  class InviteCodeService <<service>> {
+    + generateInviteCode(resId, hostId) : InviteCode
+    + validateCode(code) : boolean
+    + joinReservationWithResult(code, guestId) : JoinReservationResult
+    + checkAvailability(resId) : boolean
+  }
+  class CheckInService <<service>> {
+    + identifyTable(qr) : StudyTable
+    + validateReservation(resId, qr) : ReservationValidationResult
+    + getParticipants(resId) : List
+    + updateCheckedInStatus(participantIds) : List
+    + associateParticipants(participantIds) : boolean
+    + activateServices(participants) : boolean
+    + confirmCheckInParticipants(..) : CheckInResponseDTO
+    + checkInParticipants(..) : List<CheckIn>
+    + performCheckIn(resId, studentId, qr) : CheckInResponseDTO
+    + checkInStudent(res, student, qr) : CheckIn
+  }
+  class EBookService <<service>> {
+    + requestAccess(checkInId) : boolean
+    + getCatalog(keyword) : List<EBookCatalogDTO>
+    + executeSearch(keyword) : List<EBook>
+    + checkAvailability(ebookId) : EBookLicense
+    + requestLoan(checkInId, ebookId) : EBookLoan
+    + getBookContent(ebookId) : EBookContentDTO
+    + getLoanStatus(loanId) : EBookLoan
+    + checkRequest(loanId) : EBookLoan
+    + releaseLoan(loan)
+    + revokeLoan(checkInId)
+    + revokeExpiredLoans()
+  }
+  class GamificationService <<service>> {
+    + getWallet(studentId) : LoyaltyWallet
+    + creditPointsForStudy(studentId, resId) : int
+    + redeemPoints(studentId, pts, tableId) : boolean
+    + calculateDiscount(pts) : double
+    + applyDiscountToBill(tableId, discount)
+    + getPointsHistory(studentId) : List
+  }
+  class OrderService <<service>> {
+    + readCatalog() : List<MenuItem>
+    + addCartItem(itemId, qty) : boolean
+    + createOrder(tableId, items) : Order
+    + getActiveOrders() : List<Order>
+    + getOrderItemsAsStrings(tableId) : List<String>
+    + calculateCost(order)
+  }
+  class BillCalculationService <<service>> {
+    + generateBillForReservation(resId) : Bill
+  }
+  class PaymentService <<service>> {
+    + processPayment(billId, method, amount) : Bill
+    + calculateSplitAmount(billId, n) : double
+  }
+}
+
+' ---- service -> repository / service dependencies ----------------
+StudentService          ..> StudentRepository
+VenueService            ..> VenueRepository
+SubjectService          ..> SubjectRepository
+StudyTableService       ..> StudyTableRepository
+StudyTableService       ..> ReservationRepository
+StudyTableService       ..> ParticipantRepository
+ReservationService      ..> ReservationRepository
+ReservationService      ..> StudyTableRepository
+ReservationService      ..> StudentRepository
+ReservationService      ..> ParticipantRepository
+ReservationService      ..> SubjectService
+ReservationUpdateService ..> ReservationRepository
+InviteCodeService       ..> InviteCodeRepository
+InviteCodeService       ..> ParticipantRepository
+InviteCodeService       ..> ReservationRepository
+InviteCodeService       ..> StudentRepository
+CheckInService          ..> CheckInRepository
+CheckInService          ..> StudyTableRepository
+CheckInService          ..> ReservationRepository
+CheckInService          ..> ParticipantRepository
+CheckInService          ..> StudentRepository
+EBookService            ..> EBookRepository
+EBookService            ..> EBookLoanRepository
+EBookService            ..> EBookLicenseRepository
+EBookService            ..> CheckInRepository
+GamificationService     ..> LoyaltyWalletRepository
+GamificationService     ..> PointsTransactionRepository
+GamificationService     ..> CheckInRepository
+GamificationService     ..> ReservationRepository
+GamificationService     ..> BillRepository
+OrderService            ..> OrderRepository
+OrderService            ..> MenuItemRepository
+OrderService            ..> StudyTableRepository
+OrderService            ..> BillRepository
+OrderService            ..> ReservationRepository
+BillCalculationService  ..> BillRepository
+BillCalculationService  ..> OrderRepository
+BillCalculationService  ..> ReservationRepository
+PaymentService          ..> BillRepository
+PaymentService          ..> PaymentRepository
+PaymentService          ..> StudyTableRepository
+PaymentService          ..> CheckInRepository
+PaymentService          ..> ReservationRepository
+PaymentService          ..> EBookService
+
+
+' #####################################################################
+'  BACKEND :: REST CONTROLLER LAYER (@RestController)
+' #####################################################################
+package "backend.controller  (@RestController)" as CtrlPkg <<Rectangle>> {
+
+  class StudentController <<controller>> {
+    /api/students
+    + register(RegisterRequest)
+    + login(LoginRequest)
+  }
+  class StudyTableController <<controller>> {
+    /api/tables
+    + available(..) + matchmaking(.., date, time, dur, minCap)
+    + lock(tableId) + unlock(tableId)
+  }
+  class ReservationController <<controller>> {
+    /api/reservations
+    + private(..) + public(..)
+    + join(id) + delete(id) + byStudent(id)
+  }
+  class ReservationUpdateController <<controller>> {
+    /api/reservations
+    + modify(id, ReservationUpdateRequest)
+  }
+  class InviteCodeController <<controller>> {
+    /invite-code
+    + generate + validate + join + join-result
+  }
+  class CheckInController <<controller>> {
+    /check-in
+    + validate + participants + confirm + perform
+  }
+  class EBookController <<controller>> {
+    /api/ebooks
+    + access + search + catalog + content
+    + loan + loanStatus + return + revoke
+    + loans/active + loans/session + notify-checkout
+  }
+  class GamificationController <<controller>> {
+    /api/gamification
+    + wallet(id) + validate + earn + redeem + history(id)
+  }
+  class OrderController <<controller>> {
+    /api/orders
+    + catalog + create + cancel
+    + cart/add + summary + kitchen/active
+    + getOrderItemsByTable(tableId)
+  }
+  class LiveBoardController <<controller>> {
+    /api/liveboard
+    + published()
+  }
+  class BillLookupController <<controller>> {
+    /api/bills
+    + getByTable(tableId)  ' auto-creates empty bill
+  }
+  class PaymentController <<controller>> {
+    /payments
+    + process(PaymentRequest) + split(SplitRequest)
+  }
+
+  together {
+    class BillCalculationController <<controller>> {
+      /checkout :: + generate(resId)
+    }
+    class CancellationController <<controller>> {
+      /cancellation :: + cancel(resId)
+    }
+    class CashPaymentController <<controller>> {
+      /payment/cash :: + accept(..)
+    }
+    class TransactionProcessingController <<controller>> {
+      /payment/transaction :: + process(..)
+    }
+    class SplitBillController <<controller>> {
+      /payment/split :: + calculate(..)
+    }
+    class CompletionAndRewardController <<controller>> {
+      /payment/completion :: + summary(billId)
+    }
+    class FailureManagementController <<controller>> {
+      /payment/failure :: + report(..)
+    }
+    class TimeoutManagementController <<controller>> {
+      /payment/timeout :: + check(billId)
+    }
+    class AvailabilityCheckController <<controller>> {
+      /availability :: + tables(..)
+    }
+  }
+}
+
+note bottom of AvailabilityCheckController
+  The "/payment/*", "/checkout", "/cancellation" and "/availability"
+  controllers are an alternative endpoint set; the live Android client
+  uses the "/api/*", "/payments", "/check-in" and "/invite-code" ones.
+end note
+
+' ---- controller -> service dependencies --------------------------
+StudentController            ..> StudentService
+StudyTableController         ..> StudyTableService
+ReservationController        ..> ReservationService
+ReservationUpdateController  ..> ReservationUpdateService
+InviteCodeController         ..> InviteCodeService
+CheckInController            ..> CheckInService
+EBookController              ..> EBookService
+GamificationController       ..> GamificationService
+OrderController              ..> OrderService
+LiveBoardController          ..> ReservationService
+BillLookupController         ..> BillRepository
+BillLookupController         ..> ReservationRepository
+BillLookupController         ..> OrderRepository
+PaymentController            ..> PaymentService
+PaymentController            ..> BillRepository
+BillCalculationController    ..> BillCalculationService
+CancellationController       ..> ReservationService
+CashPaymentController        ..> PaymentService
+TransactionProcessingController ..> PaymentService
+SplitBillController          ..> PaymentService
+AvailabilityCheckController  ..> StudyTableService
+' Note: CompletionAndRewardController, FailureManagementController and
+' TimeoutManagementController are currently stubs with no injected dependencies.
+
+
+' #####################################################################
+'  BACKEND :: APPLICATION / CONFIG / SCHEDULING
+' #####################################################################
+package "backend.app & config" <<Rectangle>> {
+  class StuddictApplication <<config>> {
+    <<@SpringBootApplication, @EnableScheduling>>
+    + main(args)
+  }
+  class LoanExpiryScheduler <<config>> {
+    <<@Component, @Scheduled(60s)>>
+    + revokeExpiredLoans()
+  }
+  class DataInitializer <<config>> {
+    <<seeds venues/tables/students/menu>>
+    ' also uses JdbcTemplate for DB sanitisation
+  }
+  class EBookDataInitializer <<config>> {
+    <<seeds ebooks + licenses>>
+  }
+}
+LoanExpiryScheduler ..> EBookService : every 60s
+DataInitializer ..> RepoPkg : seeds on startup
+EBookDataInitializer ..> EBookRepository : seeds on startup
+EBookDataInitializer ..> EBookLicenseRepository : seeds on startup
+
+
+' #####################################################################
+'  BACKEND :: DTOs (request / response payloads)
+' #####################################################################
+package "backend.dto  (request / response payloads)" <<Rectangle>> {
+  class RegisterRequest <<dto>> {
+    firstName, lastName, email,
+    password, university, department
+  }
+  class LoginRequest <<dto>> {
+    email, password
+  }
+  class ReservationRequestDTO <<dto>> {
+    studentId, tableId, date, time,
+    duration, minCapacity, numberOfPeople, subjectName
+  }
+  class CheckInRequestDTO <<dto>> {
+    reservationId, studentId, qrData
+  }
+  class CheckInResponseDTO <<dto>> {
+    successful, status, message, checkInId
+  }
+  class OrderRequest <<dto>> {
+    tableId, items : List<OrderItemRequest>
+  }
+  class OrderItemRequest <<dto>> {
+    menuItemId, quantity
+  }
+}
+
+note bottom of OrderItemRequest
+  EBookCatalogDTO, EBookContentDTO and EBookLoanDTO
+  live in the **model** package (not dto).
+  They are shown above alongside the JPA entities.
+end note
+
+
+' #####################################################################
+'  ANDROID CLIENT
+' #####################################################################
+package "android-app  (com.studdict.mobile)" <<Rectangle>> {
+
+  class ApiClient <<network>> {
+    + {static} BASE_URL : String = "http://10.0.2.2:8080/"
+    - {static} api : StuddictApi
+    + {static} getApi() : StuddictApi
+  }
+
+  interface StuddictApi <<network>> {
+    .. Auth (UC11/UC12) ..
+    + registerStudent(RegisterRequest) : Call<Student>
+    + loginStudent(LoginRequest) : Call<Student>
+    .. Tables & matchmaking (UC1/UC2) ..
+    + getAvailableTables(..)
+    + getMatchmakingTables(.., date, time, dur, minCap)
+    + lockTable(id) + unlockTable(id)
+    .. Reservations (UC1/UC2/UC4) ..
+    + createPrivateReservation + createPublicReservation
+    + joinPublicReservation + modifyReservation
+    + getStudentReservations + getPublishedReservations
+    .. Invite codes (UC3) ..
+    + generateInviteCode + validateInviteCode + joinReservationWithInviteCode
+    .. Check-in (UC5) ..
+    + validateCheckIn + getCheckInParticipants + confirmCheckIn + performCheckIn
+    .. Gamification (UC9) ..
+    + getWallet + validatePoints + redeemPoints + earnPoints + getPointsHistory
+    .. E-books (UC7) ..
+    + getCatalog + executeSearch + checkEBookAvailability + getBookContent
+    + requestLoan + getLoanStatus + requestReturn + getActiveLoans + notifyCheckout
+    .. F&B orders (UC8) ..
+    + readCatalog + addCartItem + getOrderItemsByTable
+    + processSummary + createOrder + cancelOrder + getKitchenOrders
+    .. Bills & payments (UC6) ..
+    + getBillByTable + processPayment + splitBill
+  }
+
+  class SessionManager <<network>> {
+    - pref : SharedPreferences
+    + saveStudentProfile(..)
+    + getStudentId() : String
+    + getFirstName() : String
+    + getLastName() : String
+    + getEmail() : String
+    + getUniversity() : String
+    + getDepartment() : String
+    + setCheckIn(checkInId, tableId)
+    + getCheckInId() : long
+    + getTableId() : int
+    + clearCheckIn() + clearProfile()
+    + isLoggedIn() : boolean
+  }
+
+  package "ui  (Activities, one per screen)" as UiPkg <<Rectangle>> {
+    class ScreenLogin <<activity>>
+    class ScreenRegister <<activity>>
+    class ScreenVenues <<activity>>
+    class ScreenProfile <<activity>>
+    class ScreenTables <<activity>>
+    class ScreenForm <<activity>>
+    class ScreenConfirm <<activity>>
+    class ScreenMyBookings <<activity>>
+    class ScreenReservationDetails <<activity>>
+    class ScreenInviteCodeInput <<activity>>
+    class ScreenCheckIn <<activity>>
+    class ScreenCheckInSuccess <<activity>>
+    class ScreenLiveBoard <<activity>>
+    class ScreenEBookVault <<activity>>
+    class ScreenEBookReader <<activity>>
+    class ScreenOrderMenu <<activity>>
+    class ScreenOrderSummary <<activity>>
+    class ScreenKitchenOrders <<activity>>
+    class ScreenBill <<activity>>
+    class ScreenPayment <<activity>>
+  }
+
+  note bottom of UiPkg
+    Each Screen extends android.app.Activity.
+    All screens call ApiClient.getApi() for REST access and
+    use SessionManager for studentId / active check-in state.
+    Gson model DTOs (com.studdict.mobile.model, 36 classes:
+    Student, StudyTable, Reservation, PublicReservation, InviteCode,
+    CheckIn, EBook, MenuItem, Order, Bill, LoyaltyWallet, PointsTransaction,
+    plus LoginRequest / RegisterRequest / PaymentRequest ...) mirror backend JSON.
+  end note
+}
+
+ApiClient ..> StuddictApi : <<creates (Retrofit)>>
+ScreenLogin ..> ApiClient
+ScreenLogin ..> SessionManager
+ScreenEBookReader ..> ApiClient
+ScreenBill ..> SessionManager
+
+StuddictApi ..> CtrlPkg : HTTP / JSON (REST)
+
+@enduml
