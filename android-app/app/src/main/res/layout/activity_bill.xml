@@ -235,6 +235,25 @@
 
         </LinearLayout>
 
+        <!-- F&B Ordered This Session -->
+        <TextView
+            android:id="@+id/txtFBLoansHeader"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="F&amp;B Orders This Session"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#4A148C"
+            android:visibility="gone"
+            android:layout_marginBottom="4dp"/>
+
+        <LinearLayout
+            android:id="@+id/fbContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"/>
+
         <!-- E-Books Borrowed This Session -->
         <TextView
             android:id="@+id/txtEbookLoansHeader"
