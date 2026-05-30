@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,19 +48,20 @@ public class StudyTableService {
             return false;
         }).toList();
         
-        LocalTime requestedEnd = time.plusMinutes(duration);
+        LocalDateTime reqStartDT = date.atTime(time);
+        LocalDateTime reqEndDT = reqStartDT.plusMinutes(duration);
 
         List<StudyTable> filtered = tables.stream()
                 .filter(t -> t.getCapacity() >= minCapacity)
                 .filter(t -> {
                     List<Reservation> existingReservations = reservationRepository.findByTable_TableIdAndStatus(t.getId(), "CONFIRMED");
                     for (Reservation r : existingReservations) {
-                        if (r.getReservationDate() != null && r.getReservationDate().equals(date)) {
-                            LocalTime rStart = r.getStartTime();
-                            LocalTime rEnd = rStart.plusMinutes(r.getDurationMinutes());
+                        if (r.getReservationDate() != null) {
+                            LocalDateTime rStartDT = r.getReservationDate().atTime(r.getStartTime());
+                            LocalDateTime rEndDT = rStartDT.plusMinutes(r.getDurationMinutes());
                             
                             // Overlap condition: requestedStart < rEnd AND requestedEnd > rStart
-                            if (time.isBefore(rEnd) && requestedEnd.isAfter(rStart)) {
+                            if (reqStartDT.isBefore(rEndDT) && reqEndDT.isAfter(rStartDT)) {
                                 return false; // Not available
                             }
                         }

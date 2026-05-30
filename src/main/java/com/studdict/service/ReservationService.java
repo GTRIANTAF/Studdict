@@ -5,6 +5,7 @@ import com.studdict.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class ReservationService {
     // USE CASE 1: ΙΔΙΩΤΙΚΗ ΚΡΑΤΗΣΗ (Private)
     // UML: PrivateReservation.create(...) & ReservationParticipant.register(...)
     public Long savePrivateReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration, int numberOfPeople) {
+        validateStudentNoOverlap(studentId, date, time, duration);
         Student student = studentRepository.findById(studentId).orElseThrow();
         StudyTable table = studyTableRepository.findById(tableId).orElseThrow();
 
@@ -46,8 +48,10 @@ public class ReservationService {
         host.setRole("Host");
         participantRepository.save(host);
 
-        // Οριστικοποίηση κλειδώματος τραπεζιού (Hard Lock)
-        table.setIsAvailable(false);
+        // Απελευθέρωση του Soft Lock. Η διαθεσιμότητα πλέον ελέγχεται δυναμικά μέσω των ωρών της κράτησης.
+        table.setIsAvailable(true);
+        table.setSoftLockedBy(null);
+        table.setSoftLockExpiration(null);
         studyTableRepository.save(table);
 
         return reservation.getReservationId();
@@ -56,6 +60,7 @@ public class ReservationService {
     // USE CASE 2: ΔΗΜΟΣΙΑ ΚΡΑΤΗΣΗ (Public - Matchmaking)
     // UML: PublicReservation.create(...)
     public Long savePublicReservation(String studentId, Integer tableId, LocalDate date, LocalTime time, int duration, int numberOfPeople, String subjectName) {
+        validateStudentNoOverlap(studentId, date, time, duration);
         Student student = studentRepository.findById(studentId).orElseThrow();
         StudyTable table = studyTableRepository.findById(tableId).orElseThrow();
 
@@ -95,7 +100,9 @@ public class ReservationService {
         host.setRole("Host");
         participantRepository.save(host);
 
-        table.setIsAvailable(false);
+        table.setIsAvailable(true);
+        table.setSoftLockedBy(null);
+        table.setSoftLockExpiration(null);
         studyTableRepository.save(table);
 
         // Notify the Live Board!
@@ -171,5 +178,22 @@ public class ReservationService {
                 return !endDateTime.isBefore(now);
             })
             .toList();
+    }
+
+    private void validateStudentNoOverlap(String studentId, LocalDate date, LocalTime requestedStart, int duration) {
+        LocalDateTime reqStartDT = date.atTime(requestedStart);
+        LocalDateTime reqEndDT = reqStartDT.plusMinutes(duration);
+        List<Reservation> studentReservations = reservationRepository.findActiveReservationsByStudent(studentId);
+        
+        for (Reservation r : studentReservations) {
+            if ("CONFIRMED".equals(r.getStatus()) && r.getReservationDate() != null) {
+                LocalDateTime rStartDT = r.getReservationDate().atTime(r.getStartTime());
+                LocalDateTime rEndDT = rStartDT.plusMinutes(r.getDurationMinutes());
+                
+                if (reqStartDT.isBefore(rEndDT) && reqEndDT.isAfter(rStartDT)) {
+                    throw new RuntimeException("Έχεις ήδη κράτηση από " + r.getStartTime() + " έως " + rEndDT.toLocalTime() + "!");
+                }
+            }
+        }
     }
 }

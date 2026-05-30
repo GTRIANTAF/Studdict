@@ -140,6 +140,8 @@ public class ScreenOrderMenu extends Activity {
         }
         Intent intent = new Intent(this, ScreenOrderSummary.class);
         intent.putStringArrayListExtra("CART_ITEMS", cartItems);
+        intent.putExtra("TABLE_ID", getIntent().getLongExtra("TABLE_ID", 1L));
+        intent.putExtra("STUDENT_ID", getIntent().getStringExtra("STUDENT_ID"));
         startActivity(intent);
     }
 
