@@ -18,10 +18,9 @@ public class OrderService {
 
     @Autowired private OrderRepository orderRepository;
     @Autowired private MenuItemRepository menuItemRepository;
-    // Με το νέο domain model η Order συνδέεται απευθείας με το StudyTable (μέσω QR),
-    // οπότε δεν χρειαζόμαστε πλέον το ReservationRepository.
     @Autowired private StudyTableRepository studyTableRepository;
     @Autowired private BillRepository billRepository;
+    @Autowired private ReservationRepository reservationRepository;
 
     /**
      * UC8 - Παραγγελία F&B.
@@ -153,6 +152,13 @@ public class OrderService {
                 .filter(existing -> !existing.isSettled())
                 .orElseGet(Bill::new);
         bill.setTableId(tableId);
+        
+        // Link the active reservation to the bill so checkout can properly "complete" the reservation
+        List<Reservation> activeReservations = reservationRepository.findByTable_TableIdAndStatus(tableId, "CONFIRMED");
+        if (!activeReservations.isEmpty()) {
+            bill.setReservationId(activeReservations.get(0).getReservationId());
+        }
+
         //    Διατηρούμε τυχόν έκπτωση που έχει ήδη εφαρμοστεί (π.χ. εξαργύρωση πόντων πριν
         //    από νέα παραγγελία): το νέο σύνολο είναι το μεικτό άθροισμα ΜΕΙΟΝ την έκπτωση,
         //    ώστε η νέα παραγγελία να προστίθεται στο ήδη εκπτωμένο ποσό αντί να μηδενίζει

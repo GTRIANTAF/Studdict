@@ -23,7 +23,7 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     // Find active reservation by table id
     List<Reservation> findByTable_TableIdAndStatus(Integer tableId, String status);
 
-    // Fetch active reservations for a specific student
-    @Query("SELECT r FROM Reservation r JOIN ReservationParticipant rp ON r.reservationId = rp.reservationId WHERE rp.studentId = :studentId AND r.status = 'CONFIRMED'")
+    // Fetch reservations for a specific student (both active and completed)
+    @Query("SELECT r FROM Reservation r JOIN ReservationParticipant rp ON r.reservationId = rp.reservationId WHERE rp.studentId = :studentId AND r.status IN ('CONFIRMED', 'COMPLETED')")
     List<Reservation> findActiveReservationsByStudent(@Param("studentId") String studentId);
 }

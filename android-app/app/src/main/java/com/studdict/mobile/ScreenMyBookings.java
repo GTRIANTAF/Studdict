@@ -86,68 +86,81 @@ public class ScreenMyBookings extends Activity {
             params.setMargins(0, 0, 0, 24);
             card.setLayoutParams(params);
 
+            String displayStatus = res.getStatus();
+            if ("COMPLETED".equals(displayStatus)) {
+                displayStatus = "ALREADY CHECKED OUT";
+            }
+
             TextView info = new TextView(this);
             String tableInfo = res.getTable() != null ? "Table " + res.getTable().getTableNumber() : "Unknown Table";
             info.setText("Date: " + res.getReservationDate() + "\n" +
                     "Time: " + res.getStartTime() + "\n" +
                     "Duration: " + (res.getDurationMinutes() / 60) + "h\n" +
                     tableInfo + "\n" +
-                    "Status: " + res.getStatus());
+                    "Status: " + displayStatus);
             info.setTextSize(16);
             info.setTextColor(Color.BLACK);
             info.setPadding(0, 0, 0, 16);
             card.addView(info);
 
-            LinearLayout buttonLayout = new LinearLayout(this);
-            buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
+            if (!"COMPLETED".equals(res.getStatus())) {
+                LinearLayout buttonLayout = new LinearLayout(this);
+                buttonLayout.setOrientation(LinearLayout.HORIZONTAL);
 
-            Button btnModify = new Button(this);
-            btnModify.setText("MODIFY");
-            btnModify.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-            btnModify.setOnClickListener(v -> {
-                Intent intent = new Intent(ScreenMyBookings.this, ScreenForm.class);
-                intent.putExtra("RESERVATION_ID", res.getReservationId());
-                intent.putExtra("VENUE_ID", 1L); // Hardcoding to 1L because Venue is not mapped in Android StudyTable
-                intent.putExtra("STUDENT_ID", studentId);
-                intent.putExtra("EXISTING_DATE", res.getReservationDate());
-                intent.putExtra("EXISTING_CAPACITY", res.getNumberOfPeople());
-                intent.putExtra("EXISTING_TIME", res.getStartTime());
-                intent.putExtra("EXISTING_DURATION", res.getDurationMinutes());
-                startActivity(intent);
-            });
-            buttonLayout.addView(btnModify);
+                Button btnModify = new Button(this);
+                btnModify.setText("MODIFY");
+                btnModify.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+                btnModify.setOnClickListener(v -> {
+                    Intent intent = new Intent(ScreenMyBookings.this, ScreenForm.class);
+                    intent.putExtra("RESERVATION_ID", res.getReservationId());
+                    intent.putExtra("VENUE_ID", 1L); // Hardcoding to 1L because Venue is not mapped in Android StudyTable
+                    intent.putExtra("STUDENT_ID", studentId);
+                    intent.putExtra("EXISTING_DATE", res.getReservationDate());
+                    intent.putExtra("EXISTING_CAPACITY", res.getNumberOfPeople());
+                    intent.putExtra("EXISTING_TIME", res.getStartTime());
+                    intent.putExtra("EXISTING_DURATION", res.getDurationMinutes());
+                    startActivity(intent);
+                });
+                buttonLayout.addView(btnModify);
 
-            Button btnCheckIn = new Button(this);
-            btnCheckIn.setText("CHECK-IN");
-            btnCheckIn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-            btnCheckIn.setOnClickListener(v -> {
-                Intent intent = new Intent(ScreenMyBookings.this, ScreenCheckIn.class);
-                intent.putExtra("RESERVATION_ID", res.getReservationId());
-                intent.putExtra("STUDENT_ID", studentId);
+                Button btnCheckIn = new Button(this);
+                btnCheckIn.setText("CHECK-IN");
+                btnCheckIn.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+                btnCheckIn.setOnClickListener(v -> {
+                    Intent intent = new Intent(ScreenMyBookings.this, ScreenCheckIn.class);
+                    intent.putExtra("RESERVATION_ID", res.getReservationId());
+                    intent.putExtra("STUDENT_ID", studentId);
 
-                if (res.getTable() != null) {
-                    intent.putExtra("TABLE_NUMBER", res.getTable().getTableNumber());
-                    intent.putExtra("DUMMY_QR", res.getTable().getQrCodeString());
-                }
+                    if (res.getTable() != null) {
+                        intent.putExtra("TABLE_NUMBER", res.getTable().getTableNumber());
+                        intent.putExtra("DUMMY_QR", res.getTable().getQrCodeString());
+                    }
 
-                startActivity(intent);
-            });
-            buttonLayout.addView(btnCheckIn);
+                    startActivity(intent);
+                });
+                buttonLayout.addView(btnCheckIn);
 
-            Button btnCheckout = new Button(this);
-            btnCheckout.setText("CHECKOUT");
-            btnCheckout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
-            btnCheckout.setOnClickListener(v -> {
-                Toast.makeText(ScreenMyBookings.this, "Proceeding to Checkout...", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(ScreenMyBookings.this, ScreenBill.class);
-                intent.putExtra("TABLE_ID", res.getTable() != null ? (int) res.getTable().getId() : 1);
-                intent.putExtra("STUDENT_ID", studentId);
-                intent.putExtra("RESERVATION_ID", res.getReservationId());
-                startActivity(intent);
-            });
-            buttonLayout.addView(btnCheckout);
+                Button btnCheckout = new Button(this);
+                btnCheckout.setText("CHECKOUT");
+                btnCheckout.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+                btnCheckout.setOnClickListener(v -> {
+                    SessionManager session = new SessionManager(ScreenMyBookings.this);
+                    if (session.getCheckInId() == -1L) {
+                        Toast.makeText(ScreenMyBookings.this, "You must check-in to your table before checking out!", Toast.LENGTH_LONG).show();
+                        return;
+                    }
 
-            card.addView(buttonLayout);
+                    Toast.makeText(ScreenMyBookings.this, "Proceeding to Checkout...", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(ScreenMyBookings.this, ScreenBill.class);
+                    intent.putExtra("TABLE_ID", res.getTable() != null ? (int) res.getTable().getId() : 1);
+                    intent.putExtra("STUDENT_ID", studentId);
+                    intent.putExtra("RESERVATION_ID", res.getReservationId());
+                    startActivity(intent);
+                });
+                buttonLayout.addView(btnCheckout);
+
+                card.addView(buttonLayout);
+            }
             myBookingsContainer.addView(card);
         }
     }

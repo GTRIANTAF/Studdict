@@ -10,6 +10,9 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.EditText;
+import android.text.InputType;
+import android.content.Intent;
 
 import com.studdict.mobile.api.ApiClient;
 import com.studdict.mobile.model.Bill;
@@ -39,12 +42,17 @@ public class ScreenBill extends Activity {
     private TextView txtEbookLoansHeader;
     private LinearLayout ebookLoansContainer;
     private Button btnRedeemPoints;
+    private Button btnPayFull;
+    private Button btnSplitBill;
+    private Button btnPayCash;
     private Button btnCloseBill;
 
     private int tableId;
     private String studentId;
     private long reservationId;
     private int currentBalance = 0;
+    private Long currentBillId = null;
+    private double currentTotalAmount = 0.0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +75,9 @@ public class ScreenBill extends Activity {
         ebookLoansContainer = findViewById(R.id.ebookLoansContainer);
         tvAvailablePoints = findViewById(R.id.tv_available_points);
         btnRedeemPoints = findViewById(R.id.btn_redeem_points);
+        btnPayFull = findViewById(R.id.btnPayFull);
+        btnSplitBill = findViewById(R.id.btnSplitBill);
+        btnPayCash = findViewById(R.id.btnPayCash);
         btnCloseBill = findViewById(R.id.btnCloseBill);
 
         txtBillTable.setText("Table: " + tableId);
@@ -83,8 +94,11 @@ public class ScreenBill extends Activity {
         // Redeem button handler
         btnRedeemPoints.setOnClickListener(v -> redeem100Points());
 
-        // Exit / Checkout handler
-        btnCloseBill.setOnClickListener(v -> promptCheckout());
+        // Checkout handlers
+        btnPayFull.setOnClickListener(v -> payFullAmount());
+        btnSplitBill.setOnClickListener(v -> promptSplitBill());
+        btnPayCash.setOnClickListener(v -> payWithCash());
+        btnCloseBill.setOnClickListener(v -> finish());
     }
 
     private void loadEbookLoans() {
@@ -129,9 +143,16 @@ public class ScreenBill extends Activity {
             public void onResponse(Call<Bill> call, Response<Bill> response) {
                 if (response.isSuccessful() && response.body() != null) {
                     Bill bill = response.body();
+                    currentBillId = bill.getBillId();
+                    currentTotalAmount = bill.getTotalAmount();
                     txtBillId.setText("Bill #" + bill.getBillId());
                     txtBillTotal.setText(String.format("Total: €%.2f", bill.getTotalAmount()));
                     txtBillStatus.setText(bill.isSettled() ? "Status: Paid" : "Status: Pending payment");
+                    if (bill.isSettled()) {
+                        btnPayFull.setEnabled(false);
+                        btnSplitBill.setEnabled(false);
+                        btnPayCash.setEnabled(false);
+                    }
                 } else {
                     txtBillId.setText("Bill");
                     txtBillTotal.setText("Total: —");
@@ -213,13 +234,146 @@ public class ScreenBill extends Activity {
         });
     }
 
-    private void promptCheckout() {
-        new AlertDialog.Builder(this)
-                .setTitle("Checkout")
-                .setMessage("Do you want to checkout?")
-                .setPositiveButton("Yes, Checkout", (dialog, which) -> executeCheckoutPointsEarning())
-                .setNegativeButton("No", (dialog, which) -> finish())
-                .show();
+    // --- UC6 Checkout Methods ---
+
+    private void payFullAmount() {
+        if (currentBillId == null) {
+            Toast.makeText(this, "Bill not loaded.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Intent intent = new Intent(this, ScreenPayment.class);
+        intent.putExtra("BILL_ID", currentBillId);
+        intent.putExtra("AMOUNT", currentTotalAmount);
+        intent.putExtra("STUDENT_ID", studentId);
+        intent.putExtra("RESERVATION_ID", reservationId);
+        startActivity(intent);
+        finish();
+    }
+
+    private void promptSplitBill() {
+        if (currentBillId == null) {
+            Toast.makeText(this, "Bill not loaded.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (reservationId == -1L) {
+            showManualSplitDialog();
+            return;
+        }
+
+        Toast.makeText(this, "Detecting participants...", Toast.LENGTH_SHORT).show();
+        ApiClient.getApi().getParticipants(reservationId).enqueue(new Callback<List<com.studdict.mobile.model.ReservationParticipant>>() {
+            @Override
+            public void onResponse(Call<List<com.studdict.mobile.model.ReservationParticipant>> call, Response<List<com.studdict.mobile.model.ReservationParticipant>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    showParticipantsSplitDialog(response.body());
+                } else {
+                    showManualSplitDialog();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<com.studdict.mobile.model.ReservationParticipant>> call, Throwable t) {
+                showManualSplitDialog();
+            }
+        });
+    }
+
+    private void showParticipantsSplitDialog(List<com.studdict.mobile.model.ReservationParticipant> participants) {
+        String[] participantNames = new String[participants.size()];
+        boolean[] checkedItems = new boolean[participants.size()];
+        for (int i = 0; i < participants.size(); i++) {
+            participantNames[i] = "Student " + participants.get(i).getStudentId() + " (" + participants.get(i).getRole() + ")";
+            checkedItems[i] = false;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Select Participants to Split With");
+        builder.setMultiChoiceItems(participantNames, checkedItems, (dialog, which, isChecked) -> {
+            checkedItems[which] = isChecked;
+        });
+
+        builder.setPositiveButton("Calculate Split", (dialog, which) -> {
+            int selectedCount = 0;
+            for (boolean checked : checkedItems) {
+                if (checked) selectedCount++;
+            }
+            if (selectedCount > 0) {
+                processSplitBill(selectedCount);
+            } else {
+                Toast.makeText(ScreenBill.this, "No participants selected.", Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void showManualSplitDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Split Bill");
+        builder.setMessage("How many people are sharing this bill?");
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
+
+        builder.setPositiveButton("Calculate", (dialog, which) -> {
+            String val = input.getText().toString();
+            if (!val.isEmpty()) {
+                int numOfPeople = Integer.parseInt(val);
+                if (numOfPeople > 0) {
+                    processSplitBill(numOfPeople);
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void processSplitBill(int numberOfPeople) {
+        com.studdict.mobile.model.SplitRequest req = new com.studdict.mobile.model.SplitRequest(currentBillId, numberOfPeople);
+        ApiClient.getApi().splitBill(req).enqueue(new Callback<com.studdict.mobile.model.SplitResponse>() {
+            @Override
+            public void onResponse(Call<com.studdict.mobile.model.SplitResponse> call, Response<com.studdict.mobile.model.SplitResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    double amountPerPerson = response.body().getAmountPerPerson();
+                    Intent intent = new Intent(ScreenBill.this, ScreenPayment.class);
+                    intent.putExtra("BILL_ID", currentBillId);
+                    intent.putExtra("AMOUNT", amountPerPerson);
+                    intent.putExtra("STUDENT_ID", studentId);
+                    intent.putExtra("RESERVATION_ID", reservationId);
+                    startActivity(intent);
+                    finish();
+                } else {
+                    Toast.makeText(ScreenBill.this, "Failed to split bill.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<com.studdict.mobile.model.SplitResponse> call, Throwable t) {
+                Toast.makeText(ScreenBill.this, "Network error splitting bill.", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void payWithCash() {
+        if (currentBillId == null) return;
+        Toast.makeText(this, "Please wait for staff to collect cash...", Toast.LENGTH_SHORT).show();
+        
+        com.studdict.mobile.model.PaymentRequest req = new com.studdict.mobile.model.PaymentRequest(currentBillId, "CASH", currentTotalAmount);
+        ApiClient.getApi().processPayment(req).enqueue(new Callback<com.studdict.mobile.model.PaymentResponse>() {
+            @Override
+            public void onResponse(Call<com.studdict.mobile.model.PaymentResponse> call, Response<com.studdict.mobile.model.PaymentResponse> response) {
+                if (response.isSuccessful() && response.body() != null && response.body().isSuccess()) {
+                    executeCheckoutPointsEarning();
+                } else {
+                    Toast.makeText(ScreenBill.this, "Cash payment failed.", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<com.studdict.mobile.model.PaymentResponse> call, Throwable t) {
+                Toast.makeText(ScreenBill.this, "Mocking cash payment success due to offline...", Toast.LENGTH_SHORT).show();
+                executeCheckoutPointsEarning();
+            }
+        });
     }
 
     private void executeCheckoutPointsEarning() {

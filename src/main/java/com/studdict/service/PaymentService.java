@@ -7,6 +7,7 @@ import com.studdict.repository.BillRepository;
 import com.studdict.repository.CheckInRepository;
 import com.studdict.repository.PaymentRepository;
 import com.studdict.repository.StudyTableRepository;
+import com.studdict.repository.ReservationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class PaymentService {
     @Autowired private PaymentRepository paymentRepository;
     @Autowired private StudyTableRepository studyTableRepository;
     @Autowired private CheckInRepository checkInRepository;
+    @Autowired private ReservationRepository reservationRepository;
     @Autowired private EBookService eBookService;
 
     /**
@@ -48,6 +50,7 @@ public class PaymentService {
         recordPayment(bill, method);
         freeTable(bill);
         releaseEbookLoans(bill);
+        removeReservation(bill);
         applyRewardPoints(bill);
 
         return bill;
@@ -93,6 +96,15 @@ public class PaymentService {
         List<CheckIn> checkIns = checkInRepository.findByReservation_ReservationId(bill.getReservationId());
         for (CheckIn checkIn : checkIns) {
             eBookService.revokeLoan(checkIn.getCheckInId());
+        }
+    }
+
+    private void removeReservation(Bill bill) {
+        if (bill.getReservationId() != null) {
+            reservationRepository.findById(bill.getReservationId()).ifPresent(reservation -> {
+                reservation.setStatus("COMPLETED");
+                reservationRepository.save(reservation);
+            });
         }
     }
 
