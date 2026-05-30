@@ -50,10 +50,16 @@ public class ScreenOrderSummary extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        SessionManager session = new SessionManager(this);
-        tableId = session.getTableId();
+        long intentTableId = getIntent().getLongExtra("TABLE_ID", -1L);
+        if (intentTableId != -1L) {
+            tableId = (int) intentTableId;
+        } else {
+            SessionManager session = new SessionManager(this);
+            tableId = session.getTableId();
+        }
+
         if (tableId == -1) {
-            Toast.makeText(this, "Session expired. Please check in again.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Table ID not found. Please select a table or check in.", Toast.LENGTH_LONG).show();
             finish();
             return;
         }
