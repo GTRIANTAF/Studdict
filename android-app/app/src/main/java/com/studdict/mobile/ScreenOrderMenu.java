@@ -82,7 +82,7 @@ public class ScreenOrderMenu extends Activity {
                 }
             });
         });
-
+        setupBottomNavigation();
         fetchCatalog();
     }
 
@@ -266,5 +266,38 @@ public class ScreenOrderMenu extends Activity {
                 btnRemove = v.findViewById(R.id.btnRemoveItem);
             }
         }
+    }
+
+    private void setupBottomNavigation() {
+        android.view.View navHome = findViewById(R.id.navHome);
+        if (navHome != null) navHome.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenVenues.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        });
+
+        android.view.View navLiveBoard = findViewById(R.id.navLiveBoard);
+        if (navLiveBoard != null) navLiveBoard.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenLiveBoard.class);
+            startActivity(intent);
+        });
+
+        android.view.View navMyBookings = findViewById(R.id.navMyBookings);
+        if (navMyBookings != null) navMyBookings.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenMyBookings.class);
+            startActivity(intent);
+        });
+
+        android.view.View navOrder = findViewById(R.id.navOrder);
+        if (navOrder != null) navOrder.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenOrderMenu.class);
+            startActivity(intent);
+        });
+
+        android.view.View navEbook = findViewById(R.id.navEbook);
+        if (navEbook != null) navEbook.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenEBookVault.class);
+            startActivity(intent);
+        });
     }
 }

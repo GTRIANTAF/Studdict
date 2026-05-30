@@ -100,50 +100,7 @@
                 android:textColor="@color/studdict_muted"
                 android:textSize="16sp" />
 
-            <!-- Search & Filter Quick Actions -->
-            <HorizontalScrollView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:scrollbars="none">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:background="@drawable/pill_active"
-                        android:text="∞ All Places"
-                        android:textColor="@color/studdict_surface"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/pill_inactive"
-                        android:text="📚 Libraries"
-                        android:textColor="@color/studdict_muted"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:background="@drawable/pill_inactive"
-                        android:text="☕ Cafeterias"
-                        android:textColor="@color/studdict_muted"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
-            </HorizontalScrollView>
 
             <!-- Location Cards Grid -->
             <!-- CEID Library Card -->

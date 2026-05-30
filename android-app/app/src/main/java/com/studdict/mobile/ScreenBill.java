@@ -41,6 +41,8 @@ public class ScreenBill extends Activity {
     private TextView tvAvailablePoints;
     private TextView txtEbookLoansHeader;
     private LinearLayout ebookLoansContainer;
+    private TextView txtFBLoansHeader;
+    private LinearLayout fbContainer;
     private Button btnRedeemPoints;
     private Button btnPayFull;
     private Button btnSplitBill;
@@ -91,6 +93,8 @@ public class ScreenBill extends Activity {
         txtBillStatus = findViewById(R.id.txtBillStatus);
         txtEbookLoansHeader = findViewById(R.id.txtEbookLoansHeader);
         ebookLoansContainer = findViewById(R.id.ebookLoansContainer);
+        txtFBLoansHeader = findViewById(R.id.txtFBLoansHeader);
+        fbContainer = findViewById(R.id.fbContainer);
         tvAvailablePoints = findViewById(R.id.tv_available_points);
         btnRedeemPoints = findViewById(R.id.btn_redeem_points);
         btnPayFull = findViewById(R.id.btnPayFull);
@@ -120,6 +124,9 @@ public class ScreenBill extends Activity {
 
         // Show e-books borrowed this session
         loadEbookLoans();
+
+        // Show F&B ordered this session
+        loadFBOrders();
 
         // Stepper button click listeners
         btnPointsDecrement.setOnClickListener(v -> {
@@ -181,6 +188,35 @@ public class ScreenBill extends Activity {
             tv.setTextColor(Color.parseColor(loan.isReturned() ? "#9E9E9E" : "#4A148C"));
             tv.setPadding(0, 4, 0, 4);
             ebookLoansContainer.addView(tv);
+        }
+    }
+
+    private void loadFBOrders() {
+        ApiClient.getApi().getOrderItemsByTable(tableId).enqueue(new Callback<List<String>>() {
+            @Override
+            public void onResponse(Call<List<String>> call, Response<List<String>> response) {
+                if (response.isSuccessful() && response.body() != null && !response.body().isEmpty()) {
+                    showFBOrders(response.body());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<List<String>> call, Throwable t) {
+                // Ignore errors silently
+            }
+        });
+    }
+
+    private void showFBOrders(List<String> items) {
+        txtFBLoansHeader.setVisibility(View.VISIBLE);
+        fbContainer.removeAllViews();
+        for (String itemStr : items) {
+            TextView tv = new TextView(this);
+            tv.setText(itemStr);
+            tv.setTextSize(14);
+            tv.setTextColor(Color.parseColor("#4A148C"));
+            tv.setPadding(0, 4, 0, 4);
+            fbContainer.addView(tv);
         }
     }
 

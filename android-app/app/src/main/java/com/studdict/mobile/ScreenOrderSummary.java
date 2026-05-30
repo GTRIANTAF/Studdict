@@ -1,5 +1,6 @@
 package com.studdict.mobile;
 
+import android.content.Intent;
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -95,6 +96,8 @@ public class ScreenOrderSummary extends Activity {
         // UC8 Gap 7: cancel button calls backend cancelOrder endpoint
         Button btnCancel = findViewById(R.id.btnCancelOrder);
         btnCancel.setOnClickListener(v -> cancelOrder());
+
+        setupBottomNavigation();
     }
 
     private void submitOrder() {
@@ -185,5 +188,38 @@ public class ScreenOrderSummary extends Activity {
                 txtName = v.findViewById(R.id.txtCartItemName);
             }
         }
+    }
+
+    private void setupBottomNavigation() {
+        android.view.View navHome = findViewById(R.id.navHome);
+        if (navHome != null) navHome.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenVenues.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        });
+
+        android.view.View navLiveBoard = findViewById(R.id.navLiveBoard);
+        if (navLiveBoard != null) navLiveBoard.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenLiveBoard.class);
+            startActivity(intent);
+        });
+
+        android.view.View navMyBookings = findViewById(R.id.navMyBookings);
+        if (navMyBookings != null) navMyBookings.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenMyBookings.class);
+            startActivity(intent);
+        });
+
+        android.view.View navOrder = findViewById(R.id.navOrder);
+        if (navOrder != null) navOrder.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenOrderMenu.class);
+            startActivity(intent);
+        });
+
+        android.view.View navEbook = findViewById(R.id.navEbook);
+        if (navEbook != null) navEbook.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenEBookVault.class);
+            startActivity(intent);
+        });
     }
 }

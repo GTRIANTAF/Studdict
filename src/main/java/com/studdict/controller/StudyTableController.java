@@ -30,13 +30,17 @@ public class StudyTableController {
         return tableService.getAvailableTables(venueId, date, time, duration, minCapacity);
     }
 
-    // UC2: Εύρεση τραπεζιών (Matchmaking)
+    // UC2: ΑΝΑΖΗΤΗΣΗ ΤΡΑΠΕΖΙΩΝ (Matchmaking)
     @GetMapping("/matchmaking")
     public List<StudyTable> getMatchmakingTables(
             @RequestParam Long venueId,
-            @RequestParam String subjectName) {
+            @RequestParam String subjectName,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime time,
+            @RequestParam int duration,
+            @RequestParam int minCapacity) {
 
-        return tableService.findMatchmakingTables(venueId, subjectName);
+        return tableService.findMatchmakingTables(venueId, subjectName, date, time, duration, minCapacity);
     }
 
     // Προσωρινό κλείδωμα (Soft Lock)

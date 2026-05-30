@@ -79,14 +79,7 @@ public class ScreenConfirm extends Activity {
         Button confirmBtn = findViewById(R.id.confirmButton);
         confirmBtn.setOnClickListener(view -> submitReservation());
 
-        android.view.View navHome = findViewById(R.id.navHome);
-        if (navHome != null) {
-            navHome.setOnClickListener(v -> {
-                android.content.Intent intent = new android.content.Intent(this, ScreenVenues.class);
-                intent.setFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(intent);
-            });
-        }
+        setupBottomNavigation();
     }
 
     private void submitReservation() {
@@ -172,6 +165,39 @@ public class ScreenConfirm extends Activity {
             public void onFailure(Call<Long> call, Throwable t) {
                 Toast.makeText(ScreenConfirm.this, "Network Error: " + t.getMessage(), Toast.LENGTH_LONG).show();
             }
+        });
+    }
+
+    private void setupBottomNavigation() {
+        android.view.View navHome = findViewById(R.id.navHome);
+        if (navHome != null) navHome.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenVenues.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+        });
+
+        android.view.View navLiveBoard = findViewById(R.id.navLiveBoard);
+        if (navLiveBoard != null) navLiveBoard.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenLiveBoard.class);
+            startActivity(intent);
+        });
+
+        android.view.View navMyBookings = findViewById(R.id.navMyBookings);
+        if (navMyBookings != null) navMyBookings.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenMyBookings.class);
+            startActivity(intent);
+        });
+
+        android.view.View navOrder = findViewById(R.id.navOrder);
+        if (navOrder != null) navOrder.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenOrderMenu.class);
+            startActivity(intent);
+        });
+
+        android.view.View navEbook = findViewById(R.id.navEbook);
+        if (navEbook != null) navEbook.setOnClickListener(v -> {
+            Intent intent = new Intent(this, ScreenEBookVault.class);
+            startActivity(intent);
         });
     }
 }
