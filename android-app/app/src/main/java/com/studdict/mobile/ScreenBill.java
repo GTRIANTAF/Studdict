@@ -78,6 +78,10 @@ public class ScreenBill extends Activity {
         reservationId = getIntent().getLongExtra("RESERVATION_ID", -1L);
 
         if (studentId == null || studentId.isEmpty()) {
+            SessionManager session = new SessionManager(this);
+            studentId = session.getStudentId();
+        }
+        if (studentId == null || studentId.isEmpty()) {
             studentId = "S1"; // Default for isolated testability
         }
 
@@ -213,6 +217,7 @@ public class ScreenBill extends Activity {
                         btnSplitBill.setEnabled(false);
                         btnPayCash.setEnabled(false);
                     }
+                    updatePointsUI(currentBalance, false);
                 } else {
                     txtBillId.setText("Bill");
                     txtOriginalPrice.setText("€—");
@@ -220,6 +225,8 @@ public class ScreenBill extends Activity {
                     tvDiscountBadge.setVisibility(View.GONE);
                     txtBillTotal.setText("€—");
                     txtBillStatus.setText("Bill not found.");
+                    grossTotalAmount = 0.0;
+                    updatePointsUI(currentBalance, false);
                 }
             }
 
@@ -231,6 +238,8 @@ public class ScreenBill extends Activity {
                 tvDiscountBadge.setVisibility(View.GONE);
                 txtBillTotal.setText("€0.00");
                 txtBillStatus.setText("Status: Pending payment");
+                grossTotalAmount = 0.0;
+                updatePointsUI(currentBalance, true);
                 Toast.makeText(ScreenBill.this, "Offline: bill details unavailable.", Toast.LENGTH_SHORT).show();
             }
         });
@@ -276,15 +285,19 @@ public class ScreenBill extends Activity {
         tvPointsDiscount.setText(String.format("-%.2f€ Discount", discountVal));
 
         // Enable/Disable step buttons with proper visual alpha states
-        boolean canDecrement = selectedPointsToRedeem > 25;
+        boolean canDecrement = selectedPointsToRedeem > 25 && grossTotalAmount > 0.0;
         btnPointsDecrement.setEnabled(canDecrement);
         btnPointsDecrement.setImageAlpha(canDecrement ? 255 : 70);
 
-        boolean canIncrement = (selectedPointsToRedeem + 25) <= points && (selectedPointsToRedeem * 0.03) < grossTotalAmount;
+        boolean canIncrement = (selectedPointsToRedeem + 25) <= points && (selectedPointsToRedeem * 0.03) < grossTotalAmount && grossTotalAmount > 0.0;
         btnPointsIncrement.setEnabled(canIncrement);
         btnPointsIncrement.setImageAlpha(canIncrement ? 255 : 70);
 
-        if (points >= 25 && points >= selectedPointsToRedeem) {
+        if (grossTotalAmount <= 0.0) {
+            btnRedeemPoints.setEnabled(false);
+            btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#BDBDBD"))); // Disabled Grey
+            btnRedeemPoints.setText("Redeem Points (Cart is Empty)");
+        } else if (points >= 25 && points >= selectedPointsToRedeem) {
             btnRedeemPoints.setEnabled(true);
             btnRedeemPoints.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#FF8F00"))); // Active Orange
             btnRedeemPoints.setText(String.format("Redeem %d Points (-%.2f€)", selectedPointsToRedeem, discountVal));
@@ -470,7 +483,7 @@ public class ScreenBill extends Activity {
 
     private void executeCheckoutPointsEarning() {
         if (reservationId == -1L) {
-            int pointsEarned = 50;
+            int pointsEarned = 0;
             showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
             return;
         }
@@ -479,7 +492,7 @@ public class ScreenBill extends Activity {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
                 try {
-                    int pointsEarned = 50; // default fallback
+                    int pointsEarned = 0; // default fallback is 0 on error
                     if (response.isSuccessful() && response.body() != null) {
                         String msg = response.body().string();
                         java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\d+").matcher(msg);
@@ -504,16 +517,16 @@ public class ScreenBill extends Activity {
                             }
                         });
                     } else {
-                        showCongratulationsDialog(pointsEarned, currentBalance + pointsEarned);
+                        showCongratulationsDialog(0, currentBalance);
                     }
                 } catch (Exception e) {
-                    showCongratulationsDialog(50, currentBalance + 50);
+                    showCongratulationsDialog(0, currentBalance);
                 }
             }
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                showCongratulationsDialog(50, currentBalance + 50);
+                showCongratulationsDialog(0, currentBalance);
             }
         });
     }

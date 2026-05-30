@@ -77,6 +77,9 @@ public interface StuddictApi {
             @Query("reservationId") long reservationId
     );
 
+    @GET("api/gamification/history/{studentId}")
+    Call<List<com.studdict.mobile.model.PointsTransaction>> getPointsHistory(@Path("studentId") String studentId);
+
     @POST("api/tables/{tableId}/lock")
     Call<Boolean> lockTable(
             @Path("tableId") int tableId,

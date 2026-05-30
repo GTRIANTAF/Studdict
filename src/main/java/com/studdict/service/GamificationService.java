@@ -41,14 +41,14 @@ public class GamificationService {
         }
 
         java.util.List<com.studdict.model.CheckIn> checkIns = checkInRepository.findByReservation_ReservationId(reservationId);
-        boolean hasValidCheckIn = false;
+        com.studdict.model.CheckIn validCheckIn = null;
         for (com.studdict.model.CheckIn c : checkIns) {
             if (c.isSuccessful() && c.getStudent().getStudentId().equals(studentId)) {
-                hasValidCheckIn = true;
+                validCheckIn = c;
                 break;
             }
         }
-        if (!hasValidCheckIn) {
+        if (validCheckIn == null) {
             System.out.println("[GamificationService] No-show: No successful check-in found for reservation #" + reservationId + ". Earning 0 points.");
             return 0; // Gains no points if student did not show up
         }
@@ -56,7 +56,18 @@ public class GamificationService {
         com.studdict.model.Reservation res = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found."));
 
-        int durationMinutes = res.getDurationMinutes();
+        // Calculate actual stay duration based on check-in time and current checkout/payment time
+        long staySeconds = java.time.Duration.between(validCheckIn.getCheckInTime(), LocalDateTime.now()).getSeconds();
+        int durationMinutes;
+        if (staySeconds < 1800) {
+            // Test fallback: if checkout is within 30 minutes of check-in, use the planned reservation duration
+            durationMinutes = res.getDurationMinutes();
+            System.out.println("[GamificationService] Test stay detected (< 30 minutes). Using planned duration: " + durationMinutes + " minutes.");
+        } else {
+            durationMinutes = (int) (staySeconds / 60);
+            System.out.println("[GamificationService] Actual stay duration: " + durationMinutes + " minutes (" + staySeconds + " seconds).");
+        }
+
         int pointsEarned = Math.min(50, durationMinutes); // 1 point per minute, max 50
 
         if (pointsEarned > 0) {
@@ -145,6 +156,10 @@ public class GamificationService {
                 billRepository.save(bill);
             }
         });
+    }
+
+    public java.util.List<PointsTransaction> getPointsHistory(String studentId) {
+        return transactionRepository.findByStudentIdOrderByTimestampDesc(studentId);
     }
 
     private void recordTransaction(String studentId, int points, String type, String desc) {

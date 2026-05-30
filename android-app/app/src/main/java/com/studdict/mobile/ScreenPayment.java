@@ -39,6 +39,10 @@ public class ScreenPayment extends Activity {
         billId = getIntent().getLongExtra("BILL_ID", -1L);
         amountDue = getIntent().getDoubleExtra("AMOUNT", 0.0);
         studentId = getIntent().getStringExtra("STUDENT_ID");
+        if (studentId == null || studentId.isEmpty()) {
+            SessionManager session = new SessionManager(this);
+            studentId = session.getStudentId();
+        }
         reservationId = getIntent().getLongExtra("RESERVATION_ID", -1L);
 
         txtPaymentAmount = findViewById(R.id.txtPaymentAmount);
@@ -98,14 +102,14 @@ public class ScreenPayment extends Activity {
 
     private void onPaymentSuccess() {
         if (reservationId == -1L) {
-            fetchWalletAndShowSuccessDialog(50);
+            fetchWalletAndShowSuccessDialog(0);
             return;
         }
 
         ApiClient.getApi().earnPoints(studentId, reservationId).enqueue(new Callback<okhttp3.ResponseBody>() {
             @Override
             public void onResponse(Call<okhttp3.ResponseBody> call, Response<okhttp3.ResponseBody> response) {
-                int pointsEarned = 50;
+                int pointsEarned = 0;
                 try {
                     if (response.isSuccessful() && response.body() != null) {
                         String msg = response.body().string();
@@ -120,7 +124,7 @@ public class ScreenPayment extends Activity {
 
             @Override
             public void onFailure(Call<okhttp3.ResponseBody> call, Throwable t) {
-                fetchWalletAndShowSuccessDialog(50);
+                fetchWalletAndShowSuccessDialog(0);
             }
         });
     }
@@ -185,6 +189,7 @@ public class ScreenPayment extends Activity {
         session.clearCheckIn();
 
         Intent intent = new Intent(ScreenPayment.this, ScreenVenues.class);
+        intent.putExtra("STUDENT_ID", studentId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finish();

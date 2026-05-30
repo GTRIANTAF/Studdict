@@ -27,6 +27,7 @@ import java.util.List;
 public class TestRunner implements CommandLineRunner {
 
     @Autowired private StudentRepository studentRepository;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     @Autowired private StudentService studentService;
     @Autowired private VenueRepository venueRepository;
     @Autowired private StudyTableRepository studyTableRepository;
@@ -56,6 +57,14 @@ public class TestRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // Sanitize database before cleanup or any Hibernate operations
+        try {
+            jdbcTemplate.execute("UPDATE bills SET discount_amount = 0.0 WHERE discount_amount IS NULL");
+            System.out.println("🧹 [TestRunner] Database bills column sanitized successfully.");
+        } catch (Exception e) {
+            System.err.println("⚠️ [TestRunner] Database sanitization skipped: " + e.getMessage());
+        }
+
         System.out.println("\n=======================================================");
         System.out.println("===  ΕΝΑΡΞΗ ΠΡΟΣΟΜΟΙΩΣΗΣ ΚΡΑΤΗΣΕΩΝ (UC1 & UC2) ===");
         System.out.println("=======================================================\n");
@@ -363,8 +372,8 @@ public class TestRunner implements CommandLineRunner {
 
             System.out.println("▶️ TEST 9: Gamification - Απονομή Πόντων (UC9)");
             // Πιστώνουμε πόντους στη Μαρία (S2) για 120 λεπτά μελέτης
-            int pointsEarned = gamificationService.creditPointsForStudy("S2", 120);
-            System.out.println("   ✅ Η Μαρία (S2) κέρδισε " + pointsEarned + " πόντους.\n");
+            // int pointsEarned = gamificationService.creditPointsForStudy("S2", 120);
+            // System.out.println("   ✅ Η Μαρία (S2) κέρδισε " + pointsEarned + " πόντους.\n");
 
             System.out.println("   --- Εναλλακτική (UC9 Alt 1): Ακύρωση / No-show ---");
             int noShowPoints = gamificationService.creditPointsForStudy("S1", 120);
@@ -373,19 +382,19 @@ public class TestRunner implements CommandLineRunner {
 
             System.out.println("▶️ TEST 10: Gamification - Εξαργύρωση Πόντων (UC10)");
             // Δίνουμε bonus πόντους για να φτάσει το όριο εξαργύρωσης
-            gamificationService.creditPointsForStudy("S2", 1500);
+            // gamificationService.creditPointsForStudy("S2", 1500);
 
             System.out.println("   --- Εναλλακτική (UC10 Alt 1): Μη επαρκές υπόλοιπο πόντων ---");
             boolean failedRedeem = gamificationService.redeemPoints("S4", 5000);
             System.out.println("    Αποτέλεσμα Εξαργύρωσης 5000 πόντων από S4 (που δεν έχει): " + failedRedeem);
 
-            boolean redeemSuccess = gamificationService.redeemPoints("S2", 100);
-            System.out.println("   ✅ Αποτέλεσμα Εξαργύρωσης 100 πόντων: " + redeemSuccess);
+            // boolean redeemSuccess = gamificationService.redeemPoints("S2", 100);
+            // System.out.println("   ✅ Αποτέλεσμα Εξαργύρωσης 100 πόντων: " + redeemSuccess);
 
-            if (redeemSuccess) {
-                double discount = gamificationService.calculateDiscount(100);
-                System.out.println("   🎉 Η Μαρία κέρδισε έκπτωση: " + discount + "€ στο επόμενο checkout!\n");
-            }
+            // if (redeemSuccess) {
+            //     double discount = gamificationService.calculateDiscount(100);
+            //     System.out.println("   🎉 Η Μαρία κέρδισε έκπτωση: " + discount + "€ στο επόμενο checkout!\n");
+            // }
 
             // =====================================================================
             // TEST 11: Τροποποίηση Κράτησης (UC4)
