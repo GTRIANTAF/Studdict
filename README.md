@@ -40,7 +40,7 @@ Studdict is built around a set of use cases (`UC1`–`UC12`), which map directly
 | **Digital e‑book loans** (UC7) | Browse/search an e‑book catalog and borrow a title while checked in. Loans are license‑based; they are released on early return, at check‑out, or automatically when the reservation expires. |
 | **Food & beverage orders** (UC8) | Browse the menu, build a cart, place an order to the table, and view active orders on a kitchen screen. Orders roll up into the table's bill. |
 | **Check‑out, payment & split** (UC6) | Generate the bill (with an itemized list of the table's F&B order lines), pay by card or cash, optionally split it across people, and free the table. |
-| **Gamification** (UC9) | Earn points for time spent studying (1 pt/min, capped), redeem points for a discount on the bill, and view a points history. |
+| **Gamification** (UC9/10) | Earn points for time spent studying (1 pt/min, capped), redeem points for a discount on the bill, and view a points history. |
 
 ---
 
