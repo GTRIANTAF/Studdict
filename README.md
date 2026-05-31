@@ -100,7 +100,7 @@ Studdict is built around a set of use cases (`UC1`–`UC12`), which map directly
 
 ```
 Studdict/
-├── pom.xml                       # Backend Maven build
+├── pom.xml                  # Backend Maven build
 ├── src/
 │   ├── main/
 │      ├── java/com/studdict/
@@ -125,7 +125,10 @@ Studdict/
 │       ├── res/                           # layouts, drawables, values
 │       └── AndroidManifest.xml
 │
-├── class_diagram.png            # design class diagram (backend + client)
+├── sequence-diagrams/            # sequence diagrams for uc1-uc10
+│
+├── class_diagram.png            #  class diagram (backend + client)
+├── domain_model.png            # domain model (backend + client)
 ```
 
 ---
